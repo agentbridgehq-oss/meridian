@@ -31,6 +31,12 @@ function save(file, data) {
   ensure();
   fs.writeFileSync(file, JSON.stringify(data, null, 2));
 }
+function timingSafeStrEqual(a, b) {
+  const bufA = Buffer.from(String(a || ''));
+  const bufB = Buffer.from(String(b || ''));
+  if (bufA.length !== bufB.length) return false;
+  return crypto.timingSafeEqual(bufA, bufB);
+}
 function rid(p = 'm') {
   return `${p}_${crypto.randomBytes(8).toString('hex')}`;
 }
@@ -247,7 +253,7 @@ export function verifyAgentKey(agentId, apiKey) {
   const agent = load(AGENTS, { agents: [] }).agents.find((a) => a.id === agentId);
   if (!agent || agent.status !== 'active') return null;
   const hash = crypto.createHash('sha256').update(apiKey || '').digest('hex');
-  if (hash !== agent.apiKeyHash) return null;
+  if (!timingSafeStrEqual(hash, agent.apiKeyHash)) return null;
   return agent;
 }
 
@@ -273,7 +279,7 @@ export function ensureWidgetToken(agentId) {
 export function verifyWidgetToken(agentId, widgetToken) {
   const agent = load(AGENTS, { agents: [] }).agents.find((a) => a.id === agentId);
   if (!agent || agent.status !== 'active') return null;
-  if (!widgetToken || !agent.widgetToken || widgetToken !== agent.widgetToken) return null;
+  if (!widgetToken || !agent.widgetToken || !timingSafeStrEqual(widgetToken, agent.widgetToken)) return null;
   return agent;
 }
 

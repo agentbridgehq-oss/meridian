@@ -4,6 +4,8 @@
  */
 
 import express from 'express';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
 import path from 'path';
 import fs from 'fs';
 import crypto from 'crypto';
@@ -110,6 +112,35 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 const PORT = Number(process.env.PORT) || 8891;
 const stripe = process.env.STRIPE_SECRET_KEY ? new Stripe(process.env.STRIPE_SECRET_KEY) : null;
+
+// Security headers on every response. CSP allows the fonts + inline
+// style/script the current pages use (copy-button onclick, inline <style>
+// blocks) — tightening further needs a nonce-based rewrite of those pages.
+app.set('trust proxy', 1);
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", "'unsafe-inline'"],
+        scriptSrcAttr: ["'unsafe-inline'"],
+        styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+        fontSrc: ["'self'", 'https://fonts.gstatic.com'],
+        imgSrc: ["'self'", 'data:', 'https:'],
+        connectSrc: ["'self'"],
+        objectSrc: ["'none'"],
+        frameAncestors: ["'self'"],
+        upgradeInsecureRequests: [],
+      },
+    },
+    crossOriginEmbedderPolicy: false,
+  }),
+);
+
+// Public-endpoint rate limits — mitigates scraping/abuse without a login wall.
+const publicLimiter = rateLimit({ windowMs: 60_000, max: 30, standardHeaders: true, legacyHeaders: false });
+const chatLimiter = rateLimit({ windowMs: 60_000, max: 20, standardHeaders: true, legacyHeaders: false });
+const authedLimiter = rateLimit({ windowMs: 60_000, max: 60, standardHeaders: true, legacyHeaders: false });
 
 const PRODUCTS = {
   voice: {
@@ -677,12 +708,19 @@ async function handlePaidCheckout(session) {
 app.use(express.json({ limit: '2mb' }));
 app.use(express.urlencoded({ extended: true }));
 
+function timingSafeStrEqual(a, b) {
+  const bufA = Buffer.from(String(a || ''));
+  const bufB = Buffer.from(String(b || ''));
+  if (bufA.length !== bufB.length) return false;
+  return crypto.timingSafeEqual(bufA, bufB);
+}
 function admin(req) {
   const token = process.env.OPS_TOKEN || process.env.ARTICLES_API_TOKEN || '';
+  if (!token) return false;
   const auth = req.get('Authorization') || '';
   const bearer = auth.startsWith('Bearer ') ? auth.slice(7) : '';
   const h = req.get('X-Meridian-Token') || '';
-  return token && (bearer === token || h === token);
+  return timingSafeStrEqual(bearer, token) || timingSafeStrEqual(h, token);
 }
 
 async function sendEmail(to, subject, text, html) {
@@ -897,7 +935,7 @@ app.get('/api/handoff', (_req, res) => {
 /** Public AI guide chat (site assistant — no API key). Stateful concierge:
  *  client echoes back `state` each turn; can create real leads with consent.
  *  When Claude is configured, freeform turns use Claude Agent API; funnel steps stay deterministic. */
-app.post('/api/guide-chat', async (req, res) => {
+app.post('/api/guide-chat', chatLimiter, async (req, res) => {
   const message = String(req.body?.message || '').slice(0, 2000);
   const history = Array.isArray(req.body?.history) ? req.body.history.slice(-16) : [];
   const state = req.body?.state && typeof req.body.state === 'object' ? req.body.state : {};
@@ -1169,7 +1207,7 @@ app.get('/api/v1/agents/:id/billing', (req, res) => {
 });
 
 // Public funnel
-app.post('/api/funnel', async (req, res) => {
+app.post('/api/funnel', publicLimiter, async (req, res) => {
   const email = (req.body?.email || '').trim().toLowerCase();
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return res.status(400).json({ error: 'Valid email required' });
@@ -1616,7 +1654,7 @@ async function handleClaudeAgentTurn(req, res) {
 app.post('/api/v1/agents/:id/agent', handleClaudeAgentTurn);
 app.post('/api/v1/agents/:id/claude', handleClaudeAgentTurn);
 
-app.post('/api/v1/agents/:id/chat', async (req, res) => {
+app.post('/api/v1/agents/:id/chat', authedLimiter, async (req, res) => {
   const key = (req.get('Authorization') || '').replace(/^Bearer\s+/i, '');
   const agent = verifyAgentKey(req.params.id, key);
   if (!agent) return res.status(401).json({ error: 'Invalid credentials' });
@@ -1918,7 +1956,7 @@ async function startVoiceSubscriptionCheckout(req, res, planId) {
 }
 
 // Stripe kit checkout (one-time products) + Full Auto Install
-app.get('/checkout/:product', async (req, res) => {
+app.get('/checkout/:product', publicLimiter, async (req, res) => {
   // voice-pack and voice-sub handled above
   if (req.params.product === 'voice-pack' || req.params.product === 'voice-sub' || req.params.product === 'voice-pro') {
     return res.status(404).send('Use /checkout/voice-pack/:id or /checkout/voice-sub');
