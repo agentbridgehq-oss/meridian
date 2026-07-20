@@ -153,15 +153,18 @@
   .mdn-openbar-backdrop.hidden { opacity: 0; }
   /* Open composer bar — ChatGPT-style, docked bottom center (desktop) */
   .mdn-openbar {
-    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-    z-index: 79; width: min(640px, calc(100vw - 32px));
+    position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%);
+    z-index: 79; width: min(660px, calc(100vw - 32px));
     display: flex; gap: 10px; align-items: center;
-    background: #FFFFFF; border: 1px solid rgba(12,12,11,0.12);
-    border-radius: 20px; padding: 14px 14px 14px 20px;
-    box-shadow: 0 14px 44px rgba(12,12,11,0.14);
-    transition: opacity .2s, transform .2s, border-color .2s;
+    background: #FFFFFF; border: 1px solid rgba(12,12,11,0.09);
+    border-radius: 28px; padding: 15px 15px 15px 22px;
+    box-shadow: 0 1px 2px rgba(12,12,11,0.04), 0 2px 6px rgba(12,12,11,0.05), 0 18px 48px rgba(12,12,11,0.11);
+    transition: opacity .2s, transform .2s, border-color .18s, box-shadow .18s;
   }
-  .mdn-openbar:focus-within { border-color: rgba(12,12,11,0.28); }
+  .mdn-openbar:focus-within {
+    border-color: rgba(12,12,11,0.16);
+    box-shadow: 0 1px 2px rgba(12,12,11,0.04), 0 2px 6px rgba(12,12,11,0.05), 0 18px 48px rgba(12,12,11,0.13), 0 0 0 4px rgba(12,12,11,0.045);
+  }
   .mdn-openbar.hidden { opacity: 0; pointer-events: none; transform: translateX(-50%) translateY(8px); }
   .mdn-openbar .mdn-spark {
     flex-shrink: 0; width: 8px; height: 8px; border-radius: 50%;
@@ -170,15 +173,20 @@
   .mdn-openbar input {
     flex: 1; border: none; outline: none; background: transparent;
     font: inherit; font-size: 1.05rem; color: #0C0C0B; min-width: 0;
+    letter-spacing: -0.005em;
   }
-  .mdn-openbar input::placeholder { color: #6B6A66; }
+  .mdn-openbar input::placeholder { color: #8B8A86; }
   .mdn-openbar button {
     display: grid; place-items: center; flex-shrink: 0;
-    width: 34px; height: 34px; border-radius: 50%; border: none;
-    background: #0C0C0B; color: #fff; cursor: pointer;
-    transition: opacity .15s;
+    width: 36px; height: 36px; border-radius: 50%; border: none;
+    background: #E8E6E1; color: #A6A49E; cursor: pointer;
+    transition: background .16s, color .16s, transform .1s;
   }
-  .mdn-openbar button:hover { opacity: 0.85; }
+  .mdn-openbar button:active { transform: scale(0.92); }
+  .mdn-openbar.has-text button {
+    background: #0C0C0B; color: #fff;
+  }
+  .mdn-openbar.has-text button:hover { background: #262624; }
   .mdn-openbar button svg { width: 15px; height: 15px; }
   @media (max-width: 720px) { .mdn-openbar { display: none; } }
   /* Action chips returned by the guide agent */
@@ -238,6 +246,9 @@
   document.body.appendChild(openBarFade);
   document.body.appendChild(openBar);
   const openInput = openBar.querySelector('input');
+  openInput.addEventListener('input', () => {
+    openBar.classList.toggle('has-text', openInput.value.trim().length > 0);
+  });
 
   const backdrop = el('div', 'mdn-chat-backdrop');
   const drawer = el('div', 'mdn-chat-drawer');
@@ -303,6 +314,7 @@
     open();
     if (t) {
       openInput.value = '';
+      openBar.classList.remove('has-text');
       send(t);
     }
   });
