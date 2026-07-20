@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Meridian — Client intake</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F7F6F3; --elev: #fff; --ink: #0C0C0B; --muted: #6B6A66;
+    --line: rgba(12,12,11,0.1); --good: #1F7A4C;
+    --serif: 'Instrument Serif', Georgia, serif;
+    --sans: 'Inter', system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: var(--sans); background: var(--bg); color: var(--ink);
+    line-height: 1.5; -webkit-font-smoothing: antialiased;
+    min-height: 100vh; padding: 32px 16px 64px;
+  }
+  .wrap { max-width: 560px; margin: 0 auto; }
+  .brand {
+    display: flex; align-items: center; gap: 10px;
+    font-weight: 600; margin-bottom: 28px; text-decoration: none; color: inherit;
+  }
+  .mark {
+    width: 28px; height: 28px; border-radius: 8px; background: var(--ink);
+    display: grid; place-items: center;
+  }
+  .mark svg { width: 14px; height: 14px; }
+  h1 {
+    font-family: var(--serif); font-weight: 400;
+    font-size: clamp(1.85rem, 5vw, 2.4rem);
+    letter-spacing: -0.02em; line-height: 1.15; margin-bottom: 8px;
+  }
+  .lede { color: var(--muted); margin-bottom: 28px; font-size: 0.95rem; }
+  .card {
+    background: var(--elev); border: 1px solid var(--line);
+    border-radius: 20px; padding: 28px 24px;
+  }
+  label { display: block; font-size: 0.78rem; font-weight: 600; color: var(--muted); margin: 14px 0 6px; }
+  label:first-of-type { margin-top: 0; }
+  input, select, textarea {
+    width: 100%; font: inherit; font-size: 0.95rem;
+    padding: 12px 14px; border-radius: 12px;
+    border: 1px solid var(--line); background: var(--bg);
+  }
+  textarea { min-height: 80px; resize: vertical; }
+  .btn {
+    display: inline-flex; width: 100%; justify-content: center;
+    margin-top: 22px; padding: 14px 20px; border: none; border-radius: 999px;
+    background: var(--ink); color: #fff; font: inherit; font-weight: 600;
+    cursor: pointer;
+  }
+  .btn:disabled { opacity: 0.6; cursor: wait; }
+  .err, .ok {
+    margin-top: 16px; padding: 14px 16px; border-radius: 12px; font-size: 0.9rem;
+  }
+  .err { background: #FDF2F2; color: #7A1F1F; display: none; }
+  .ok { background: #F0F7F3; color: #145C38; display: none; white-space: pre-wrap; font-family: ui-monospace, monospace; font-size: 0.82rem; }
+  .ok.show, .err.show { display: block; }
+  .token-missing { color: var(--muted); padding: 40px 0; text-align: center; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="brand" href="/">
+    <span class="mark"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2"><path d="M4 12h16M12 4v16"/></svg></span>
+    Meridian
+  </a>
+  <h1>Client intake</h1>
+  <p class="lede">Fill this once. Meridian provisions your agent API key and fires webhooks to your stack.</p>
+
+  <div id="missing" class="token-missing" hidden>
+    <p>Missing intake link. Use the full URL from your proposal email.</p>
+    <p style="margin-top:12px"><a href="/#proposal">Request a proposal →</a></p>
+  </div>
+
+  <div class="card" id="form-card">
+    <form id="intake-form">
+      <label for="businessName">Business name *</label>
+      <input id="businessName" name="businessName" required>
+
+      <label for="niche">Niche / industry</label>
+      <input id="niche" name="niche" placeholder="Dental, HVAC, med spa…">
+
+      <label for="hours">Business hours</label>
+      <input id="hours" name="hours" placeholder="Mon–Fri 8–6, Sat 9–1">
+
+      <label for="phone">Main phone</label>
+      <input id="phone" name="phone" type="tel">
+
+      <label for="website">Website</label>
+      <input id="website" name="website" type="url" placeholder="https://">
+
+      <label for="calendar">Calendar tool</label>
+      <input id="calendar" name="calendar" placeholder="Google Calendar, Calendly, ServiceTitan…">
+
+      <label for="crm">CRM / lead source</label>
+      <input id="crm" name="crm" placeholder="GoHighLevel, HubSpot, forms…">
+
+      <label for="services">Services &amp; rough pricing language</label>
+      <textarea id="services" name="services" placeholder="What you sell and how to talk about price"></textarea>
+
+      <label for="faqs">Top FAQs the agent should answer</label>
+      <textarea id="faqs" name="faqs"></textarea>
+
+      <label for="bookingRules">Booking rules</label>
+      <textarea id="bookingRules" name="bookingRules" placeholder="Min notice, blackout days, deposit rules…"></textarea>
+
+      <label for="humanTransfer">Human transfer / emergency number</label>
+      <input id="humanTransfer" name="humanTransfer">
+
+      <label for="tone">Tone</label>
+      <select id="tone" name="tone">
+        <option value="professional">Professional</option>
+        <option value="warm">Warm &amp; friendly</option>
+        <option value="direct">Direct / no-nonsense</option>
+      </select>
+
+      <label for="primaryNeed">Primary agent focus</label>
+      <select id="primaryNeed" name="primaryNeed">
+        <option value="full">Full stack</option>
+        <option value="voice">Voice</option>
+        <option value="sales">Sales</option>
+        <option value="booking">Booking</option>
+      </select>
+
+      <label for="notes">Notes</label>
+      <textarea id="notes" name="notes"></textarea>
+
+      <button type="submit" class="btn" id="btn">Connect agent API</button>
+    </form>
+    <div class="err" id="err"></div>
+    <div class="ok" id="ok"></div>
+  </div>
+</div>
+<script>
+(function () {
+  // Support /intake/:token and ?token=
+  let token = new URLSearchParams(location.search).get('token') || '';
+  const parts = location.pathname.split('/').filter(Boolean);
+  if (parts[0] === 'intake' && parts[1]) token = parts[1];
+
+  if (!token) {
+    document.getElementById('missing').hidden = false;
+    document.getElementById('form-card').hidden = true;
+    return;
+  }
+
+  const form = document.getElementById('intake-form');
+  const btn = document.getElementById('btn');
+  const err = document.getElementById('err');
+  const ok = document.getElementById('ok');
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    err.classList.remove('show');
+    ok.classList.remove('show');
+    btn.disabled = true;
+    btn.textContent = 'Provisioning…';
+    const body = Object.fromEntries(new FormData(form).entries());
+    try {
+      const res = await fetch('/api/intake/' + encodeURIComponent(token), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Intake failed');
+      const c = data.connection || {};
+      const verified = data.verified || data.readyToSell;
+      const guide = data.guideUrl || '';
+      ok.innerHTML =
+        '<strong>' + (verified ? 'Agent verified — ready for your systems' : 'Provisioned — verification needs a re-check') + '</strong><br><br>' +
+        'Agent ID: ' + (c.id || '') + '<br>' +
+        'API Key (save once): <code style="word-break:break-all">' + (c.apiKey || '') + '</code><br><br>' +
+        (guide
+          ? '<a href="' + guide + '" style="font-weight:600;color:#0C0C0B">Open short connect guide (API + webhooks) →</a><br><br>'
+          : '') +
+        'Chat: POST ' + (c.endpoints?.chat || '') + '<br>' +
+        'Voice turn: POST ' + (c.endpoints?.voiceTurn || '') + '<br>' +
+        'Auth: Bearer &lt;apiKey&gt; · Body: {"message":"hours?"}<br><br>' +
+        'Guide emailed if Resend is configured.';
+      ok.classList.add('show');
+      form.style.display = 'none';
+      if (guide && verified) {
+        setTimeout(function () { window.location.href = guide; }, 1200);
+      }
+    } catch (ex) {
+      err.textContent = ex.message || 'Error';
+      err.classList.add('show');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Connect agent API';
+    }
+  });
+})();
+</script>
+<script src="/js/meridian-chat.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Meridian — Voice, Sales &amp; Booking Agents</title>
+<meta name="description" content="Meridian Agency installs three precision AI agents: Voice, Sales, and Booking for local business. Proposal, intake, and live API.">
+<meta property="og:title" content="Meridian — Agents that answer, sell, and book">
+<meta property="og:description" content="Professional AI agent systems for local business. Voice · Sales · Booking.">
+<meta name="theme-color" content="#0C0C0B">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F7F6F3;
+    --bg-elev: #FFFFFF;
+    --ink: #0C0C0B;
+    --muted: #6B6A66;
+    --line: rgba(12,12,11,0.08);
+    --line-strong: rgba(12,12,11,0.14);
+    --soft: #E8E6E1;
+    --good: #1F7A4C;
+    --radius: 20px;
+    --max: 1120px;
+    --serif: 'Instrument Serif', Georgia, serif;
+    --sans: 'Inter', system-ui, sans-serif;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: inherit; }
+  .mist {
+    position: fixed; inset: 0; z-index: -1; pointer-events: none;
+    background:
+      radial-gradient(ellipse 55% 42% at 12% 8%, rgba(31,122,76,0.055), transparent 62%),
+      radial-gradient(ellipse 50% 40% at 88% 28%, rgba(255,255,255,0.55), transparent 65%),
+      radial-gradient(ellipse 62% 46% at 45% 96%, rgba(74,73,69,0.045), transparent 68%);
+  }
+  .nav {
+    position: sticky; top: 0; z-index: 50;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 16px; padding: 16px 24px;
+    background: rgba(247,246,243,0.82);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--line);
+  }
+  .brand {
+    display: flex; align-items: center; gap: 10px;
+    text-decoration: none; font-weight: 600; letter-spacing: -0.02em;
+  }
+  .brand-mark {
+    width: 28px; height: 28px; border-radius: 8px;
+    background: var(--ink);
+    display: grid; place-items: center;
+  }
+  .brand-mark svg { width: 14px; height: 14px; }
+  .nav-links { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .nav-links a.ghost {
+    text-decoration: none; font-size: 0.875rem; font-weight: 500; color: var(--muted);
+    padding: 8px 12px; border-radius: 999px;
+  }
+  .nav-links a.ghost:hover { color: var(--ink); background: var(--soft); }
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    font-family: var(--sans); font-weight: 600; font-size: 0.9rem;
+    text-decoration: none; border-radius: 999px; padding: 12px 20px;
+    border: 1px solid transparent; transition: transform .15s, background .15s;
+    cursor: pointer; background: none;
+  }
+  .btn:active { transform: scale(0.98); }
+  .btn-dark { background: var(--ink); color: #fff; }
+  .btn-dark:hover { background: #222; }
+  .btn-light { background: var(--bg-elev); color: var(--ink); border-color: var(--line-strong); }
+  .btn-light:hover { background: var(--soft); }
+  .btn-lg { padding: 16px 26px; font-size: 0.95rem; }
+  .hero {
+    /* Premium agency frame: content-width, not full-bleed shout */
+    max-width: var(--max);
+    margin: 0 auto;
+    padding: clamp(22px, 4.5vw, 52px) 24px clamp(40px, 7vw, 72px);
+    text-align: center;
+  }
+  .eyebrow {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 0.6875rem; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 1.35rem;
+  }
+  .eyebrow i {
+    width: 5px; height: 5px; border-radius: 50%; background: var(--good);
+    box-shadow: 0 0 0 3px rgba(31,122,76,0.14);
+  }
+  /*
+   * Hero title — premium B2B / agency scale (not billboard).
+   * Research: serif = trust/authority for services; oversized display
+   * reads “loud startup,” refined 2.5–3.75rem range + open tracking
+   * reads high-ticket, calm confidence. Ideal measure ~14–18ch.
+   * Hierarchy: title leads eye → lede → CTA (Fitts + scan order).
+   */
+  .hero h1 {
+    font-family: var(--serif);
+    font-weight: 400;
+    font-size: clamp(2.65rem, 5.3vw + 0.75rem, 4.5rem);
+    line-height: 1.12;
+    letter-spacing: -0.018em;
+    max-width: 15.5ch;
+    width: 100%;
+    margin: 0 auto 0.85rem;
+    color: var(--ink);
+    font-feature-settings: "liga" 1, "kern" 1;
+    text-wrap: balance;
+  }
+  .hero h1 em {
+    font-style: italic;
+    font-weight: 400;
+    color: #4A4945;
+    letter-spacing: -0.012em;
+  }
+  .hero-lede {
+    font-size: clamp(1rem, 1.4vw + 0.75rem, 1.125rem);
+    color: var(--muted);
+    max-width: 32rem;
+    margin: 0 auto 1.35rem;
+    line-height: 1.7;
+    letter-spacing: 0.005em;
+    font-weight: 400;
+  }
+  .hero-cta { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin-bottom: 16px; }
+  .hero-note { font-size: 0.8rem; color: var(--muted); }
+  .live-strip { max-width: var(--max); margin: 0 auto 8px; padding: 0 24px; }
+  .live-panel {
+    background: var(--bg-elev);
+    border: 1px solid var(--line);
+    border-radius: calc(var(--radius) + 4px);
+    padding: 20px 22px;
+    display: grid; gap: 14px;
+    box-shadow: 0 1px 0 rgba(255,255,255,0.8) inset, 0 24px 60px rgba(12,12,11,0.04);
+  }
+  @media (min-width: 800px) {
+    .live-panel { grid-template-columns: 1.1fr 1fr; align-items: center; padding: 28px 32px; }
+  }
+  .live-label {
+    font-size: 0.72rem; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 10px;
+  }
+  .live-title {
+    font-family: var(--serif); font-size: clamp(1.5rem, 3vw, 2rem);
+    letter-spacing: -0.02em; line-height: 1.15; margin-bottom: 8px;
+  }
+  .live-copy { color: var(--muted); font-size: 0.95rem; max-width: 36ch; }
+  .pills { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+  .pill {
+    font-size: 0.78rem; font-weight: 500;
+    background: var(--bg); border: 1px solid var(--line);
+    padding: 7px 12px; border-radius: 999px;
+  }
+  .phone-mock {
+    background: #111; color: #F5F5F4; border-radius: 24px;
+    padding: 18px 16px 20px; max-width: 340px; margin-left: auto;
+    box-shadow: 0 30px 60px rgba(0,0,0,0.18);
+  }
+  .phone-bar { display: flex; justify-content: space-between; font-size: 0.7rem; color: #A1A1AA; margin-bottom: 14px; }
+  .bubble {
+    font-size: 0.82rem; line-height: 1.45; padding: 10px 12px; border-radius: 14px;
+    margin-bottom: 8px; max-width: 92%;
+  }
+  .bubble.them { background: #27272A; border-bottom-left-radius: 4px; }
+  .bubble.us { background: #FAFAF9; color: #111; margin-left: auto; border-bottom-right-radius: 4px; }
+  .bubble .who { font-size: 0.65rem; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.55; margin-bottom: 4px; }
+  .wrap { max-width: var(--max); margin: 0 auto; padding: 0 24px 96px; }
+  .section { padding: clamp(48px, 8vw, 80px) 0 0; }
+  .section-head { max-width: 36rem; margin-bottom: 32px; }
+  .section-head h2 {
+    font-family: var(--serif); font-weight: 400;
+    font-size: clamp(2rem, 4vw, 2.75rem);
+    letter-spacing: -0.025em; line-height: 1.1; margin-bottom: 12px;
+  }
+  .section-head p { color: var(--muted); font-size: 1.05rem; }
+  .agent-grid { display: grid; gap: 16px; }
+  @media (min-width: 900px) { .agent-grid { grid-template-columns: repeat(3, 1fr); } }
+  .agent {
+    background: var(--bg-elev);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 28px 24px 24px;
+    display: flex; flex-direction: column;
+    transition: border-color .2s, box-shadow .2s, transform .2s;
+  }
+  .agent:hover {
+    border-color: var(--line-strong);
+    box-shadow: 0 20px 50px rgba(12,12,11,0.06);
+    transform: translateY(-2px);
+  }
+  .agent-num {
+    font-size: 0.72rem; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 18px;
+  }
+  .agent h3 {
+    font-family: var(--serif); font-weight: 400; font-size: 1.75rem;
+    letter-spacing: -0.02em; margin-bottom: 10px;
+  }
+  .agent .desc { color: var(--muted); font-size: 0.95rem; margin-bottom: 20px; flex: 1; }
+  .agent ul { list-style: none; margin: 0 0 24px; }
+  .agent li {
+    font-size: 0.88rem; color: #3F3F3A; padding: 8px 0;
+    border-top: 1px solid var(--line);
+    display: flex; gap: 10px;
+  }
+  .agent li span { color: var(--good); font-weight: 700; }
+  .agent-price { display: flex; align-items: baseline; gap: 8px; margin-bottom: 16px; }
+  .agent-price b {
+    font-family: var(--serif); font-size: 2.1rem; font-weight: 400; letter-spacing: -0.02em;
+  }
+  .agent-price small { color: var(--muted); font-size: 0.85rem; }
+  .stack {
+    margin-top: 20px;
+    background: var(--ink);
+    color: #F5F5F4;
+    border-radius: calc(var(--radius) + 8px);
+    padding: clamp(28px, 5vw, 48px);
+    display: grid; gap: 28px;
+  }
+  @media (min-width: 860px) {
+    .stack { grid-template-columns: 1.25fr 0.85fr; align-items: center; }
+  }
+  .stack h2 {
+    font-family: var(--serif); font-weight: 400;
+    font-size: clamp(2rem, 3.5vw, 2.6rem);
+    letter-spacing: -0.025em; line-height: 1.1; margin-bottom: 12px;
+  }
+  .stack p { color: #A1A1AA; font-size: 1rem; max-width: 38ch; margin-bottom: 20px; }
+  .stack-list { list-style: none; display: grid; gap: 8px; margin-bottom: 24px; }
+  .stack-list li { font-size: 0.92rem; color: #D4D4D8; }
+  .stack-list li::before { content: '— '; color: #71717A; }
+  .stack-side {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 18px;
+    padding: 24px;
+  }
+  .stack-side .big {
+    font-family: var(--serif); font-size: 3rem; letter-spacing: -0.03em; margin-bottom: 4px;
+  }
+  .stack-side .sub { color: #A1A1AA; font-size: 0.9rem; margin-bottom: 20px; }
+  .stack .btn-dark { background: #fff; color: #111; }
+  .stack .btn-dark:hover { background: #E4E4E7; }
+  .fine { font-size: 0.78rem; color: #71717A; margin-top: 12px; }
+  .steps { display: grid; gap: 12px; }
+  @media (min-width: 800px) { .steps { grid-template-columns: repeat(3, 1fr); } }
+  .step {
+    background: var(--bg-elev); border: 1px solid var(--line);
+    border-radius: var(--radius); padding: 24px;
+  }
+  .step b {
+    display: block; font-size: 0.72rem; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 12px; font-weight: 600;
+  }
+  .step h3 {
+    font-family: var(--serif); font-weight: 400; font-size: 1.45rem;
+    letter-spacing: -0.02em; margin-bottom: 8px;
+  }
+  .step p { color: var(--muted); font-size: 0.92rem; }
+  .funnel {
+    margin-top: 48px;
+    background: var(--bg-elev);
+    border: 1px solid var(--line);
+    border-radius: calc(var(--radius) + 4px);
+    padding: clamp(24px, 4vw, 40px);
+  }
+  .funnel h2 {
+    font-family: var(--serif); font-weight: 400;
+    font-size: clamp(1.75rem, 3vw, 2.25rem);
+    letter-spacing: -0.02em; margin-bottom: 8px;
+  }
+  .funnel > p { color: var(--muted); margin-bottom: 24px; max-width: 42ch; }
+  .form-grid {
+    display: grid; gap: 12px;
+  }
+  @media (min-width: 640px) {
+    .form-grid { grid-template-columns: 1fr 1fr; }
+    .form-grid .full { grid-column: 1 / -1; }
+  }
+  label { display: block; font-size: 0.78rem; font-weight: 600; margin-bottom: 6px; color: var(--muted); }
+  input, select, textarea {
+    width: 100%; font-family: var(--sans); font-size: 0.95rem;
+    padding: 12px 14px; border-radius: 12px;
+    border: 1px solid var(--line-strong); background: var(--bg);
+    color: var(--ink);
+  }
+  input:focus, select:focus, textarea:focus {
+    outline: 2px solid var(--ink); outline-offset: 1px;
+  }
+  .consent {
+    display: flex; gap: 10px; align-items: flex-start;
+    font-size: 0.85rem; color: var(--muted); margin: 8px 0 16px;
+  }
+  .consent input { width: auto; margin-top: 3px; }
+  .funnel-result {
+    display: none; margin-top: 20px; padding: 18px;
+    background: #F0F7F3; border: 1px solid rgba(31,122,76,0.2);
+    border-radius: 14px; color: #145C38;
+  }
+  .funnel-result.show { display: block; }
+  .funnel-result a { color: #0C0C0B; font-weight: 600; }
+  details {
+    border-top: 1px solid var(--line);
+    padding: 18px 0;
+  }
+  details:last-child { border-bottom: 1px solid var(--line); }
+  summary {
+    font-weight: 600; font-size: 1rem; cursor: pointer; list-style: none;
+    display: flex; justify-content: space-between; gap: 12px;
+  }
+  summary::-webkit-details-marker { display: none; }
+  summary::after { content: '+'; color: var(--muted); font-weight: 400; }
+  details[open] summary::after { content: '−'; }
+  details p { color: var(--muted); margin-top: 10px; font-size: 0.95rem; max-width: 52ch; }
+  footer {
+    border-top: 1px solid var(--line);
+    padding: 28px 24px 48px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.82rem;
+  }
+  footer a { color: var(--ink); text-decoration: none; font-weight: 500; }
+  .toast {
+    display: none; position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+    background: var(--ink); color: #fff; padding: 12px 20px; border-radius: 999px;
+    font-size: 0.9rem; z-index: 100; box-shadow: 0 12px 40px rgba(0,0,0,0.2);
+  }
+  .toast.show { display: block; }
+  @media (max-width: 640px) {
+    .nav { padding: 12px 16px; }
+    .hero, .wrap, .live-strip { padding-left: 16px; padding-right: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="mist" aria-hidden="true"></div>
+
+<header class="nav">
+  <a class="brand" href="/">
+    <span class="brand-mark" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2"><path d="M4 12h16M12 4v16"/></svg>
+    </span>
+    Meridian
+  </a>
+  <div class="nav-links">
+    <a class="ghost" href="#agents">Agents</a>
+    <a class="ghost" href="#method">Method</a>
+    <a class="ghost" href="/why-agents">Why agents</a>
+    <a class="ghost" href="/install">Install guide</a>
+    <a class="ghost" href="/setup">Setup wizard</a>
+    <a class="ghost" href="#proposal">Proposal</a>
+    <a class="btn btn-dark" href="#stack">Get Meridian</a>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="eyebrow"><i></i> AI agency · Live</div>
+  <h1>Agents that <em>answer, sell,</em> and book.</h1>
+  <p class="hero-lede">
+    Meridian installs Voice, Sales, and Booking agents for local businesses and the operators who serve them.
+    Three systems. Clear outcomes. Kits you sell and deliver — or full done-for-you installs.
+  </p>
+  <div class="hero-cta">
+    <a class="btn btn-dark btn-lg" href="#stack">Get the full stack — $997</a>
+    <a class="btn btn-light btn-lg" href="#proposal">Get a proposal</a>
+    <a class="btn btn-light btn-lg" href="/why-agents">Why these agents</a>
+  </div>
+  <p class="hero-note">Meridian Agency · Instant kits · Stripe · Email + webhooks · CASL-aware</p>
+</section>
+
+<div class="live-strip">
+  <div class="live-panel">
+    <div>
+      <div class="live-label">What Meridian does</div>
+      <div class="live-title">Every missed call is a lost customer.</div>
+      <p class="live-copy">
+        Voice that answers, sales that follow up in under a minute, booking that fills the calendar.
+        Same stack winning agencies sell — packaged for install.
+      </p>
+      <div class="pills">
+        <span class="pill">Voice</span>
+        <span class="pill">Platform voice</span>
+        <span class="pill">Sales follow-up</span>
+        <span class="pill">Appointments</span>
+        <span class="pill">API + webhooks</span>
+      </div>
+    </div>
+    <div class="phone-mock" aria-hidden="true">
+      <div class="phone-bar"><span>Meridian · Live</span><span>9:41</span></div>
+      <div class="bubble them">
+        <div class="who">Caller</div>
+        Can you fit me in this week for an estimate?
+      </div>
+      <div class="bubble us">
+        <div class="who">Meridian Voice</div>
+        Yes — Thursday 2:00 or Friday 10:30. Which works?
+      </div>
+      <div class="bubble them">
+        <div class="who">Caller</div>
+        Thursday 2:00.
+      </div>
+      <div class="bubble us">
+        <div class="who">Meridian Voice</div>
+        Booked. You’ll get a confirmation text shortly.
+      </div>
+    </div>
+  </div>
+</div>
+
+<main class="wrap">
+
+  <section class="section" id="agents">
+    <div class="section-head">
+      <h2>Three agents. One operating system.</h2>
+      <p>Each kit is a complete delivery system: intake, prompts, stack, go-live checklist, and the sales language you use with clients.</p>
+    </div>
+
+    <div class="agent-grid">
+      <article class="agent" id="voice">
+        <div class="agent-num">01 · Voice</div>
+        <h3>Voice Agent</h3>
+        <p class="desc">A 24/7 receptionist that answers, qualifies, books, and transfers — without missing after-hours revenue.</p>
+        <ul>
+          <li><span>✓</span> System prompt &amp; call flow</li>
+          <li><span>✓</span> Client intake sheet</li>
+          <li><span>✓</span> Meridian brain + voice-turn API</li>
+          <li><span>✓</span> Platform TTS (Retell / Vapi / Bland)</li>
+        </ul>
+        <div class="agent-price"><b>$497</b><small>one-time kit</small></div>
+        <a class="btn btn-dark" href="/checkout/voice">Buy Voice Agent</a>
+        <p class="fine" style="margin-top:10px">Premium xAI speech is pay-as-you-go below — only billed when it speaks.</p>
+      </article>
+
+      <article class="agent" id="sales">
+        <div class="agent-num">02 · Sales</div>
+        <h3>Sales Agent</h3>
+        <p class="desc">Instant lead follow-up by SMS, chat, or email — qualifies, sends next steps, and books before the lead cools.</p>
+        <ul>
+          <li><span>✓</span> Master sales prompt</li>
+          <li><span>✓</span> Consent-aware sequences</li>
+          <li><span>✓</span> Qualification scorecard</li>
+          <li><span>✓</span> CRM go-live list</li>
+        </ul>
+        <div class="agent-price"><b>$497</b><small>one-time kit</small></div>
+        <a class="btn btn-dark" href="/checkout/sales">Buy Sales Agent</a>
+        <a class="btn btn-light" href="/checkout/auto_sales" style="margin-top:8px">Full Auto Sales · $997</a>
+        <p class="fine" style="margin-top:10px">Pipeline: form → <code>/sales/lead</code> → draft SMS → you send (CASL)</p>
+      </article>
+
+      <article class="agent" id="booking">
+        <div class="agent-num">03 · Booking</div>
+        <h3>Booking Agent</h3>
+        <p class="desc">Schedules, reschedules, confirms, and recovers no-shows — so the calendar stays full without the admin drag.</p>
+        <ul>
+          <li><span>✓</span> Scheduler system prompt</li>
+          <li><span>✓</span> Reminder &amp; recovery copy</li>
+          <li><span>✓</span> No-show playbook</li>
+          <li><span>✓</span> Delivery sprint checklist</li>
+        </ul>
+        <div class="agent-price"><b>$497</b><small>one-time kit</small></div>
+        <a class="btn btn-dark" href="/checkout/booking">Buy Booking Agent</a>
+      </article>
+    </div>
+
+    <div class="stack" id="voice-usage" style="margin-bottom:28px">
+      <div>
+        <div class="live-label" style="color:#A1A1AA">Usage billing · high margin</div>
+        <h2>Premium voice — pay as you go</h2>
+        <p>
+          Hosted neural speech (xAI) runs through Meridian. Customers prepay packs or subscribe.
+          You only spend on TTS when a turn succeeds — list price is set far above provider cost so ROI stays locked in.
+        </p>
+        <ul class="stack-list">
+          <li><strong>Pay as you go packs</strong> — cash first, turns second</li>
+          <li><strong>Voice Premium $197/mo</strong> — 300 turns included, then overage</li>
+          <li><strong>Voice Pro $497/mo</strong> — 1,200 turns included</li>
+          <li>Failed audio is not charged · platform Retell/Vapi text path stays free at Meridian</li>
+        </ul>
+        <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:8px">
+          <a class="btn btn-dark" href="/checkout/voice-pack/starter">100 turns · $49</a>
+          <a class="btn btn-light" href="/checkout/voice-pack/growth">500 turns · $199</a>
+          <a class="btn btn-light" href="/checkout/voice-pack/scale">2,000 turns · $697</a>
+        </div>
+        <p class="fine">About $0.35–$0.49 per turn to the customer · your provider cost is a small fraction</p>
+      </div>
+      <div class="stack-side">
+        <div class="big">$197</div>
+        <div class="sub">/mo Voice Premium · 300 hosted turns</div>
+        <a class="btn btn-dark" href="/checkout/voice-sub" style="width:100%;margin-bottom:10px">Start subscription</a>
+        <a class="btn btn-light" href="/checkout/voice-pro" style="width:100%">Pro $497/mo · 1,200 turns</a>
+        <p class="fine" style="margin-top:16px">Overage billed as you go on the next invoice.</p>
+      </div>
+    </div>
+
+    <div class="stack" id="full-auto" style="margin-bottom:28px;background:linear-gradient(145deg,#0C0C0B 0%,#1a1a18 100%);color:#F5F5F4">
+      <div>
+        <div class="live-label" style="color:#A1A1AA">Pay more · do almost nothing</div>
+        <h2 style="color:#fff">Full Auto Install</h2>
+        <p style="color:#A1A1AA">
+          You pay a higher one-time fee. Meridian provisions your agent, smoke-tests it, builds widget + API + n8n + phone packs with OpenClaw,
+          and drops you into a short wizard. <strong style="color:#fff">Your work:</strong> attach a phone number in Retell/Vapi and paste the widget if you want it on the site.
+        </p>
+        <ul class="stack-list" style="color:#D4D4D4">
+          <li>Agent built + verified the moment you pay</li>
+          <li>Checkout collects hours &amp; services — no long forms after</li>
+          <li>OpenClaw priority pack + setup wizard pre-filled</li>
+          <li>Starter premium voice turns included</li>
+          <li>Only carrier step stays with you (phone number ownership)</li>
+        </ul>
+        <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:8px">
+          <a class="btn btn-dark" href="/checkout/auto_voice" style="background:#fff;color:#0C0C0B">Voice Auto · $997</a>
+          <a class="btn btn-light" href="/checkout/auto" style="border-color:#444;color:#fff;background:transparent">Full Auto · $1,497</a>
+          <a class="btn btn-light" href="/checkout/auto_stack" style="border-color:#444;color:#fff;background:transparent">Stack Auto · $2,497</a>
+          <a class="btn btn-light" href="/checkout/auto_sales" style="border-color:#444;color:#fff;background:transparent">Sales Auto · $997</a>
+        </div>
+        <p class="fine" style="color:#71717A;margin-top:12px">Secure Stripe · Instant provision · Wizard at /setup after pay</p>
+      </div>
+      <div class="stack-side" style="background:rgba(255,255,255,0.04);border-color:rgba(255,255,255,0.1)">
+        <div class="big" style="color:#fff">$1,497</div>
+        <div class="sub" style="color:#A1A1AA">Full Auto · most businesses</div>
+        <a class="btn btn-dark" href="/checkout/auto" style="width:100%;background:#fff;color:#0C0C0B;margin-bottom:10px">Pay for Full Auto</a>
+        <a class="btn btn-light" href="/setup" style="width:100%;border-color:#444;color:#fff;background:transparent">Preview setup wizard</a>
+        <p class="fine" style="margin-top:16px;color:#71717A">DIY kits from $497 if you prefer to install yourself.</p>
+      </div>
+    </div>
+
+    <div class="stack" id="stack">
+      <div>
+        <div class="live-label" style="color:#A1A1AA">Recommended</div>
+        <h2>Meridian Full Stack</h2>
+        <p>
+          All three agent kits plus the agency playbook: retail pricing, 14-day delivery sprint,
+          niche focus, and the funnel to get clients.
+        </p>
+        <ul class="stack-list">
+          <li>Voice + Sales + Booking kits</li>
+          <li>Suggested client pricing ($797–$3,497 setups)</li>
+          <li>Order of install (booking → sales → voice)</li>
+          <li>Compliance notes for SMS / consent</li>
+        </ul>
+        <a class="btn btn-dark btn-lg" href="/checkout/stack">Get Full Stack — $997</a>
+        <p class="fine">Secure Stripe · Instant kit access · Meridian standalone product</p>
+      </div>
+      <div class="stack-side">
+        <div class="big">$997</div>
+        <div class="sub">One-time · all three agents + playbook</div>
+        <a class="btn btn-dark" href="/checkout/stack" style="width:100%">Checkout with Stripe</a>
+        <p class="fine" style="margin-top:16px">Prefer singles? Each agent is $497.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="method">
+    <div class="section-head">
+      <h2>How Meridian is meant to be used</h2>
+      <p>Specialized agents, clear outcomes, short path from interest to paid install — with deliverables you can ship.</p>
+    </div>
+    <div class="steps">
+      <div class="step">
+        <b>Step 01</b>
+        <h3>Sell the outcome</h3>
+        <p>Missed calls. Dead leads. Empty calendar slots. Not “AI.” Not jargon.</p>
+      </div>
+      <div class="step">
+        <b>Step 02</b>
+        <h3>Deliver from the kit</h3>
+        <p>Intake → stack → prompts → test → go live. Same SOP for every client.</p>
+      </div>
+      <div class="step">
+        <b>Step 03</b>
+        <h3>Connect the API</h3>
+        <p>Proposal → intake form → Meridian provisions an agent key and webhooks to your stack.</p>
+      </div>
+    </div>
+    <p style="margin-top:28px;color:var(--muted);font-size:0.95rem;max-width:40rem">
+      Want the full story?
+      <a href="/why-agents" style="font-weight:600;color:var(--ink);text-decoration:underline;text-underline-offset:3px">Read: Why these agents — and how they work →</a>
+    </p>
+  </section>
+
+  <section class="section" id="proposal">
+    <div class="funnel">
+      <h2>Get a 1-page proposal</h2>
+      <p>Tell us the business. We’ll generate a proposal and an intake link that connects your agent API. Consent required — no spam.</p>
+      <form id="funnel-form">
+        <div class="form-grid">
+          <div>
+            <label for="email">Work email *</label>
+            <input id="email" name="email" type="email" required placeholder="you@business.com" autocomplete="email">
+          </div>
+          <div>
+            <label for="businessName">Business name</label>
+            <input id="businessName" name="businessName" type="text" placeholder="Acme Plumbing">
+          </div>
+          <div>
+            <label for="niche">Niche</label>
+            <input id="niche" name="niche" type="text" placeholder="HVAC, dental, home services…">
+          </div>
+          <div>
+            <label for="primaryNeed">Primary need</label>
+            <select id="primaryNeed" name="primaryNeed">
+              <option value="full">Full stack (recommended)</option>
+              <option value="voice">Voice only</option>
+              <option value="sales">Sales only</option>
+              <option value="booking">Booking only</option>
+            </select>
+          </div>
+          <div class="full">
+            <label for="phone">Phone (optional)</label>
+            <input id="phone" name="phone" type="tel" placeholder="+1 …">
+          </div>
+        </div>
+        <label class="consent">
+          <input type="checkbox" name="consent" id="consent" required>
+          <span>I agree Meridian may email me this proposal and intake link. I can reply STOP anytime. No purchased lists. See our <a href="/privacy" target="_blank" style="color:inherit;text-decoration:underline">Privacy Policy</a> and <a href="/terms" target="_blank" style="color:inherit;text-decoration:underline">Terms</a>.</span>
+        </label>
+        <button type="submit" class="btn btn-dark btn-lg" id="funnel-btn">Send my proposal</button>
+      </form>
+      <div class="funnel-result" id="funnel-result" role="status"></div>
+    </div>
+  </section>
+
+  <section class="section" id="faq">
+    <div class="section-head">
+      <h2>FAQ</h2>
+    </div>
+    <details>
+      <summary>What do I get when I buy a kit?</summary>
+      <p>Install playbooks: prompts, intake sheets, go-live checklists, and sales language so you can deliver or resell installs.</p>
+    </details>
+    <details>
+      <summary>What is the proposal funnel?</summary>
+      <p>Consent-based lead capture → auto proposal → secure intake form → Meridian provisions an agent API key (<code>mdn_…</code>) and can fire webhooks to your CRM or n8n.</p>
+    </details>
+    <details>
+      <summary>Do you cold email?</summary>
+      <p>Never without explicit ops approval. Drafts exist; send requires <code>approved_send</code>. Funnel always requires consent.</p>
+    </details>
+  </section>
+</main>
+
+<footer>
+  <p><strong>Meridian Agency</strong> — Voice · Sales · Booking</p>
+  <p style="margin-top:8px">
+    <a href="/#agents">Agents</a> ·
+    <a href="/why-agents">Why agents</a> ·
+    <a href="/install">Install guide</a> ·
+    <a href="/#proposal">Proposal</a> ·
+    <a href="/privacy">Privacy</a> ·
+    <a href="/terms">Terms</a> ·
+    <a href="/ops">Ops</a> ·
+    <a href="/health">Health</a>
+  </p>
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<script src="/js/meridian-chat.js" defer></script>
+<script>
+(function () {
+  const params = new URLSearchParams(location.search);
+  const bought = params.get('purchased');
+  if (bought) {
+    const t = document.getElementById('toast');
+    t.textContent = 'Purchase received: ' + bought + '. Check email for kit access.';
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 6000);
+  }
+
+  const form = document.getElementById('funnel-form');
+  const result = document.getElementById('funnel-result');
+  const btn = document.getElementById('funnel-btn');
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    btn.disabled = true;
+    btn.textContent = 'Generating…';
+    result.classList.remove('show');
+    try {
+      const body = {
+        email: form.email.value.trim(),
+        businessName: form.businessName.value.trim(),
+        niche: form.niche.value.trim(),
+        primaryNeed: form.primaryNeed.value,
+        phone: form.phone.value.trim(),
+        consent: form.consent.checked,
+      };
+      const res = await fetch('/api/funnel', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Request failed');
+      const p = data.proposal || {};
+      result.innerHTML =
+        '<strong>Proposal ready.</strong> ' +
+        (p.summary || '') +
+        '<br>Agents: ' + (p.agents || []).join(', ') +
+        ' · Setup ~$' + (p.setupUsd || '—') +
+        ' · Monthly ~$' + (p.monthlyUsd || '—') +
+        '<br><br><a href="' + (data.intakeUrl || '#') + '">Open intake form →</a>';
+      result.classList.add('show');
+      form.reset();
+    } catch (err) {
+      result.innerHTML = '<strong>Error:</strong> ' + (err.message || 'Try again');
+      result.classList.add('show');
+      result.style.background = '#FDF2F2';
+      result.style.borderColor = 'rgba(180,40,40,0.2)';
+      result.style.color = '#7A1F1F';
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Send my proposal';
+    }
+  });
+})();
+</script>
+</body>
+</html>

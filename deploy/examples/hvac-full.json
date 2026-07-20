@@ -1,0 +1,15 @@
+{
+  "email": "owner@example-hvac.com",
+  "businessName": "Example HVAC Co",
+  "niche": "HVAC",
+  "primaryNeed": "full",
+  "phone": "+1-555-0100",
+  "hours": "Mon–Fri 7:30–18:00, Sat 8–12 emergency only",
+  "services": "AC repair, furnace service, tune-ups. Estimates free in-area.",
+  "faqs": "Service area: metro + 30 miles. Same-day when slots open. Financing available for installs.",
+  "bookingRules": "24h notice preferred. 60–90 min windows. Tech SMS on the way.",
+  "humanTransfer": "Dispatch 555-0199 for gas smell / no heat under 40F",
+  "tone": "direct",
+  "calendar": "ServiceTitan / Google Calendar",
+  "source": "example"
+}

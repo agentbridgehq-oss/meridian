@@ -1,0 +1,15 @@
+node_modules/
+data/
+!data/deploy-queue.example.json
+!data/README.md
+logs/
+.env
+.env.local
+.env.railway
+*.log
+.DS_Store
+.railway/
+**/connection.secret.json
+data/deploys/
+
+.env.railway

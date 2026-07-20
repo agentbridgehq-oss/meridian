@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Setup wizard — connect your agent · Meridian</title>
+<meta name="description" content="Interactive Meridian setup: click Next through website, API, webhooks, phone, and OpenClaw autonomous install.">
+<meta name="theme-color" content="#0C0C0B">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F7F6F3;--elev:#fff;--ink:#0C0C0B;--muted:#6B6A66;
+  --line:rgba(12,12,11,.08);--soft:#E8E6E1;--good:#1F7A4C;
+  --serif:'Instrument Serif',Georgia,serif;--sans:Inter,system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--sans);background:var(--bg);color:var(--ink);line-height:1.55;min-height:100vh;-webkit-font-smoothing:antialiased}
+a{color:inherit}
+.top{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:14px 20px;border-bottom:1px solid var(--line);
+  background:rgba(247,246,243,.9);backdrop-filter:blur(12px);position:sticky;top:0;z-index:20;
+}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;font-weight:600}
+.mark{width:28px;height:28px;border-radius:8px;background:var(--ink);display:grid;place-items:center}
+.mark svg{width:14px;height:14px}
+.top a.ghost{font-size:.85rem;color:var(--muted);text-decoration:none;padding:8px 12px;border-radius:999px}
+.top a.ghost:hover{background:var(--soft);color:var(--ink)}
+.shell{max-width:640px;margin:0 auto;padding:28px 16px 80px}
+.progress-wrap{margin-bottom:14px}
+.progress-bar{height:6px;background:var(--soft);border-radius:99px;overflow:hidden}
+.progress-bar i{display:block;height:100%;background:var(--ink);border-radius:99px;transition:width .35s ease}
+.progress-meta{font-size:.78rem;color:var(--muted);margin-top:8px;font-weight:500}
+.step-pills{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:18px}
+.pill{
+  width:28px;height:28px;border-radius:50%;display:grid;place-items:center;
+  font-size:.72rem;font-weight:600;background:var(--soft);color:var(--muted);
+}
+.pill.on{background:var(--ink);color:#fff}
+.pill.did{background:rgba(31,122,76,.15);color:var(--good)}
+.block{
+  background:var(--elev);border:1px solid var(--line);border-radius:20px;
+  padding:26px 22px 20px;box-shadow:0 20px 50px rgba(12,12,11,.04);
+}
+.block.appear{animation:rise .35s ease}
+@keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.eyebrow{font-size:.68rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+.block h1{font-family:var(--serif);font-weight:400;font-size:clamp(1.6rem,4vw,2.1rem);letter-spacing:-.02em;line-height:1.15;margin-bottom:8px}
+.sub{color:var(--muted);margin-bottom:4px}
+.block-body{margin-top:18px}
+.lead{font-size:1rem;color:#3F3F3A;margin-bottom:14px}
+.lead strong{color:var(--ink)}
+.bullets,.steps-ol{margin:12px 0 12px 1.2rem;color:#3F3F3A;font-size:.95rem}
+.bullets li,.steps-ol li{margin:8px 0}
+.field{margin:14px 0}
+.field label{display:block;font-size:.72rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.field input,.field select{
+  width:100%;padding:12px 14px;border-radius:12px;border:1px solid var(--line);
+  font:inherit;background:#fff;color:var(--ink);
+}
+.field input.mono,.mono{font-family:ui-monospace,Consolas,monospace;font-size:.82rem}
+.box{
+  background:#111;color:#F5F5F4;padding:12px 14px;border-radius:12px;
+  word-break:break-all;margin-bottom:8px;
+}
+.box.secret{color:#FBBF24}
+.code{
+  background:#111;color:#E7E5E4;padding:14px;border-radius:12px;overflow:auto;
+  font-family:ui-monospace,Consolas,monospace;font-size:.75rem;line-height:1.5;
+  white-space:pre-wrap;word-break:break-word;margin:10px 0;
+}
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  font:inherit;font-weight:600;font-size:.9rem;border-radius:999px;padding:12px 20px;
+  border:1px solid transparent;cursor:pointer;text-decoration:none;background:none;margin:4px 4px 4px 0;
+}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.dark{background:var(--ink);color:#fff}
+.btn.light{background:#fff;color:var(--ink);border-color:rgba(12,12,11,.14)}
+.btn.sm{padding:8px 14px;font-size:.8rem}
+.nav-row{display:flex;justify-content:space-between;gap:12px;margin-top:22px;padding-top:16px;border-top:1px solid var(--line)}
+.callout{border-radius:14px;padding:14px 16px;margin:14px 0;font-size:.92rem}
+.callout b{display:block;margin-bottom:4px}
+.callout.good{background:rgba(31,122,76,.08);border:1px solid rgba(31,122,76,.2)}
+.callout.warn{background:rgba(180,120,20,.08);border:1px solid rgba(180,120,20,.25)}
+.check{display:flex;align-items:flex-start;gap:10px;margin:16px 0 4px;font-size:.92rem;font-weight:500;cursor:pointer}
+.check input{margin-top:3px;width:16px;height:16px}
+.path-pick{display:grid;gap:10px}
+@media(min-width:520px){.path-pick{grid-template-columns:1fr 1fr}}
+.path-card{
+  text-align:left;padding:14px;border-radius:14px;border:1px solid var(--line);
+  background:#fff;cursor:pointer;font:inherit;
+}
+.path-card strong{display:block;margin-bottom:4px;font-size:.95rem}
+.path-card span{font-size:.82rem;color:var(--muted)}
+.path-card.on{border-color:var(--ink);box-shadow:0 0 0 1px var(--ink)}
+.row{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
+.reply-box{background:var(--soft);border-radius:14px;padding:14px;margin:12px 0}
+.reply-box .label{font-size:.7rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.hint{font-size:.85rem;color:var(--muted);margin-top:12px}
+.foot-hint{text-align:center;font-size:.8rem;color:var(--muted);margin-top:20px}
+.foot-hint a{font-weight:500;color:var(--ink)}
+h3{font-size:1rem;margin:18px 0 8px}
+</style>
+</head>
+<body>
+<header class="top">
+  <a class="brand" href="/">
+    <span class="mark"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2"><path d="M4 12h16M12 4v16"/></svg></span>
+    Meridian
+  </a>
+  <div>
+    <a class="ghost" href="/install">Full docs</a>
+    <a class="ghost" href="/">Home</a>
+  </div>
+</header>
+<main class="shell">
+  <div id="wizard"></div>
+</main>
+<script src="/js/setup-wizard.js" defer></script>
+</body>
+</html>

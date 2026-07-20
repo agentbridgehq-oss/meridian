@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Privacy Policy — Meridian Agency</title>
+<meta name="description" content="How Meridian Agency collects, uses, and protects your information, in plain language.">
+<meta name="theme-color" content="#0C0C0B">
+<link rel="canonical" href="/privacy">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F7F6F3; --bg-elev: #FFFFFF; --ink: #0C0C0B; --muted: #6B6A66;
+    --line: rgba(12,12,11,0.08); --line-strong: rgba(12,12,11,0.14); --soft: #E8E6E1;
+    --good: #1F7A4C; --radius: 20px; --max: 720px;
+    --serif: 'Instrument Serif', Georgia, serif; --sans: 'Inter', system-ui, sans-serif;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body { font-family: var(--sans); background: var(--bg); color: var(--ink); line-height: 1.65; -webkit-font-smoothing: antialiased; }
+  a { color: inherit; }
+  .nav {
+    position: sticky; top: 0; z-index: 50;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 16px; padding: 16px 24px;
+    background: rgba(247,246,243,0.88); backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--line);
+  }
+  .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; font-weight: 600; letter-spacing: -0.02em; }
+  .brand-mark { width: 28px; height: 28px; border-radius: 8px; background: var(--ink); display: grid; place-items: center; }
+  .brand-mark svg { width: 14px; height: 14px; }
+  .nav-links { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .nav-links a { text-decoration: none; font-size: 0.875rem; font-weight: 500; color: var(--muted); padding: 8px 12px; border-radius: 999px; }
+  .nav-links a:hover { color: var(--ink); background: var(--soft); }
+  main { max-width: var(--max); margin: 0 auto; padding: 56px 24px 80px; }
+  h1 { font-family: var(--serif); font-weight: 400; font-size: clamp(2rem, 5vw, 2.75rem); letter-spacing: -0.02em; margin-bottom: 8px; }
+  .updated { color: var(--muted); font-size: 0.85rem; margin-bottom: 40px; }
+  h2 { font-family: var(--serif); font-weight: 400; font-size: 1.4rem; margin: 36px 0 12px; }
+  p, li { color: #2E2E2B; font-size: 0.98rem; margin-bottom: 12px; }
+  ul { margin-left: 1.3rem; margin-bottom: 12px; }
+  a.link { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; font-weight: 500; }
+  footer {
+    border-top: 1px solid var(--line); padding: 28px 24px 48px;
+    text-align: center; color: var(--muted); font-size: 0.82rem;
+  }
+  footer a { color: var(--ink); text-decoration: none; font-weight: 500; }
+</style>
+</head>
+<body>
+
+<header class="nav">
+  <a class="brand" href="/">
+    <span class="brand-mark" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2"><path d="M4 12h16M12 4v16"/></svg>
+    </span>
+    Meridian
+  </a>
+  <div class="nav-links">
+    <a href="/#agents">Agents</a>
+    <a href="/why-agents">Article</a>
+    <a href="/#proposal">Proposal</a>
+  </div>
+</header>
+
+<main>
+  <h1>Privacy Policy</h1>
+  <p class="updated">Last updated: July 19, 2026 · Meridian Agency, Ontario, Canada</p>
+
+  <p>Meridian Agency ("Meridian," "we," "us") installs Voice, Sales, and Booking AI agents for local businesses. This page explains what we collect, why, and your rights under Canadian privacy law (PIPEDA) and Canada's Anti-Spam Legislation (CASL).</p>
+
+  <h2>What we collect</h2>
+  <ul>
+    <li>Contact details you give us: email, business name, phone (proposal form, intake form, checkout)</li>
+    <li>Business operating details you provide for your agent: hours, services, FAQs, booking rules</li>
+    <li>Payment details — processed directly by Stripe; Meridian never stores card numbers</li>
+    <li>Basic usage data: chat messages sent to your agent or our site guide, for support and quality</li>
+  </ul>
+
+  <h2>Why we collect it</h2>
+  <ul>
+    <li>To generate your proposal and configure your AI agent</li>
+    <li>To deliver your connect guide, API key, and setup instructions</li>
+    <li>To process payment via Stripe</li>
+    <li>To respond to support requests</li>
+  </ul>
+
+  <h2>Consent &amp; email (CASL)</h2>
+  <p>We only email you if you gave express consent (a checked box on our forms). Every email includes an unsubscribe option — reply STOP or use the link provided. We do not purchase, rent, or scrape contact lists. Any outreach beyond a direct reply requires internal human approval before it is sent.</p>
+
+  <h2>How we protect it</h2>
+  <p>API keys are stored hashed, never in plaintext. Secrets shown once are not re-displayed. Payment data never touches our servers — Stripe handles it under PCI-DSS. Website widget access uses a separate, limited public token; it cannot access your account settings or billing.</p>
+
+  <h2>Who we share it with</h2>
+  <p>Only the services required to run Meridian: Stripe (payment), Resend (transactional email), and your own downstream tools if you configure a webhook (your choice, your URL). We do not sell personal information.</p>
+
+  <h2>Your rights</h2>
+  <p>You can request a copy of your data, ask us to correct it, or ask us to delete it, at any time. Contact us using the email your proposal was sent from, or reply STOP to any Meridian email to unsubscribe immediately.</p>
+
+  <h2>Changes</h2>
+  <p>If this policy changes materially, the "Last updated" date above will change and, where required, we'll notify active customers by email.</p>
+
+  <p style="margin-top:32px"><a class="link" href="/terms">Read our Terms of Service →</a></p>
+</main>
+
+<footer>
+  <p><strong>Meridian Agency</strong> — Voice · Sales · Booking</p>
+  <p style="margin-top:8px">
+    <a href="/">Home</a> ·
+    <a href="/privacy">Privacy</a> ·
+    <a href="/terms">Terms</a> ·
+    <a href="/#proposal">Proposal</a>
+  </p>
+</footer>
+
+<script src="/js/meridian-chat.js" defer></script>
+</body>
+</html>

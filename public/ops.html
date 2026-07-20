@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Meridian Ops</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0C0C0B; --panel: #161614; --ink: #F5F5F4; --muted: #A1A1AA;
+    --line: rgba(255,255,255,0.08); --good: #4ADE80; --warn: #FBBF24;
+    --sans: 'Inter', system-ui, sans-serif;
+    --mono: 'JetBrains Mono', ui-monospace, monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: var(--sans); background: var(--bg); color: var(--ink);
+    min-height: 100vh; line-height: 1.45;
+  }
+  header {
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+    gap: 12px; padding: 16px 20px; border-bottom: 1px solid var(--line);
+  }
+  h1 { font-size: 1rem; font-weight: 600; letter-spacing: -0.02em; }
+  h1 span { color: var(--muted); font-weight: 400; }
+  .auth {
+    display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+  }
+  input, button, select {
+    font: inherit; font-size: 0.85rem;
+    padding: 8px 12px; border-radius: 8px;
+    border: 1px solid var(--line); background: var(--panel); color: var(--ink);
+  }
+  input { min-width: 180px; }
+  button {
+    cursor: pointer; background: #F5F5F4; color: #111; font-weight: 600; border: none;
+  }
+  button.ghost { background: transparent; color: var(--ink); border: 1px solid var(--line); }
+  main { padding: 20px; max-width: 1200px; margin: 0 auto; }
+  .stats {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 10px; margin-bottom: 20px;
+  }
+  .stat {
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: 12px; padding: 14px 16px;
+  }
+  .stat b { display: block; font-size: 1.5rem; font-weight: 600; letter-spacing: -0.03em; }
+  .stat small { color: var(--muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; }
+  .grid { display: grid; gap: 16px; }
+  @media (min-width: 900px) { .grid { grid-template-columns: 1fr 1fr; } }
+  .panel {
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: 14px; padding: 16px; overflow: hidden;
+  }
+  .panel h2 {
+    font-size: 0.72rem; font-weight: 600; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--muted); margin-bottom: 12px;
+  }
+  .row {
+    display: flex; justify-content: space-between; gap: 10px;
+    padding: 10px 0; border-top: 1px solid var(--line); font-size: 0.85rem;
+  }
+  .row:first-of-type { border-top: none; }
+  .muted { color: var(--muted); }
+  .mono { font-family: var(--mono); font-size: 0.78rem; }
+  .tag {
+    font-size: 0.7rem; padding: 2px 8px; border-radius: 999px;
+    background: rgba(255,255,255,0.06); color: var(--muted);
+  }
+  .tag.good { color: var(--good); background: rgba(74,222,128,0.1); }
+  .tag.warn { color: var(--warn); background: rgba(251,191,36,0.1); }
+  .actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  .log {
+    margin-top: 16px; font-family: var(--mono); font-size: 0.75rem;
+    color: var(--muted); max-height: 160px; overflow: auto;
+    white-space: pre-wrap;
+  }
+  .locked { opacity: 0.5; pointer-events: none; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Meridian <span>Ops</span></h1>
+  <div class="auth">
+    <input type="password" id="token" placeholder="OPS_TOKEN" autocomplete="off">
+    <button type="button" id="save">Unlock</button>
+    <a href="/" style="color:var(--muted);font-size:0.85rem;text-decoration:none">Site</a>
+  </div>
+</header>
+<main>
+  <div class="stats" id="stats">
+    <div class="stat"><b>—</b><small>Leads</small></div>
+    <div class="stat"><b>—</b><small>Agents live</small></div>
+    <div class="stat"><b>—</b><small>Drafts</small></div>
+    <div class="stat"><b>—</b><small>Approved unsent</small></div>
+  </div>
+  <div class="grid locked" id="body">
+    <div class="panel">
+      <h2>Leads</h2>
+      <div id="leads"></div>
+      <div class="actions">
+        <button type="button" class="ghost" id="refresh">Refresh</button>
+        <button type="button" class="ghost" id="openclaw">Run OpenClaw</button>
+      </div>
+    </div>
+    <div class="panel">
+      <h2>Outreach (approve-only)</h2>
+      <div id="outreach"></div>
+      <div class="actions">
+        <button type="button" class="ghost" id="send-approved">Send approved (max 20)</button>
+      </div>
+      <div class="log" id="log"></div>
+    </div>
+  </div>
+</main>
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id);
+  const log = (m) => { $('log').textContent = new Date().toISOString().slice(11, 19) + ' ' + m + '\n' + $('log').textContent; };
+
+  function token() {
+    return localStorage.getItem('mdn_ops') || $('token').value.trim();
+  }
+  function headers() {
+    const t = token();
+    return t ? { Authorization: 'Bearer ' + t, 'Content-Type': 'application/json' } : { 'Content-Type': 'application/json' };
+  }
+
+  $('save').onclick = () => {
+    localStorage.setItem('mdn_ops', $('token').value.trim());
+    load();
+  };
+  if (localStorage.getItem('mdn_ops')) $('token').value = localStorage.getItem('mdn_ops');
+
+  async function loadStats() {
+    const res = await fetch('/api/stats');
+    const s = await res.json();
+    $('stats').innerHTML =
+      '<div class="stat"><b>' + (s.totalLeads || 0) + '</b><small>Leads</small></div>' +
+      '<div class="stat"><b>' + (s.agentsLive || 0) + '</b><small>Agents live</small></div>' +
+      '<div class="stat"><b>' + (s.outreachDrafts || 0) + '</b><small>Drafts</small></div>' +
+      '<div class="stat"><b>' + (s.approvedUnsent || 0) + '</b><small>Approved unsent</small></div>';
+  }
+
+  async function load() {
+    await loadStats();
+    if (!token()) {
+      $('body').classList.add('locked');
+      return;
+    }
+    const leadsRes = await fetch('/api/leads', { headers: headers() });
+    if (!leadsRes.ok) {
+      log('Auth failed — check OPS_TOKEN');
+      $('body').classList.add('locked');
+      return;
+    }
+    $('body').classList.remove('locked');
+    const { leads } = await leadsRes.json();
+    $('leads').innerHTML = (leads || []).slice(0, 30).map((l) =>
+      '<div class="row">' +
+      '<div><div>' + (l.businessName || l.email) + '</div>' +
+      '<div class="muted mono">' + (l.email || '') + '</div></div>' +
+      '<span class="tag">' + (l.stage || '') + '</span></div>'
+    ).join('') || '<p class="muted">No leads yet</p>';
+
+    const outRes = await fetch('/api/outreach', { headers: headers() });
+    const { drafts } = await outRes.json();
+    $('outreach').innerHTML = (drafts || []).slice(0, 20).map((d) =>
+      '<div class="row">' +
+      '<div><div>' + (d.subject || '').slice(0, 48) + '</div>' +
+      '<div class="muted mono">' + (d.to || '') + '</div></div>' +
+      '<div style="display:flex;gap:6px;align-items:center">' +
+      (d.sentAt ? '<span class="tag good">sent</span>' :
+        d.approved_send ? '<span class="tag warn">approved</span><button type="button" data-id="' + d.id + '" class="approve-btn ghost" style="padding:4px 8px;font-size:0.75rem">OK</button>' :
+        '<button type="button" data-id="' + d.id + '" class="approve-btn" style="padding:4px 8px;font-size:0.75rem">Approve</button>') +
+      '</div></div>'
+    ).join('') || '<p class="muted">No drafts</p>';
+
+    document.querySelectorAll('.approve-btn').forEach((btn) => {
+      btn.onclick = async () => {
+        const id = btn.getAttribute('data-id');
+        const r = await fetch('/api/outreach/' + id + '/approve', { method: 'POST', headers: headers() });
+        log(r.ok ? 'Approved ' + id : 'Approve failed');
+        load();
+      };
+    });
+  }
+
+  $('refresh').onclick = load;
+  $('openclaw').onclick = async () => {
+    const r = await fetch('/api/openclaw/run', { method: 'POST', headers: headers() });
+    const d = await r.json();
+    log(r.ok ? 'OpenClaw: ' + JSON.stringify(d.stats || d) : 'OpenClaw failed');
+    load();
+  };
+  $('send-approved').onclick = async () => {
+    if (!confirm('Send all approved unsent outreach via Resend?')) return;
+    const r = await fetch('/api/outreach/send-approved', { method: 'POST', headers: headers() });
+    const d = await r.json();
+    log(r.ok ? 'Sent ' + (d.sent || 0) : 'Send failed');
+    load();
+  };
+
+  load();
+  setInterval(loadStats, 30000);
+})();
+</script>
+</body>
+</html>

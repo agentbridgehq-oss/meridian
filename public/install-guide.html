@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Install guide — API, webhooks &amp; agent setup · Meridian</title>
+<meta name="description" content="Seamless Meridian customer onboarding: website widget, API, webhooks, Retell/Vapi phone, n8n/Zapier. Copy-paste install for Voice, Sales, and Booking agents.">
+<meta name="theme-color" content="#0C0C0B">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F7F6F3; --bg-elev: #FFFFFF; --ink: #0C0C0B; --muted: #6B6A66;
+    --line: rgba(12,12,11,0.08); --line-strong: rgba(12,12,11,0.14);
+    --soft: #E8E6E1; --good: #1F7A4C; --radius: 20px; --max: 760px;
+    --serif: 'Instrument Serif', Georgia, serif;
+    --sans: 'Inter', system-ui, sans-serif;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: var(--sans); background: var(--bg); color: var(--ink);
+    line-height: 1.6; -webkit-font-smoothing: antialiased;
+  }
+  a { color: inherit; }
+  .nav {
+    position: sticky; top: 0; z-index: 50;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 16px; padding: 16px 24px;
+    background: rgba(247,246,243,0.9); backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--line);
+  }
+  .brand {
+    display: flex; align-items: center; gap: 10px;
+    text-decoration: none; font-weight: 600; letter-spacing: -0.02em;
+  }
+  .brand-mark {
+    width: 28px; height: 28px; border-radius: 8px; background: var(--ink);
+    display: grid; place-items: center;
+  }
+  .brand-mark svg { width: 14px; height: 14px; }
+  .nav-links { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .nav-links a {
+    text-decoration: none; font-size: 0.84rem; font-weight: 500; color: var(--muted);
+    padding: 8px 12px; border-radius: 999px;
+  }
+  .nav-links a:hover { color: var(--ink); background: var(--soft); }
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    font-family: var(--sans); font-weight: 600; font-size: 0.875rem;
+    text-decoration: none; border-radius: 999px; padding: 11px 18px;
+    border: 1px solid transparent; cursor: pointer; background: none;
+  }
+  .btn-dark { background: var(--ink); color: #fff; }
+  .btn-dark:hover { background: #222; }
+  .btn-light { background: var(--bg-elev); color: var(--ink); border-color: var(--line-strong); }
+  .wrap { max-width: var(--max); margin: 0 auto; padding: 40px 24px 96px; }
+  .eyebrow {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 0.68rem; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 14px;
+  }
+  .eyebrow i {
+    width: 5px; height: 5px; border-radius: 50%; background: var(--good);
+    box-shadow: 0 0 0 3px rgba(31,122,76,0.14);
+  }
+  h1 {
+    font-family: var(--serif); font-weight: 400;
+    font-size: clamp(2rem, 4.5vw, 2.85rem);
+    letter-spacing: -0.02em; line-height: 1.12; margin-bottom: 12px;
+  }
+  .lede { color: var(--muted); font-size: 1.05rem; max-width: 38rem; margin-bottom: 28px; line-height: 1.7; }
+  .path-grid {
+    display: grid; gap: 12px; margin-bottom: 36px;
+  }
+  @media (min-width: 640px) { .path-grid { grid-template-columns: 1fr 1fr 1fr; } }
+  .path {
+    background: var(--bg-elev); border: 1px solid var(--line); border-radius: 16px;
+    padding: 18px 16px; text-decoration: none; transition: border-color .15s, box-shadow .15s;
+  }
+  .path:hover { border-color: var(--line-strong); box-shadow: 0 8px 28px rgba(12,12,11,0.05); }
+  .path b { display: block; font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+  .path h3 { font-family: var(--serif); font-weight: 400; font-size: 1.25rem; margin-bottom: 6px; letter-spacing: -0.02em; }
+  .path p { font-size: 0.88rem; color: var(--muted); line-height: 1.45; }
+  .toc {
+    background: var(--bg-elev); border: 1px solid var(--line); border-radius: 16px;
+    padding: 18px 20px; margin-bottom: 40px;
+  }
+  .toc h2 { font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
+  .toc ol { margin-left: 1.15rem; font-size: 0.92rem; }
+  .toc li { margin: 6px 0; }
+  .toc a { text-decoration: none; font-weight: 500; border-bottom: 1px solid transparent; }
+  .toc a:hover { border-bottom-color: var(--ink); }
+  section { margin-bottom: 44px; scroll-margin-top: 80px; }
+  section h2 {
+    font-family: var(--serif); font-weight: 400; font-size: 1.65rem;
+    letter-spacing: -0.02em; margin-bottom: 10px; line-height: 1.2;
+  }
+  section h3 {
+    font-size: 1rem; font-weight: 600; margin: 20px 0 8px; letter-spacing: -0.01em;
+  }
+  section p, section li { color: #3F3F3A; font-size: 0.95rem; }
+  section ul, section ol { margin: 10px 0 10px 1.2rem; }
+  section li { margin: 6px 0; }
+  .card {
+    background: var(--bg-elev); border: 1px solid var(--line); border-radius: 16px;
+    padding: 18px 18px; margin: 14px 0;
+  }
+  .card.good { border-color: rgba(31,122,76,0.25); background: rgba(31,122,76,0.04); }
+  .card.warn { border-color: rgba(180,120,20,0.3); background: rgba(180,120,20,0.05); }
+  .label {
+    font-size: 0.7rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 8px;
+  }
+  pre, code { font-family: ui-monospace, 'Cascadia Code', Consolas, monospace; font-size: 0.78rem; }
+  pre {
+    background: #111; color: #F5F5F4; padding: 14px 16px; border-radius: 12px;
+    overflow-x: auto; margin: 10px 0; white-space: pre-wrap; word-break: break-word; line-height: 1.5;
+  }
+  code { background: var(--soft); padding: 1px 6px; border-radius: 5px; font-size: 0.84em; }
+  pre code { background: none; padding: 0; color: inherit; }
+  .copy-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+  .copybtn {
+    font: inherit; font-size: 0.8rem; font-weight: 600; cursor: pointer;
+    padding: 8px 14px; border-radius: 999px; border: 1px solid var(--line-strong);
+    background: var(--ink); color: #fff;
+  }
+  .copybtn.secondary { background: #fff; color: var(--ink); }
+  table { width: 100%; border-collapse: collapse; font-size: 0.88rem; margin: 12px 0; }
+  th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+  .check li { list-style: none; margin-left: 0; padding-left: 1.6rem; position: relative; }
+  .check li::before {
+    content: ''; position: absolute; left: 0; top: 0.35em;
+    width: 14px; height: 14px; border: 1.5px solid var(--line-strong); border-radius: 4px;
+  }
+  .flow {
+    display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 14px 0;
+    font-size: 0.85rem; font-weight: 500;
+  }
+  .flow span {
+    background: var(--soft); padding: 8px 12px; border-radius: 999px;
+  }
+  .flow em { color: var(--muted); font-style: normal; font-weight: 400; }
+  footer {
+    border-top: 1px solid var(--line); padding: 28px 24px 48px; text-align: center;
+    color: var(--muted); font-size: 0.82rem;
+  }
+  footer a { color: var(--ink); text-decoration: none; font-weight: 500; }
+  .sticky-cta {
+    position: sticky; bottom: 16px; z-index: 40;
+    display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;
+    margin: 32px 0 0; padding: 12px;
+    background: rgba(247,246,243,0.92); backdrop-filter: blur(12px);
+    border: 1px solid var(--line); border-radius: 999px;
+    box-shadow: 0 12px 40px rgba(12,12,11,0.08);
+  }
+  @media (max-width: 640px) {
+    .wrap { padding: 28px 16px 80px; }
+    .nav { padding: 12px 16px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="nav">
+  <a class="brand" href="/">
+    <span class="brand-mark" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2"><path d="M4 12h16M12 4v16"/></svg>
+    </span>
+    Meridian
+  </a>
+  <div class="nav-links">
+    <a href="#paths">Paths</a>
+    <a href="#api">API</a>
+    <a href="#webhooks">Webhooks</a>
+    <a href="#phone">Phone</a>
+    <a href="#checklist">Checklist</a>
+    <a class="btn btn-dark" href="/#proposal">Get an agent</a>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="eyebrow"><i></i> Customer install · seamless</div>
+  <h1>Connect your Meridian agent to your systems</h1>
+  <p class="lede">
+    One guide for website, API, webhooks, and phone. Your agent is already built and smoke-tested.
+    Prefer click-through steps? Use the <a href="/setup" style="font-weight:600">interactive setup wizard</a>
+    (Next on each block). With your delivery link: <code>/setup/&lt;token&gt;</code>.
+  </p>
+  <p style="margin:-12px 0 28px">
+    <a class="btn btn-dark" href="/setup">Open setup wizard →</a>
+    <a class="btn btn-light" href="/checkout/auto">Full Auto Install · $1,497</a>
+    <a class="btn btn-light" href="#paths">Read full docs</a>
+  </p>
+  <div class="card good" style="margin-bottom:28px">
+    <div class="label">Pay more · minimal work</div>
+    <p><strong>Full Auto Install</strong> provisions your agent at payment, runs OpenClaw packs (widget, API, n8n, phone configs), and opens a short wizard. You only attach a phone number in Retell/Vapi and paste the widget if needed.
+      <a href="/#full-auto" style="font-weight:600">See pricing →</a>
+      · Voice Auto $997 · Full Auto $1,497 · Stack Auto $2,497
+    </p>
+  </div>
+
+  <div class="path-grid" id="paths">
+    <a class="path" href="#website">
+      <b>Fastest</b>
+      <h3>Website widget</h3>
+      <p>One line of code. Chat bubble on any site. No secret keys in the browser.</p>
+    </a>
+    <a class="path" href="#api">
+      <b>Developer</b>
+      <h3>API install</h3>
+      <p>Chat + Claude agent + voice-turn with your secret key. CRM, app, or backend.</p>
+    </a>
+    <a class="path" href="#webhooks">
+      <b>Automations</b>
+      <h3>Webhooks</h3>
+      <p>n8n, Zapier, Make, or your server. Events in and out of Meridian.</p>
+    </a>
+  </div>
+
+  <div class="toc">
+    <h2>On this page</h2>
+    <ol>
+      <li><a href="#you-have">What you receive after purchase</a></li>
+      <li><a href="#security">Keys &amp; security (read once)</a></li>
+      <li><a href="#website">Website widget (1 line)</a></li>
+      <li><a href="#api">API install (chat, agent, voice)</a></li>
+      <li><a href="#webhooks">Webhooks (inbound + outbound)</a></li>
+      <li><a href="#phone">Phone (Retell / Vapi / Bland)</a></li>
+      <li><a href="#sales">Sales agent on your funnel</a></li>
+      <li><a href="#n8n">n8n / Zapier / Make recipes</a></li>
+      <li><a href="#test">Must-work tests</a></li>
+      <li><a href="#checklist">Go-live checklist</a></li>
+      <li><a href="#troubleshoot">Troubleshooting</a></li>
+    </ol>
+  </div>
+
+  <!-- 1 -->
+  <section id="you-have">
+    <h2>1. What you receive after purchase</h2>
+    <p>When payment clears (or Meridian ops finishes provision), you get a <strong>personal connect guide</strong> link:</p>
+    <pre><code>https://meridian-production-2eb0.up.railway.app/guide/&lt;your-delivery-token&gt;</code></pre>
+    <p>That page includes your real Agent ID, API key (shown once), widget snippet, phone configs, and verification results.</p>
+    <div class="card good">
+      <div class="label">Seamless path</div>
+      <p>If you finished setup in Meridian AI chat, payment → <strong>live guide automatically</strong>. No extra forms.</p>
+    </div>
+    <div class="flow">
+      <span>Pay or approve</span><em>→</em>
+      <span>Agent provisioned</span><em>→</em>
+      <span>Smoke tests</span><em>→</em>
+      <span>Connect guide</span><em>→</em>
+      <span>Your site / phone / CRM</span>
+    </div>
+  </section>
+
+  <!-- 2 -->
+  <section id="security">
+    <h2>2. Keys &amp; security (read once)</h2>
+    <table>
+      <thead><tr><th>Credential</th><th>Looks like</th><th>Where it goes</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><strong>Secret API key</strong></td>
+          <td><code>mdn_…</code></td>
+          <td>Server, secrets manager, Retell/Vapi server tools, n8n credentials. <strong>Never</strong> in HTML, WordPress, or public JS.</td>
+        </tr>
+        <tr>
+          <td><strong>Widget token</strong></td>
+          <td><code>mdnw_…</code></td>
+          <td>Safe on your public website. Chat-only, rate-limited.</td>
+        </tr>
+        <tr>
+          <td><strong>Agent ID</strong></td>
+          <td><code>agent_…</code></td>
+          <td>All API paths: <code>/api/v1/agents/{id}/…</code></td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="card warn">
+      <div class="label">If the key leaks</div>
+      <p>Contact Meridian ops immediately. We can rotate the key and re-issue your connect guide. Treat <code>mdn_</code> like a Stripe secret key.</p>
+    </div>
+  </section>
+
+  <!-- 3 Website -->
+  <section id="website">
+    <h2>3. Website widget — fastest install</h2>
+    <p>Best for: “I just need the agent answering visitors on my site.” No developer required for most builders.</p>
+    <h3>Steps</h3>
+    <ol>
+      <li>Open your personal connect guide and copy the <strong>widget snippet</strong>.</li>
+      <li>Paste it before <code>&lt;/body&gt;</code> on every page you want the chat (or site-wide footer).</li>
+      <li>Hard-refresh the site. You should see a bubble bottom-right.</li>
+      <li>Send: “What are your hours?” — reply must match your business facts.</li>
+    </ol>
+    <div class="card">
+      <div class="label">Snippet shape (your guide fills real values)</div>
+      <pre id="snippet-widget"><code>&lt;script
+  src="https://meridian-production-2eb0.up.railway.app/widget.js"
+  data-agent="agent_YOUR_ID"
+  data-token="mdnw_YOUR_PUBLIC_TOKEN"
+  data-name="Your Business Name"&gt;&lt;/script&gt;</code></pre>
+      <div class="copy-row">
+        <button class="copybtn" type="button" data-copy="snippet-widget">Copy pattern</button>
+      </div>
+    </div>
+    <h3>Where to paste</h3>
+    <ul>
+      <li><strong>WordPress</strong> — Appearance → Theme File Editor → footer.php, or a “Custom HTML” block in the footer template / plugin like Insert Headers and Footers.</li>
+      <li><strong>Shopify</strong> — Online Store → Themes → Edit code → <code>theme.liquid</code> before <code>&lt;/body&gt;</code>.</li>
+      <li><strong>Squarespace / Wix</strong> — Settings → Custom code / Embed → site footer.</li>
+      <li><strong>Webflow</strong> — Project Settings → Custom Code → Footer.</li>
+      <li><strong>Next.js / React</strong> — load the script in <code>_document</code> / layout with <code>next/script</code> (still use public <code>mdnw_</code> only).</li>
+    </ul>
+  </section>
+
+  <!-- 4 API -->
+  <section id="api">
+    <h2>4. API install — chat, Claude agent, voice-turn</h2>
+    <p>Best for: your app, CRM custom code, mobile backend, or any server that can HTTPS POST.</p>
+    <p><strong>Base URL:</strong></p>
+    <pre><code>https://meridian-production-2eb0.up.railway.app</code></pre>
+    <p>All secret calls use:</p>
+    <pre><code>Authorization: Bearer mdn_YOUR_SECRET_KEY
+Content-Type: application/json</code></pre>
+
+    <h3>4.1 Chat (simple)</h3>
+    <p>General Q&amp;A. Claude-powered when Meridian has Anthropic configured (production default).</p>
+    <pre id="snippet-chat"><code>curl -s -X POST "https://meridian-production-2eb0.up.railway.app/api/v1/agents/AGENT_ID/chat" \
+  -H "Authorization: Bearer mdn_YOUR_KEY" \
+  -H "Content-Type: application/json" \
+  -d "{\"message\":\"What are your hours?\",\"history\":[]}"</code></pre>
+    <div class="copy-row"><button class="copybtn" type="button" data-copy="snippet-chat">Copy curl</button></div>
+
+    <h3>4.2 Claude Agent API (recommended for apps)</h3>
+    <p>Richer response: model, usage, source. Same brain as chat/voice.</p>
+    <pre id="snippet-agent"><code>curl -s -X POST "https://meridian-production-2eb0.up.railway.app/api/v1/agents/AGENT_ID/agent" \
+  -H "Authorization: Bearer mdn_YOUR_KEY" \
+  -H "Content-Type: application/json" \
+  -d "{
+    \"message\": \"I need a quote for a furnace install next week\",
+    \"history\": [
+      {\"role\": \"user\", \"content\": \"Hi\"},
+      {\"role\": \"assistant\", \"content\": \"Hello — how can I help?\"}
+    ]
+  }"</code></pre>
+    <div class="copy-row"><button class="copybtn" type="button" data-copy="snippet-agent">Copy curl</button></div>
+    <p>Alias: <code>POST .../claude</code> (same body).</p>
+    <p><strong>Response fields to use:</strong></p>
+    <ul>
+      <li><code>reply</code> — show this to the user / speak it</li>
+      <li><code>source</code> — <code>llm</code> (Claude) or <code>fallback</code></li>
+      <li><code>model</code> / <code>usage</code> — optional logging</li>
+    </ul>
+
+    <h3>4.3 Voice-turn (phone &amp; voice UIs)</h3>
+    <p>Send the caller’s transcript each turn. Meridian returns what to say next.</p>
+    <pre id="snippet-voice"><code>curl -s -X POST "https://meridian-production-2eb0.up.railway.app/api/v1/agents/AGENT_ID/voice-turn" \
+  -H "Authorization: Bearer mdn_YOUR_KEY" \
+  -H "Content-Type: application/json" \
+  -d "{\"message\":\"I'd like to book Thursday afternoon\",\"audio\":false}"</code></pre>
+    <div class="copy-row"><button class="copybtn" type="button" data-copy="snippet-voice">Copy curl</button></div>
+    <ul>
+      <li>Always speak / display <code>reply</code> (also in <code>platform.say</code>).</li>
+      <li><code>"audio": true</code> requests Meridian-hosted premium TTS (pay-as-you-go balance required). Most phone platforms leave this <strong>false</strong> and use Retell/Vapi native voice.</li>
+    </ul>
+
+    <h3>4.4 Node.js example</h3>
+    <pre id="snippet-node"><code>const BASE = "https://meridian-production-2eb0.up.railway.app";
+const AGENT = process.env.MERIDIAN_AGENT_ID;
+const KEY = process.env.MERIDIAN_API_KEY; // mdn_…
+
+async function askMeridian(message, history = []) {
+  const res = await fetch(`${BASE}/api/v1/agents/${AGENT}/agent`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${KEY}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ message, history }),
+  });
+  if (!res.ok) throw new Error(`Meridian ${res.status}: ${await res.text()}`);
+  const data = await res.json();
+  return data.reply;
+}
+
+// Usage
+const reply = await askMeridian("Do you offer emergency service?");
+console.log(reply);</code></pre>
+    <div class="copy-row"><button class="copybtn" type="button" data-copy="snippet-node">Copy Node</button></div>
+
+    <h3>4.5 Python example</h3>
+    <pre id="snippet-py"><code>import os, requests
+
+BASE = "https://meridian-production-2eb0.up.railway.app"
+AGENT = os.environ["MERIDIAN_AGENT_ID"]
+KEY = os.environ["MERIDIAN_API_KEY"]
+
+def ask_meridian(message, history=None):
+    r = requests.post(
+        f"{BASE}/api/v1/agents/{AGENT}/agent",
+        headers={"Authorization": f"Bearer {KEY}", "Content-Type": "application/json"},
+        json={"message": message, "history": history or []},
+        timeout=20,
+    )
+    r.raise_for_status()
+    return r.json()["reply"]
+
+print(ask_meridian("What are your hours?"))</code></pre>
+    <div class="copy-row"><button class="copybtn" type="button" data-copy="snippet-py">Copy Python</button></div>
+
+    <h3>Endpoint map</h3>
+    <table>
+      <thead><tr><th>Method</th><th>Path</th><th>Use</th></tr></thead>
+      <tbody>
+        <tr><td>POST</td><td><code>/api/v1/agents/:id/agent</code></td><td>Primary Claude agent turn</td></tr>
+        <tr><td>POST</td><td><code>/api/v1/agents/:id/claude</code></td><td>Alias of agent</td></tr>
+        <tr><td>POST</td><td><code>/api/v1/agents/:id/chat</code></td><td>Simple chat</td></tr>
+        <tr><td>POST</td><td><code>/api/v1/agents/:id/voice-turn</code></td><td>Phone / voice UIs</td></tr>
+        <tr><td>POST</td><td><code>/api/v1/agents/:id/speak</code></td><td>TTS (optional hosted audio)</td></tr>
+        <tr><td>POST</td><td><code>/api/v1/agents/:id/events</code></td><td>Inbound events from your stack</td></tr>
+        <tr><td>GET</td><td><code>/api/v1/agents/:id</code></td><td>Agent meta + endpoints</td></tr>
+        <tr><td>GET</td><td><code>/api/v1/agents/:id/billing</code></td><td>Voice usage balance (if on premium TTS)</td></tr>
+        <tr><td>GET</td><td><code>/api/v1/agents/:id/voice-spec</code></td><td>Install spec for phone platforms</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- 5 Webhooks -->
+  <section id="webhooks">
+    <h2>5. Webhooks — seamless CRM &amp; automation</h2>
+    <p>Two directions. You only need one of them to start.</p>
+
+    <h3>A) Your system → Meridian (inbound events)</h3>
+    <p>Send call ends, form fills, CRM stage changes, etc. Meridian logs and can fan out.</p>
+    <pre id="snippet-events"><code>curl -s -X POST "https://meridian-production-2eb0.up.railway.app/api/v1/agents/AGENT_ID/events" \
+  -H "Authorization: Bearer mdn_YOUR_KEY" \
+  -H "Content-Type: application/json" \
+  -d "{
+    \"type\": \"lead.created\",
+    \"payload\": {
+      \"name\": \"Jane Doe\",
+      \"phone\": \"+1-555-0100\",
+      \"source\": \"website-form\",
+      \"notes\": \"Wants estimate this week\"
+    }
+  }"</code></pre>
+    <div class="copy-row"><button class="copybtn" type="button" data-copy="snippet-events">Copy events curl</button></div>
+    <p>Suggested <code>type</code> values: <code>call.started</code>, <code>call.ended</code>, <code>lead.created</code>, <code>booking.requested</code>, <code>sms.inbound</code>, <code>custom</code>.</p>
+
+    <h3>B) Meridian → your system (outbound)</h3>
+    <p>Meridian can POST events to your HTTPS URL (CRM, n8n, Make, Slack bridge).</p>
+    <div class="card">
+      <div class="label">Setup</div>
+      <ol>
+        <li>Create a public HTTPS endpoint that accepts JSON POST.</li>
+        <li>Send Meridian ops your URL (or set it during DFY install): e.g. <code>https://hooks.yourcrm.com/meridian</code>.</li>
+        <li>Optional: share a shared secret for <code>X-Meridian-Signature</code> (HMAC-SHA256 of body).</li>
+      </ol>
+    </div>
+    <p><strong>Example payload shape:</strong></p>
+    <pre><code>{
+  "event": "agent.claude_turn",
+  "ts": "2026-07-20T12:00:00.000Z",
+  "source": "meridian",
+  "agentId": "agent_…",
+  "businessName": "Acme HVAC",
+  "message": "What are your hours?",
+  "reply": "We're open Mon–Fri 8–5…"
+}</code></pre>
+    <p>Respond <code>2xx</code> quickly. Retry logic is best-effort — design your receiver to be idempotent.</p>
+  </section>
+
+  <!-- 6 Phone -->
+  <section id="phone">
+    <h2>6. Phone — Retell, Vapi, or Bland</h2>
+    <p>Meridian is the <strong>brain</strong>. The phone platform owns the number, STT, and voice. Seamless pattern:</p>
+    <div class="flow">
+      <span>Caller speaks</span><em>→</em>
+      <span>Platform STT</span><em>→</em>
+      <span>POST Meridian voice-turn</span><em>→</em>
+      <span>Speak <code>reply</code></span>
+    </div>
+    <h3>Steps (any platform)</h3>
+    <ol>
+      <li>From your connect guide, download <strong>Retell</strong> or <strong>Vapi</strong> config JSON.</li>
+      <li>Create an assistant; paste the system prompt from the file.</li>
+      <li>Add a custom tool / server / function:
+        <ul>
+          <li>URL: your <code>voice-turn</code> endpoint</li>
+          <li>Header: <code>Authorization: Bearer mdn_…</code></li>
+          <li>Body: <code>{"message":"{{user_transcript}}"}</code></li>
+          <li>Speak field: <code>reply</code></li>
+        </ul>
+      </li>
+      <li>Attach a phone number (or forward your business line).</li>
+      <li>Place a <strong>real test call</strong>. Ask hours, booking, price.</li>
+    </ol>
+    <div class="card good">
+      <div class="label">Seamless tip</div>
+      <p>Keep <code>audio: false</code> on voice-turn for phone. Let Retell/Vapi use their native voice (lowest latency). Use Meridian premium TTS only when you deliberately host audio in your own app.</p>
+    </div>
+  </section>
+
+  <!-- 7 Sales -->
+  <section id="sales">
+    <h2>7. Sales agent on your funnel</h2>
+    <p>Sales agents use the same API with sales expertise baked in (Claude).</p>
+    <ul>
+      <li><strong>Website form</strong> → webhook to your server → <code>POST /agent</code> with lead message → send reply via SMS/email.</li>
+      <li><strong>Instant follow-up:</strong> on new lead, first message within 60 seconds via your SMS provider (Twilio, etc.) using Meridian’s reply text.</li>
+      <li><strong>Widget:</strong> put the chat bubble on landing pages that collect leads.</li>
+      <li><strong>Events:</strong> POST <code>lead.created</code> so Meridian (and your outbound webhook) stay in sync.</li>
+    </ul>
+    <pre id="snippet-sales"><code>// Pseudo: form webhook handler
+const reply = await askMeridian(
+  `New lead. Name: ${name}. Need: ${need}. Phone: ${phone}. Write a short SMS follow-up.`
+);
+await sendSms(phone, reply);</code></pre>
+    <div class="copy-row"><button class="copybtn" type="button" data-copy="snippet-sales">Copy pattern</button></div>
+  </section>
+
+  <!-- 8 n8n -->
+  <section id="n8n">
+    <h2>8. n8n / Zapier / Make — copy this recipe</h2>
+    <h3>Recipe: “When form submitted → Meridian reply → SMS”</h3>
+    <ol>
+      <li><strong>Trigger:</strong> Webhook / Form / CRM “new lead”.</li>
+      <li><strong>HTTP Request</strong> (POST):
+        <ul>
+          <li>URL: <code>…/api/v1/agents/AGENT_ID/agent</code></li>
+          <li>Auth header: Bearer <code>mdn_…</code></li>
+          <li>JSON body: <code>{"message": "…lead context…"}</code></li>
+        </ul>
+      </li>
+      <li><strong>Parse</strong> <code>reply</code> from JSON.</li>
+      <li><strong>Action:</strong> Twilio SMS / Gmail / Slack with that text.</li>
+      <li>Optional: second HTTP POST to <code>…/events</code> with <code>type: "lead.created"</code>.</li>
+    </ol>
+    <div class="card">
+      <div class="label">Zapier mapping</div>
+      <p>Action: <em>Webhooks by Zapier → Custom Request</em>. Method POST. Data pass-through raw JSON. Next step uses <code>reply</code> field.</p>
+    </div>
+  </section>
+
+  <!-- 9 Test -->
+  <section id="test">
+    <h2>9. Must-work tests (do these before you tell staff)</h2>
+    <table>
+      <thead><tr><th>Test</th><th>You say / send</th><th>Pass if</th></tr></thead>
+      <tbody>
+        <tr><td>Hours</td><td>“What are your hours?”</td><td>Matches your intake hours</td></tr>
+        <tr><td>Booking</td><td>“I want to book an appointment”</td><td>Offers next step / slots / rules</td></tr>
+        <tr><td>Price</td><td>“How much does it cost?”</td><td>Uses your services copy, no invented prices</td></tr>
+        <tr><td>Greeting</td><td>“Hi”</td><td>Warm, business-named reply</td></tr>
+        <tr><td>Widget</td><td>Message from your live site</td><td>Bubble answers in &lt; 3s typical</td></tr>
+        <tr><td>Phone</td><td>Live call after number attach</td><td>Hears correct business facts</td></tr>
+      </tbody>
+    </table>
+    <p>Meridian already ran smoke tests before delivery. Re-run these after <em>you</em> wire the widget or phone so the full path is proven.</p>
+  </section>
+
+  <!-- 10 Checklist -->
+  <section id="checklist">
+    <h2>10. Go-live checklist</h2>
+    <ul class="check">
+      <li>Saved <code>mdn_</code> key in secrets (not email forever, not git)</li>
+      <li>Bookmarked personal <code>/guide/…</code> link</li>
+      <li>Website widget live on production domain</li>
+      <li>Tested hours / booking / price on widget</li>
+      <li>API smoke test from server (curl or n8n)</li>
+      <li>Phone assistant points at voice-turn + speaks <code>reply</code></li>
+      <li>Number attached + live test call completed</li>
+      <li>Optional: outbound webhook to CRM receiving 2xx</li>
+      <li>Optional: sales funnel posts new leads within 1 minute</li>
+      <li>Team knows how to escalate (human transfer number in intake)</li>
+    </ul>
+  </section>
+
+  <!-- 11 Troubleshoot -->
+  <section id="troubleshoot">
+    <h2>11. Troubleshooting</h2>
+    <table>
+      <thead><tr><th>Symptom</th><th>Fix</th></tr></thead>
+      <tbody>
+        <tr><td>401 Invalid credentials</td><td>Wrong agent ID or key. Copy both from connect guide. Header must be <code>Bearer mdn_…</code>.</td></tr>
+        <tr><td>Widget silent</td><td>Confirm <code>data-agent</code> + <code>data-token</code> (public <code>mdnw_</code>). Check browser console. Domain must load <code>widget.js</code> over HTTPS.</td></tr>
+        <tr><td>Phone hears nothing useful</td><td>Platform must POST transcript every turn and speak <code>reply</code>, not a static script only.</td></tr>
+        <tr><td>402 on audio</td><td>Premium hosted TTS needs prepaid turns or subscription. Use platform voice or top up packs.</td></tr>
+        <tr><td>Wrong hours / services</td><td>Re-submit intake or ask Meridian to update agent config — brain only knows facts in intake.</td></tr>
+        <tr><td>Webhook not arriving</td><td>Your URL must be public HTTPS, return 2xx, and be registered with Meridian ops.</td></tr>
+        <tr><td>Slow replies</td><td>Normal Claude path ~0.5–2s. Timeouts: raise client timeout to 15–20s.</td></tr>
+      </tbody>
+    </table>
+    <div class="card">
+      <div class="label">Still stuck?</div>
+      <p>Reply on your proposal email or open Meridian chat on the site. Include Agent ID (never post the full secret key in public tickets if you can avoid it).</p>
+    </div>
+  </section>
+
+  <div class="sticky-cta">
+    <a class="btn btn-dark" href="/#proposal">Get a proposal</a>
+    <a class="btn btn-light" href="/#agents">See agents</a>
+    <a class="btn btn-light" href="/why-agents">Why these agents</a>
+  </div>
+</main>
+
+<footer>
+  <p><strong>Meridian Agency</strong> — Voice · Sales · Booking</p>
+  <p style="margin-top:8px">
+    <a href="/">Home</a> ·
+    <a href="/install-guide">Install guide</a> ·
+    <a href="/why-agents">Why agents</a> ·
+    <a href="/privacy">Privacy</a> ·
+    <a href="/terms">Terms</a>
+  </p>
+  <p style="margin-top:10px">
+    Live: <a href="https://meridian-production-2eb0.up.railway.app/">meridian-production-2eb0.up.railway.app</a>
+  </p>
+</footer>
+
+<script>
+document.querySelectorAll('[data-copy]').forEach(function (btn) {
+  btn.addEventListener('click', function () {
+    var el = document.getElementById(btn.getAttribute('data-copy'));
+    if (!el) return;
+    var text = el.innerText || el.textContent;
+    navigator.clipboard.writeText(text).then(function () {
+      var prev = btn.textContent;
+      btn.textContent = 'Copied ✓';
+      setTimeout(function () { btn.textContent = prev; }, 1600);
+    });
+  });
+});
+</script>
+</body>
+</html>
