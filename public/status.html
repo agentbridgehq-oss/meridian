@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>System status · Meridian</title>
+<meta name="description" content="Live Meridian platform status — brain, voice, notifications, reliability.">
+<meta name="theme-color" content="#0C0C0B">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F7F6F3;--elev:#fff;--ink:#0C0C0B;--muted:#6B6A66;--line:rgba(12,12,11,.08);--good:#1F7A4C;--warn:#B45309;--bad:#9B2C2C;--serif:'Instrument Serif',Georgia,serif;--sans:Inter,system-ui,sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--sans);background:var(--bg);color:var(--ink);line-height:1.55;min-height:100vh;-webkit-font-smoothing:antialiased}
+a{color:inherit}
+.top{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--line);background:rgba(247,246,243,.92);backdrop-filter:blur(12px);position:sticky;top:0;z-index:10}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;font-weight:600}
+.mark{width:28px;height:28px;border-radius:8px;background:var(--ink);display:grid;place-items:center}
+.mark svg{width:14px;height:14px}
+.ghost{font-size:.85rem;color:var(--muted);text-decoration:none;padding:8px 12px;border-radius:999px}
+.ghost:hover{background:#E8E6E1;color:var(--ink)}
+.shell{max-width:720px;margin:0 auto;padding:36px 16px 80px}
+h1{font-family:var(--serif);font-weight:400;font-size:clamp(1.9rem,4vw,2.5rem);letter-spacing:-.02em;margin-bottom:8px}
+.lede{color:var(--muted);margin-bottom:28px}
+.badge{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:999px;font-weight:600;font-size:.85rem;margin-bottom:20px}
+.badge.ok{background:rgba(31,122,76,.12);color:var(--good)}
+.badge.degraded{background:rgba(180,83,9,.12);color:var(--warn)}
+.badge.down{background:rgba(155,44,44,.12);color:var(--bad)}
+.dot{width:8px;height:8px;border-radius:50%;background:currentColor}
+.card{background:var(--elev);border:1px solid var(--line);border-radius:18px;padding:20px;margin-bottom:14px}
+.card h2{font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:12px;font-weight:600}
+.row{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--line);font-size:.92rem}
+.row:last-child{border-bottom:0}
+.row span{color:var(--muted)}
+.row strong.ok{color:var(--good)}
+.row strong.no{color:var(--warn)}
+.msg{font-size:.95rem;color:#3F3F3A;margin-top:8px}
+.foot{margin-top:28px;font-size:.82rem;color:var(--muted);text-align:center}
+.foot a{font-weight:500;color:var(--ink)}
+</style>
+</head>
+<body>
+<header class="top">
+  <a class="brand" href="/"><span class="mark"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2"><path d="M4 12h16M12 4v16"/></svg></span>Meridian</a>
+  <div>
+    <a class="ghost" href="/security">Security</a>
+    <a class="ghost" href="/dashboard">Dashboard</a>
+    <a class="ghost" href="/">Home</a>
+  </div>
+</header>
+<main class="shell">
+  <h1>System status</h1>
+  <p class="lede">Public live checks. Customer phone/chat keep working even when optional pieces are offline.</p>
+  <div id="badge" class="badge degraded"><span class="dot"></span> Checking…</div>
+  <div class="card">
+    <h2>Platform message</h2>
+    <p class="msg" id="message">Loading…</p>
+  </div>
+  <div class="card">
+    <h2>Core checks</h2>
+    <div id="checks"></div>
+  </div>
+  <div class="card">
+    <h2>Details</h2>
+    <div id="details"></div>
+  </div>
+  <p class="foot">JSON: <a href="/api/status">/api/status</a> · Health: <a href="/health">/health</a> · <a href="/security">Security posture</a></p>
+</main>
+<script>
+(async function () {
+  function row(label, ok, detail) {
+    return '<div class="row"><span>' + label + '</span><strong class="' + (ok ? 'ok' : 'no') + '">' +
+      (ok ? 'Operational' : (detail || 'Not configured')) + '</strong></div>';
+  }
+  try {
+    const res = await fetch('/api/status');
+    const d = await res.json();
+    const badge = document.getElementById('badge');
+    const st = d.status || 'unknown';
+    badge.className = 'badge ' + (st === 'operational' ? 'ok' : st === 'degraded' ? 'degraded' : 'down');
+    badge.innerHTML = '<span class="dot"></span> ' + (st === 'operational' ? 'All systems operational' : st === 'degraded' ? 'Operational with notes' : String(st));
+    document.getElementById('message').textContent = d.message || '';
+    const c = d.checks || {};
+    document.getElementById('checks').innerHTML =
+      row('Platform online', c.online !== false) +
+      row('Claude brain', c.claude, 'Fallback brain active') +
+      row('xAI hosted TTS', c.xaiTts, 'Platform TTS still OK') +
+      row('Owner email alerts', c.email, 'Set RESEND_API_KEY') +
+      row('SMS (optional)', c.sms, 'Set Twilio env') +
+      row('OpenClaw contained', c.openclawContained !== false);
+    document.getElementById('details').innerHTML =
+      '<div class="row"><span>Voice mode</span><strong>' + (c.voiceMode || d.voice?.mode || '—') + '</strong></div>' +
+      '<div class="row"><span>Uptime</span><strong>' + Math.floor((d.uptimeSec || 0) / 60) + ' min</strong></div>' +
+      '<div class="row"><span>Interactions (24h)</span><strong>' + (d.interactions?.last24h ?? '—') + '</strong></div>' +
+      '<div class="row"><span>Updated</span><strong>' + (d.updatedAt || '—') + '</strong></div>';
+  } catch (e) {
+    document.getElementById('badge').className = 'badge down';
+    document.getElementById('badge').innerHTML = '<span class="dot"></span> Unable to reach status API';
+    document.getElementById('message').textContent = e.message || 'Error';
+  }
+})();
+</script>
+</body>
+</html>

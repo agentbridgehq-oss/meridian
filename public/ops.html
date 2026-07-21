@@ -115,6 +115,16 @@
       </div>
       <div class="log" id="log"></div>
     </div>
+    <div class="panel" style="grid-column:1/-1">
+      <h2>Articles (draft → Claude vet → fix → you publish)</h2>
+      <p class="muted" style="font-size:0.82rem;margin-bottom:10px">Long-form every ~2–3 days when MERIDIAN_ARTICLES=1. Nothing goes live until status is <strong>ready</strong> and you hit Publish (unless auto-publish env is on).</p>
+      <div id="articles"></div>
+      <div class="actions">
+        <button type="button" id="art-cycle">Run full cycle now</button>
+        <button type="button" class="ghost" id="art-refresh">Refresh list</button>
+        <a class="ghost" href="/blog" style="padding:8px 12px;display:inline-block">View blog →</a>
+      </div>
+    </div>
   </div>
 </main>
 <script>
@@ -188,9 +198,89 @@
         load();
       };
     });
+    loadArticles();
   }
 
-  $('refresh').onclick = load;
+  async function loadArticles() {
+    if (!token() || !$('articles')) return;
+    try {
+      const r = await fetch('/api/ops/articles', { headers: headers() });
+      if (!r.ok) return;
+      const d = await r.json();
+      const list = d.articles || [];
+      $('articles').innerHTML = list.slice(0, 15).map((a) =>
+        '<div class="row">' +
+        '<div><div>' + (a.title || a.id).slice(0, 60) + '</div>' +
+        '<div class="muted mono">' + (a.status || '') + ' · ' + (a.slug || '') +
+        (a.lastVet?.score != null ? ' · score ' + a.lastVet.score : '') + '</div></div>' +
+        '<div style="display:flex;gap:6px;flex-wrap:wrap">' +
+        (a.status === 'ready' || a.status === 'published'
+          ? '<button type="button" class="art-pub" data-id="' + a.id + '" style="padding:4px 8px;font-size:0.75rem">Publish</button>'
+          : '') +
+        (a.status === 'needs_fix' || a.status === 'rejected'
+          ? '<button type="button" class="art-fix ghost" data-id="' + a.id + '" style="padding:4px 8px;font-size:0.75rem">Fix+vet</button>'
+          : '') +
+        (a.status === 'draft'
+          ? '<button type="button" class="art-vet ghost" data-id="' + a.id + '" style="padding:4px 8px;font-size:0.75rem">Vet</button>'
+          : '') +
+        '<button type="button" class="art-rej ghost" data-id="' + a.id + '" style="padding:4px 8px;font-size:0.75rem">Reject</button>' +
+        (a.status === 'published' ? '<a class="muted" href="/blog/' + a.slug + '" style="font-size:0.75rem">View</a>' : '') +
+        '</div></div>'
+      ).join('') || '<p class="muted">No articles yet — run full cycle</p>';
+
+      document.querySelectorAll('.art-pub').forEach((btn) => {
+        btn.onclick = async () => {
+          const id = btn.getAttribute('data-id');
+          const res = await fetch('/api/ops/articles/' + id + '/publish', { method: 'POST', headers: headers(), body: '{}' });
+          const j = await res.json();
+          log(res.ok ? 'Published ' + (j.article?.slug || id) : 'Publish failed: ' + (j.error || ''));
+          loadArticles();
+        };
+      });
+      document.querySelectorAll('.art-fix').forEach((btn) => {
+        btn.onclick = async () => {
+          const id = btn.getAttribute('data-id');
+          log('Fixing ' + id + '…');
+          const res = await fetch('/api/ops/articles/' + id + '/fix', { method: 'POST', headers: headers(), body: '{}' });
+          const j = await res.json();
+          log(res.ok ? 'Fix/vet → ' + (j.article?.status || '') : 'Fix failed');
+          loadArticles();
+        };
+      });
+      document.querySelectorAll('.art-vet').forEach((btn) => {
+        btn.onclick = async () => {
+          const id = btn.getAttribute('data-id');
+          const res = await fetch('/api/ops/articles/' + id + '/vet', { method: 'POST', headers: headers(), body: '{}' });
+          const j = await res.json();
+          log(res.ok ? 'Vet → ' + (j.article?.status || '') : 'Vet failed');
+          loadArticles();
+        };
+      });
+      document.querySelectorAll('.art-rej').forEach((btn) => {
+        btn.onclick = async () => {
+          const id = btn.getAttribute('data-id');
+          const res = await fetch('/api/ops/articles/' + id + '/reject', {
+            method: 'POST', headers: headers(),
+            body: JSON.stringify({ reason: 'ops_reject' }),
+          });
+          log(res.ok ? 'Rejected ' + id : 'Reject failed');
+          loadArticles();
+        };
+      });
+    } catch (e) {
+      log('Articles load error');
+    }
+  }
+
+  $('refresh').onclick = () => { load(); loadArticles(); };
+  $('art-refresh') && ($('art-refresh').onclick = loadArticles);
+  $('art-cycle') && ($('art-cycle').onclick = async () => {
+    log('Article cycle starting (Claude draft+vet)…');
+    const r = await fetch('/api/ops/articles/cycle', { method: 'POST', headers: headers(), body: '{}' });
+    const d = await r.json();
+    log(r.ok ? 'Cycle: ' + (d.stage || d.error || JSON.stringify(d).slice(0, 120)) : 'Cycle failed: ' + (d.error || ''));
+    loadArticles();
+  });
   $('openclaw').onclick = async () => {
     const r = await fetch('/api/openclaw/run', { method: 'POST', headers: headers() });
     const d = await r.json();

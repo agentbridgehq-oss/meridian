@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Security · Meridian</title>
+<meta name="description" content="Meridian security posture: keys, rate limits, containment, privacy, PIPEDA-minded practices.">
+<meta name="theme-color" content="#0C0C0B">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F7F6F3;--elev:#fff;--ink:#0C0C0B;--muted:#6B6A66;--line:rgba(12,12,11,.08);--good:#1F7A4C;--serif:'Instrument Serif',Georgia,serif;--sans:Inter,system-ui,sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--sans);background:var(--bg);color:var(--ink);line-height:1.6;-webkit-font-smoothing:antialiased}
+a{color:inherit}
+.top{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--line);position:sticky;top:0;background:rgba(247,246,243,.92);backdrop-filter:blur(12px);z-index:10}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;font-weight:600}
+.mark{width:28px;height:28px;border-radius:8px;background:var(--ink);display:grid;place-items:center}
+.mark svg{width:14px;height:14px}
+.ghost{font-size:.85rem;color:var(--muted);text-decoration:none;padding:8px 12px;border-radius:999px}
+.ghost:hover{background:#E8E6E1;color:var(--ink)}
+.shell{max-width:720px;margin:0 auto;padding:36px 16px 80px}
+h1{font-family:var(--serif);font-weight:400;font-size:clamp(1.9rem,4vw,2.5rem);letter-spacing:-.02em;margin-bottom:10px}
+.lede{color:var(--muted);margin-bottom:28px;font-size:1.02rem}
+h2{font-family:var(--serif);font-weight:400;font-size:1.45rem;margin:28px 0 10px}
+.card{background:var(--elev);border:1px solid var(--line);border-radius:18px;padding:20px 22px;margin:14px 0}
+ul{margin:8px 0 0 1.15rem}
+li{margin:8px 0;color:#3F3F3A}
+.tag{display:inline-block;font-size:.68rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--good);margin-bottom:8px}
+.muted{color:var(--muted);font-size:.9rem}
+code{font-family:ui-monospace,Consolas,monospace;font-size:.85em;background:#EFEDE8;padding:1px 6px;border-radius:6px}
+</style>
+</head>
+<body>
+<header class="top">
+  <a class="brand" href="/"><span class="mark"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2"><path d="M4 12h16M12 4v16"/></svg></span>Meridian</a>
+  <div>
+    <a class="ghost" href="/status">Status</a>
+    <a class="ghost" href="/privacy">Privacy</a>
+    <a class="ghost" href="/terms">Terms</a>
+  </div>
+</header>
+<main class="shell">
+  <h1>Security posture</h1>
+  <p class="lede">How Meridian protects customer agents, keys, and conversations. Built for Ontario SMBs with PIPEDA-minded defaults — not theater.</p>
+
+  <div class="card">
+    <div class="tag">Keys &amp; surfaces</div>
+    <ul>
+      <li><strong>Secret API keys</strong> (<code>mdn_</code>) stay on servers, n8n, and phone platforms — never in website HTML.</li>
+      <li><strong>Public widget tokens</strong> (<code>mdnw_</code>) are chat-only, rate-limited, and separate from secret keys.</li>
+      <li><strong>Provider keys</strong> (Anthropic, xAI, Stripe, Resend, Twilio) live only in Meridian server environment variables.</li>
+      <li>Key comparison uses timing-safe checks; agent records store hashes, not raw secrets.</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <div class="tag">Abuse &amp; network</div>
+    <ul>
+      <li>Helmet security headers and Content-Security-Policy on every response.</li>
+      <li>Rate limits on public chat, widget, voice previews, and funnel endpoints.</li>
+      <li>Widget spam soft-filter for obvious SEO/lead spam patterns.</li>
+      <li>Website knowledge scrape blocks private/local network hosts (SSRF guard).</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <div class="tag">Payments</div>
+    <ul>
+      <li>Stripe Checkout + signed webhooks — Meridian never stores full card numbers.</li>
+      <li>Hosted xAI voice is balance-checked <em>before</em> provider calls and charged only after success.</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <div class="tag">Agent containment + expert gate</div>
+    <ul>
+      <li>OpenClaw autonomous install is <strong>contained</strong>: config packs, transactional email, drafts — not bank logins, customer inboxes, or arbitrary file access.</li>
+      <li><strong>Expert gate:</strong> every OpenClaw agent loads its training <code>.md</code> from disk <em>before every task</em> (fail closed if missing).</li>
+      <li>Public report: <a href="/api/openclaw/containment"><code>/api/openclaw/containment</code></a> · <a href="/api/openclaw/experts"><code>/api/openclaw/experts</code></a></li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <div class="tag">Truth &amp; reliability</div>
+    <ul>
+      <li>Agents are bound to business facts + knowledge base with anti-hallucination rules.</li>
+      <li>If Claude is slow or down, a deterministic fallback still answers hours/booking intents — no silent failure.</li>
+      <li>Phone default path uses platform TTS so calls keep working if Meridian-hosted audio is unavailable.</li>
+      <li>Emergency / human-request intents alert the business owner when notify contacts are set.</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <div class="tag">Data &amp; privacy</div>
+    <ul>
+      <li>We minimize what we store: agent config, interaction logs for your dashboard, billing balances.</li>
+      <li>No selling of lead lists. Marketing email requires consent (CASL-aligned).</li>
+      <li>See <a href="/privacy">Privacy Policy</a> and <a href="/terms">Terms</a> for full legal language.</li>
+      <li>Enterprise SOC 2 / HIPAA BAA are not claimed until formally attested — we do not invent compliance badges.</li>
+    </ul>
+  </div>
+
+  <h2>Subprocessors (typical)</h2>
+  <div class="card">
+    <ul>
+      <li>Railway — application hosting</li>
+      <li>Stripe — payments</li>
+      <li>Anthropic — LLM brain (when configured)</li>
+      <li>xAI — optional hosted TTS</li>
+      <li>Resend — transactional email</li>
+      <li>Twilio — optional SMS (only if you enable)</li>
+      <li>Retell / Vapi / Bland — customer-chosen phone platforms</li>
+    </ul>
+    <p class="muted" style="margin-top:12px">Exact stack depends on which features you enable for your agent.</p>
+  </div>
+
+  <h2>Report an issue</h2>
+  <p class="muted">Security concerns: email the address on your connect guide / ops contact. Rotate a leaked <code>mdn_</code> key immediately via Meridian ops.</p>
+</main>
+</body>
+</html>
