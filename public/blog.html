@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Insights · Meridian Agency</title>
+<meta name="description" content="Long-form articles on AI receptionists, missed calls, booking, and secure agents for local business.">
+<meta name="theme-color" content="#0C0C0B">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F7F6F3;--elev:#fff;--ink:#0C0C0B;--muted:#6B6A66;--line:rgba(12,12,11,.08);--serif:'Instrument Serif',Georgia,serif;--sans:Inter,system-ui,sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--sans);background:var(--bg);color:var(--ink);line-height:1.55;-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+.top{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--line);position:sticky;top:0;background:rgba(247,246,243,.92);backdrop-filter:blur(12px);z-index:10}
+.brand{display:flex;align-items:center;gap:10px;font-weight:600}
+.mark{width:28px;height:28px;border-radius:8px;background:var(--ink);display:grid;place-items:center}
+.mark svg{width:14px;height:14px}
+.ghost{font-size:.85rem;color:var(--muted);padding:8px 12px;border-radius:999px}
+.ghost:hover{background:#E8E6E1;color:var(--ink)}
+.shell{max-width:760px;margin:0 auto;padding:40px 16px 80px}
+h1{font-family:var(--serif);font-weight:400;font-size:clamp(2rem,4vw,2.6rem);letter-spacing:-.02em;margin-bottom:8px}
+.lede{color:var(--muted);margin-bottom:28px}
+.card{display:block;background:var(--elev);border:1px solid var(--line);border-radius:18px;padding:22px;margin-bottom:14px;transition:box-shadow .15s}
+.card:hover{box-shadow:0 12px 40px rgba(12,12,11,.06)}
+.card h2{font-family:var(--serif);font-weight:400;font-size:1.45rem;margin-bottom:8px;letter-spacing:-.01em}
+.meta{font-size:.78rem;color:var(--muted);margin-bottom:10px}
+.excerpt{color:#3F3F3A;font-size:.95rem}
+.empty{color:var(--muted);padding:40px 0}
+</style>
+</head>
+<body>
+<header class="top">
+  <a class="brand" href="/"><span class="mark"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2"><path d="M4 12h16M12 4v16"/></svg></span>Meridian</a>
+  <div>
+    <a class="ghost" href="/why-agents">Why agents</a>
+    <a class="ghost" href="/">Home</a>
+  </div>
+</header>
+<main class="shell">
+  <h1>Insights</h1>
+  <p class="lede">Long-form notes on AI receptionists, booking, and running agents that don’t invent your prices. Vetted before publish.</p>
+  <div id="list"><p class="empty">Loading…</p></div>
+</main>
+<script>
+(async function () {
+  try {
+    const res = await fetch('/api/blog');
+    const data = await res.json();
+    const items = data.articles || [];
+    const el = document.getElementById('list');
+    if (!items.length) {
+      el.innerHTML = '<p class="empty">No published articles yet. Check back soon.</p>';
+      return;
+    }
+    el.innerHTML = items.map(function (a) {
+      return '<a class="card" href="/blog/' + encodeURIComponent(a.slug) + '">' +
+        '<div class="meta">' + (a.publishedAt || '').slice(0, 10) +
+        (a.readingMinutes ? ' · ' + a.readingMinutes + ' min read' : '') + '</div>' +
+        '<h2>' + escapeHtml(a.title) + '</h2>' +
+        '<p class="excerpt">' + escapeHtml(a.excerpt || a.subtitle || '') + '</p></a>';
+    }).join('');
+  } catch (e) {
+    document.getElementById('list').innerHTML = '<p class="empty">Could not load articles.</p>';
+  }
+  function escapeHtml(s) {
+    return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+})();
+</script>
+</body>
+</html>

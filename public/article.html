@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Article · Meridian</title>
+<meta name="theme-color" content="#0C0C0B">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F7F6F3;--elev:#fff;--ink:#0C0C0B;--muted:#6B6A66;--line:rgba(12,12,11,.08);--serif:'Instrument Serif',Georgia,serif;--sans:Inter,system-ui,sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--sans);background:var(--bg);color:var(--ink);line-height:1.65;-webkit-font-smoothing:antialiased}
+a{color:inherit}
+.top{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--line);position:sticky;top:0;background:rgba(247,246,243,.92);backdrop-filter:blur(12px);z-index:10}
+.brand{display:flex;align-items:center;gap:10px;font-weight:600;text-decoration:none}
+.mark{width:28px;height:28px;border-radius:8px;background:var(--ink);display:grid;place-items:center}
+.mark svg{width:14px;height:14px}
+.ghost{font-size:.85rem;color:var(--muted);text-decoration:none;padding:8px 12px;border-radius:999px}
+.shell{max-width:720px;margin:0 auto;padding:36px 16px 80px}
+.meta{font-size:.8rem;color:var(--muted);margin-bottom:12px}
+h1{font-family:var(--serif);font-weight:400;font-size:clamp(1.9rem,4.5vw,2.7rem);letter-spacing:-.02em;line-height:1.15;margin-bottom:12px}
+.sub{font-size:1.1rem;color:#3F3F3A;margin-bottom:28px}
+.article h2{font-family:var(--serif);font-weight:400;font-size:1.55rem;margin:32px 0 12px;letter-spacing:-.01em}
+.article h3{font-size:1.1rem;margin:24px 0 10px}
+.article p{margin:0 0 16px;color:#2A2A28}
+.article ul{margin:0 0 16px 1.2rem}
+.article li{margin:6px 0}
+.article code{font-size:.88em;background:#EFEDE8;padding:1px 6px;border-radius:6px}
+.mdn-art-fig{margin:28px 0;border-radius:18px;overflow:hidden;background:#111}
+.mdn-art-fig svg{display:block;width:100%;height:auto}
+.mdn-art-fig figcaption{font-size:.82rem;color:var(--muted);padding:10px 4px 0;background:var(--bg)}
+.cta{margin-top:40px;padding:22px;border-radius:18px;background:var(--elev);border:1px solid var(--line)}
+.cta a{font-weight:600}
+.err{color:#9B2C2C;padding:40px 0}
+</style>
+</head>
+<body>
+<header class="top">
+  <a class="brand" href="/"><span class="mark"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2"><path d="M4 12h16M12 4v16"/></svg></span>Meridian</a>
+  <div>
+    <a class="ghost" href="/blog">All insights</a>
+    <a class="ghost" href="/">Home</a>
+  </div>
+</header>
+<main class="shell" id="main">
+  <p class="meta">Loading…</p>
+</main>
+<script>
+(async function () {
+  const parts = location.pathname.split('/').filter(Boolean);
+  const slug = parts[0] === 'blog' && parts[1] ? parts[1] : new URLSearchParams(location.search).get('slug');
+  const main = document.getElementById('main');
+  if (!slug) {
+    main.innerHTML = '<p class="err">Missing article.</p>';
+    return;
+  }
+  try {
+    const res = await fetch('/api/blog/' + encodeURIComponent(slug));
+    const data = await res.json();
+    if (!res.ok || !data.article) throw new Error(data.error || 'Not found');
+    const a = data.article;
+    document.title = a.title + ' · Meridian';
+    main.innerHTML =
+      '<div class="meta">' + (a.publishedAt || '').slice(0, 10) +
+      (a.readingMinutes ? ' · ' + a.readingMinutes + ' min read' : '') +
+      (a.tags && a.tags.length ? ' · ' + a.tags.slice(0, 4).join(', ') : '') + '</div>' +
+      '<h1>' + escapeHtml(a.title) + '</h1>' +
+      (a.subtitle ? '<p class="sub">' + escapeHtml(a.subtitle) + '</p>' : '') +
+      '<article class="article">' + (a.bodyHtml || '') + '</article>' +
+      '<div class="cta"><p><strong>Meridian Agency</strong> builds Voice, Sales, and Booking agents that answer with your real business facts.</p>' +
+      '<p style="margin-top:10px"><a href="/#proposal">Request a proposal →</a> · <a href="/why-agents">Why agents</a></p></div>';
+  } catch (e) {
+    main.innerHTML = '<p class="err">' + escapeHtml(e.message || 'Not found') + '</p><p><a href="/blog">← Insights</a></p>';
+  }
+  function escapeHtml(s) {
+    return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+})();
+</script>
+</body>
+</html>
