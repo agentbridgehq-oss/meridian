@@ -187,6 +187,17 @@ export function provisionClientAgent(lead) {
       humanTransfer: lead.intake?.humanTransfer || '',
       calendar: lead.intake?.calendar || '',
       primaryNeed: lead.intake?.primaryNeed || 'full',
+      // Preferred Meridian-hosted xAI voice (customer picker)
+      xaiVoiceId: (
+        lead.intake?.xaiVoiceId ||
+        lead.intake?.voiceId ||
+        process.env.XAI_TTS_VOICE ||
+        'eve'
+      )
+        .toString()
+        .toLowerCase()
+        .trim()
+        .slice(0, 64),
       // Optional ElevenLabs plug-in (null = platform TTS)
       elevenlabsVoiceId: lead.intake?.elevenlabsVoiceId || process.env.ELEVENLABS_VOICE_ID || '',
     },
@@ -239,7 +250,12 @@ export function submitIntake(intakeToken, body) {
     primaryNeed: body.primaryNeed || lead.primaryNeed || 'full',
     website: body.website || '',
     notes: body.notes || '',
-    elevenlabsVoiceId: body.elevenlabsVoiceId || body.voiceId || '',
+    elevenlabsVoiceId: body.elevenlabsVoiceId || '',
+    xaiVoiceId: (body.xaiVoiceId || body.voiceId || process.env.XAI_TTS_VOICE || 'eve')
+      .toString()
+      .toLowerCase()
+      .trim()
+      .slice(0, 64),
   };
   setStage(lead.id, 'intake_received', { intake, consent: true });
   const connection = provisionClientAgent(getLead(lead.id));
@@ -259,6 +275,43 @@ export function verifyAgentKey(agentId, apiKey) {
 
 export function listAgents() {
   return load(AGENTS, { agents: [] }).agents;
+}
+
+/** Find agent record by id (no auth). */
+export function getAgent(agentId) {
+  return load(AGENTS, { agents: [] }).agents.find((a) => a.id === agentId) || null;
+}
+
+/**
+ * Patch agent.config (and optional top-level fields). Returns updated agent or null.
+ * Never returns apiKeyHash to callers via this helper's return of stored shape.
+ */
+export function updateAgentConfig(agentId, configPatch = {}, topLevel = {}) {
+  const store = load(AGENTS, { agents: [] });
+  const agent = store.agents.find((a) => a.id === agentId);
+  if (!agent) return null;
+  agent.config = { ...(agent.config || {}), ...configPatch };
+  for (const [k, v] of Object.entries(topLevel || {})) {
+    if (k === 'apiKey' || k === 'apiKeyHash' || k === 'id') continue;
+    if (v !== undefined) agent[k] = v;
+  }
+  agent.updatedAt = new Date().toISOString();
+  save(AGENTS, store);
+  return agent;
+}
+
+/** Set preferred xAI / hosted voice id on agent. */
+export function setAgentVoice(agentId, voiceId) {
+  const id = String(voiceId || '')
+    .toLowerCase()
+    .trim()
+    .slice(0, 64);
+  if (!id || !/^[a-z0-9_-]{1,64}$/i.test(id)) {
+    return { ok: false, error: 'Invalid voice id' };
+  }
+  const agent = updateAgentConfig(agentId, { xaiVoiceId: id, voiceId: id });
+  if (!agent) return { ok: false, error: 'Agent not found' };
+  return { ok: true, agentId, xaiVoiceId: id, config: agent.config };
 }
 
 /** Get-or-create the public widget token for an agent (backfills pre-widget agents). */
