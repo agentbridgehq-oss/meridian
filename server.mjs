@@ -29,6 +29,8 @@ import {
   ensureWidgetToken,
   verifyWidgetToken,
   listAgents,
+  getAgent,
+  setAgentVoice,
   BASE,
 } from './engine.mjs';
 import { runAutopilot, lastAutopilotReport } from './lib/autopilot.mjs';
@@ -43,6 +45,7 @@ import {
 } from './lib/claude-agent-api.mjs';
 import { runOpenClaw } from './openclaw/daily.mjs';
 import { containmentStatus, buildContainmentReport } from './lib/openclaw-containment.mjs';
+import { expertGateStatus, withExpertAndContainment } from './lib/openclaw-expert-gate.mjs';
 import {
   voiceStatus,
   listVoices,
@@ -53,6 +56,8 @@ import {
   buildPlatformPayload,
   preferredHostedTts,
   hostedTextToSpeech,
+  previewVoice,
+  resolveAgentVoiceId,
 } from './lib/voice-pipeline.mjs';
 import { deployAgent, listDeployTemplates } from './lib/deploy-agent.mjs';
 import { runOpenClawDeploy } from './openclaw/deploy-agent.mjs';
@@ -75,6 +80,9 @@ import {
   buildN8nWorkflow,
   listInstallJobs,
   SETUP_STEPS,
+  getVoiceCatalog,
+  saveAgentVoicePreference,
+  saveSetupKnowledge,
 } from './lib/customer-setup.mjs';
 import {
   TOPUP_PACKS,
@@ -107,6 +115,57 @@ import {
   buildSalesN8nRecipe,
   scoreLead,
 } from './lib/sales-pipeline.mjs';
+import { runCustomerTurn } from './lib/turn-pipeline.mjs';
+import {
+  setKnowledge,
+  fetchWebsiteSummary,
+  analyzeIntent,
+} from './lib/knowledge.mjs';
+import {
+  refreshAgentKnowledge,
+  listProposals,
+  approveProposal,
+  rejectProposal,
+  approveAll,
+  rejectAll,
+  runWeeklyKnowledgeRefresh,
+  knowledgeRefreshStatus,
+} from './lib/knowledge-refresh.mjs';
+import {
+  listInteractions,
+  agentStats,
+  buildActivitySummary,
+  logInteraction,
+} from './lib/interactions.mjs';
+import {
+  notifyConfig,
+  notifyOwner,
+  sendInteractionSummary,
+  sendMissedCallTextBack,
+  sendSms,
+  sendOwnerEmail,
+} from './lib/notify.mjs';
+import {
+  platformStatus,
+  probeAgent,
+  probeAllAgents,
+  getAgentHealth,
+} from './lib/reliability.mjs';
+import {
+  draftArticle,
+  vetArticle,
+  fixArticle,
+  runArticleCycle,
+  maybeRunScheduledCycle,
+  publishArticle,
+  unpublishArticle,
+  rejectArticleFinal,
+  listArticles,
+  getArticle,
+  listPublished,
+  getPublishedArticle,
+  articlesStatus,
+} from './lib/articles.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -742,21 +801,109 @@ async function sendEmail(to, subject, text, html) {
 }
 
 app.get('/health', (_req, res) => {
+  const plat = platformStatus();
   res.json({
-    status: 'online',
+    status: plat.status === 'operational' ? 'online' : plat.status,
     product: 'meridian',
     uptime: process.uptime(),
     voice: voiceStatus(),
     brain: brainStatus(),
     claudeAgent: claudeAgentStatus(),
     openclaw: containmentStatus(),
+    notify: notifyConfig(),
+    platform: plat,
     ...funnelStats(),
   });
 });
 
+/** Public status JSON — safe for customers & status pages */
+app.get(['/api/status', '/status.json'], (_req, res) => {
+  res.json(platformStatus());
+});
+
 /** Public: OpenClaw is caged — no banks, inboxes, files, account logins */
 app.get('/api/openclaw/containment', (_req, res) => {
-  res.json({ ok: true, ...buildContainmentReport() });
+  res.json({ ok: true, ...buildContainmentReport(), expertGate: expertGateStatus() });
+});
+
+/** Public: expert training gate status — every agent must load MD every task */
+app.get('/api/openclaw/experts', (_req, res) => {
+  res.json({ ok: true, ...expertGateStatus() });
+});
+
+/** Ops: run a named Meridian OpenClaw agent (expert-gated) */
+app.post('/api/ops/openclaw/run', async (req, res) => {
+  if (!admin(req)) return res.status(401).json({ error: 'Unauthorized' });
+  const agentId = String(req.body?.agentId || req.body?.agent || '').toLowerCase();
+  const allowed = new Set([
+    'daily-ops',
+    'deploy-agent',
+    'install-pack',
+    'health-probe',
+    'sales-pipeline',
+    'usage-report',
+    'knowledge-refresh',
+  ]);
+  if (!allowed.has(agentId)) {
+    return res.status(400).json({ error: 'Unknown agentId', allowed: [...allowed] });
+  }
+  try {
+    if (agentId === 'daily-ops') {
+      return res.json(await runOpenClaw());
+    }
+    if (agentId === 'deploy-agent') {
+      return res.json(await runOpenClawDeploy({ max: Number(req.body?.max) || 10 }));
+    }
+    if (agentId === 'install-pack') {
+      return res.json(await processInstallQueue({ sendEmail, max: Number(req.body?.max) || 10 }));
+    }
+    if (agentId === 'health-probe') {
+      const out = await withExpertAndContainment(
+        'health-probe',
+        'openclaw.health',
+        async (ctx) => {
+          const report = await probeAllAgents({ max: Number(req.body?.max) || 12 });
+          return { ...report, expert: { path: ctx.expert.expertPath, hash: ctx.expert.expertHash } };
+        },
+        { taskBrief: 'Synthetic health probes for Meridian agents.' },
+      );
+      return res.json(out.result || out);
+    }
+    if (agentId === 'knowledge-refresh') {
+      const out = await withExpertAndContainment(
+        'knowledge-refresh',
+        'openclaw.knowledge_refresh',
+        async (ctx) => {
+          const report = await runWeeklyKnowledgeRefresh({
+            force: req.body?.force === true,
+            notify: req.body?.notify !== false,
+          });
+          return { ...report, expert: { path: ctx.expert.expertPath, hash: ctx.expert.expertHash } };
+        },
+        { taskBrief: 'Knowledge self-update drafts for human approve' },
+      );
+      return res.json(out.result || out);
+    }
+    // sales-pipeline / usage-report: expert load + status stamp only (safe)
+    const out = await withExpertAndContainment(
+      agentId,
+      `openclaw.${agentId}`,
+      async (ctx) => ({
+        ok: true,
+        note: 'Expert loaded; specialized task handlers use this gate from their modules.',
+        expert: { path: ctx.expert.expertPath, hash: ctx.expert.expertHash, runId: ctx.runId },
+        containment: containmentStatus(),
+      }),
+      { taskBrief: req.body?.taskBrief || `Run ${agentId}` },
+    );
+    res.json(out.result || out);
+  } catch (e) {
+    res.status(e.code === 'OPENCLAW_CONTAINMENT' || e.code === 'OPENCLAW_EXPERT_MISSING' ? 403 : 500).json({
+      ok: false,
+      error: e.message,
+      code: e.code,
+    });
+  }
 });
 
 /** Public: is Claude Agent API wired? */
@@ -979,14 +1126,49 @@ app.post('/api/guide-chat', chatLimiter, async (req, res) => {
   }
 });
 
-// ── Voice pipeline (platform-first; ElevenLabs off unless armed) ─────────────
+// ── Voice pipeline (platform-first; full xAI picker) ─────────────────────────
+const previewHits = new Map(); // ip → timestamps
+function previewRateOk(ip) {
+  const now = Date.now();
+  const hits = (previewHits.get(ip) || []).filter((t) => now - t < 60_000);
+  if (hits.length >= 12) return false; // 12 free previews / min / IP
+  hits.push(now);
+  previewHits.set(ip, hits);
+  if (previewHits.size > 5000) previewHits.clear();
+  return true;
+}
+
 app.get('/api/voice/status', (_req, res) => {
   res.json(voiceStatus());
 });
 
-app.get('/api/voice/voices', async (req, res) => {
-  if (!admin(req)) return res.status(401).json({ error: 'Unauthorized' });
-  res.json(await listVoices());
+/** Public catalog for customer voice picker (no secret key required). */
+app.get('/api/voice/voices', async (_req, res) => {
+  try {
+    res.json(await getVoiceCatalog());
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+/**
+ * Free short sample for the picker — NOT billed to customer packs.
+ * Requires XAI_API_KEY on Meridian. Rate-limited.
+ */
+app.post('/api/voice/preview', async (req, res) => {
+  const ip = req.ip || req.socket?.remoteAddress || 'unknown';
+  if (!previewRateOk(ip)) {
+    return res.status(429).json({ ok: false, error: 'Too many previews — wait a minute and try again.' });
+  }
+  const voiceId = String(req.body?.voiceId || req.body?.voice_id || 'eve').slice(0, 64);
+  const text = String(req.body?.text || '').slice(0, 220);
+  try {
+    const result = await previewVoice(voiceId, text);
+    if (!result.ok) return res.status(result.error?.includes('XAI_API_KEY') ? 503 : 400).json(result);
+    res.json(result);
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
 });
 
 app.post('/api/voice/tts', async (req, res) => {
@@ -1017,6 +1199,39 @@ app.get('/api/v1/agents/:id/voice-spec', (req, res) => {
   if (!agent) return res.status(401).json({ error: 'Invalid credentials' });
   res.json(buildVoiceInstallSpec(agent, BASE));
 });
+
+/** Catalog + currently selected voice for this agent. */
+app.get('/api/v1/agents/:id/voices', async (req, res) => {
+  const key = (req.get('Authorization') || '').replace(/^Bearer\s+/i, '');
+  const agent = verifyAgentKey(req.params.id, key);
+  if (!agent) return res.status(401).json({ error: 'Invalid credentials' });
+  const catalog = await getVoiceCatalog();
+  res.json({
+    ...catalog,
+    selectedVoiceId: resolveAgentVoiceId(agent),
+    agentId: agent.id,
+  });
+});
+
+/**
+ * Save preferred xAI voice for this agent.
+ * Body: { "voiceId": "carina" } or { "xaiVoiceId": "luna" }
+ */
+function handleSetAgentVoice(req, res) {
+  const key = (req.get('Authorization') || '').replace(/^Bearer\s+/i, '');
+  const agent = verifyAgentKey(req.params.id, key);
+  if (!agent) return res.status(401).json({ error: 'Invalid credentials' });
+  const voiceId = req.body?.voiceId || req.body?.xaiVoiceId || req.body?.voice_id;
+  const result = setAgentVoice(agent.id, voiceId);
+  if (!result.ok) return res.status(400).json(result);
+  dispatchWebhook('agent.voice_selected', {
+    agentId: agent.id,
+    xaiVoiceId: result.xaiVoiceId,
+  }).catch(() => {});
+  res.json(result);
+}
+app.put('/api/v1/agents/:id/voice', handleSetAgentVoice);
+app.post('/api/v1/agents/:id/voice', handleSetAgentVoice);
 
 /**
  * Speak text:
@@ -1064,7 +1279,7 @@ app.post('/api/v1/agents/:id/speak', async (req, res) => {
   if (!pre.ok) return res.status(pre.status || 402).json(pre.body);
 
   const result = await hostedTextToSpeech(text, {
-    voiceId: req.body?.voiceId || agent.config?.xaiVoiceId || agent.config?.elevenlabsVoiceId,
+    voiceId: resolveAgentVoiceId(agent, req.body?.voiceId || req.body?.voice_id),
     provider: preferredHostedTts(),
   });
 
@@ -1138,7 +1353,7 @@ app.post('/api/v1/agents/:id/voice-turn', async (req, res) => {
   const turn = await runVoiceTurn(agent, message, {
     baseUrl: BASE,
     wantAudio,
-    voiceId: req.body?.voiceId,
+    voiceId: req.body?.voiceId || req.body?.voice_id || undefined,
   });
   if (!turn.ok) return res.status(400).json(turn);
 
@@ -1149,17 +1364,51 @@ app.post('/api/v1/agents/:id/voice-turn', async (req, res) => {
     });
   }
 
+  const intent = analyzeIntent(message);
+  const ix = logInteraction({
+    agentId: agent.id,
+    businessName: agent.businessName,
+    channel: 'voice',
+    message,
+    reply: turn.reply,
+    brainSource: turn.brainSource || turn.pipeline?.[0] || turn.mode,
+    intent,
+    meta: { mode: turn.mode, billed: Boolean(settled?.ok && turn.audioBase64) },
+  });
+
+  if (intent.emergency || intent.frustrated || intent.wantHuman) {
+    notifyOwner(agent, {
+      subject: intent.emergency
+        ? `🚨 Emergency call · ${agent.businessName}`
+        : `Voice transfer signal · ${agent.businessName}`,
+      text: `Caller: ${message}\nAgent: ${turn.reply}\nTransfer: ${agent.config?.humanTransfer || 'n/a'}`,
+      forceSms: intent.emergency,
+    }).catch(() => {});
+  }
+
   await dispatchWebhook('agent.voice_turn', {
     agentId: agent.id,
     businessName: agent.businessName,
     message: message.slice(0, 200),
     reply: (turn.reply || '').slice(0, 200),
     mode: turn.mode,
+    intent,
+    interactionId: ix.id,
     billed: Boolean(settled?.ok && settled.charged !== false),
   }).catch(() => {});
 
   res.json({
     ...turn,
+    intent,
+    transfer:
+      intent.transferSuggested || intent.emergency
+        ? {
+            suggested: true,
+            number: agent.config?.humanTransfer || null,
+            reason: intent.emergency ? 'emergency' : 'human_or_frustration',
+          }
+        : null,
+    interactionId: ix.id,
     billed: Boolean(settled?.ok && turn.audioBase64),
     billing: settled?.ok && turn.audioBase64
       ? {
@@ -1556,15 +1805,21 @@ app.post('/api/v1/agents/:id/widget-chat', async (req, res) => {
   const message = String(req.body?.message || '').slice(0, 500);
   if (!message) return res.status(400).json({ error: 'message required' });
   const history = Array.isArray(req.body?.history) ? req.body.history.slice(-8) : [];
-  const brain = await smartAgentChat(agent, message, { history });
-  dispatchWebhook('agent.widget_chat', {
+  const turn = await runCustomerTurn(agent, message, {
+    channel: 'widget',
+    history,
+    maxLen: 500,
+    blockSpam: true,
+  });
+  if (!turn.ok) return res.status(400).json(turn);
+  res.json({
+    reply: turn.reply,
     agentId: agent.id,
-    businessName: agent.businessName,
-    message: message.slice(0, 200),
-    reply: (brain.reply || '').slice(0, 200),
-    brainSource: brain.source,
-  }).catch(() => {});
-  res.json({ reply: brain.reply, agentId: agent.id });
+    source: turn.source,
+    intent: turn.intent
+      ? { priority: turn.intent.priority, transferSuggested: turn.intent.transferSuggested }
+      : null,
+  });
 });
 
 // ── Autopilot (autonomous ops cycle) ─────────────────────────────────────────
@@ -1587,11 +1842,15 @@ app.get('/api/v1/agents/:id', (req, res) => {
   const agent = verifyAgentKey(req.params.id, key);
   if (!agent) return res.status(401).json({ error: 'Invalid credentials' });
   const brain = brainStatus();
+  const health = getAgentHealth(agent.id);
+  const stats = agentStats(agent.id, { hours: 24 * 7 });
   res.json({
     id: agent.id,
     businessName: agent.businessName,
     status: agent.status,
     config: agent.config,
+    health,
+    stats,
     endpoints: {
       ...agent.endpoints,
       agent: `/api/v1/agents/${agent.id}/agent`,
@@ -1599,14 +1858,311 @@ app.get('/api/v1/agents/:id', (req, res) => {
       voiceTurn: `/api/v1/agents/${agent.id}/voice-turn`,
       speak: `/api/v1/agents/${agent.id}/speak`,
       billing: `/api/v1/agents/${agent.id}/billing`,
+      dashboard: `/api/v1/agents/${agent.id}/dashboard`,
+      interactions: `/api/v1/agents/${agent.id}/interactions`,
+      knowledge: `/api/v1/agents/${agent.id}/knowledge`,
+      summary: `/api/v1/agents/${agent.id}/summary`,
+      health: `/api/v1/agents/${agent.id}/health`,
     },
     brain: {
       provider: brain.provider,
       model: brain.model,
       mode: brain.mode,
       api: brain.api,
+      version: agent.config?.brainVersion || process.env.MERIDIAN_BRAIN_VERSION || 'v2',
+    },
+    notify: {
+      ownerEmail: Boolean(agent.config?.ownerNotifyEmail),
+      ownerPhone: Boolean(agent.config?.ownerNotifyPhone),
+      platform: notifyConfig(),
     },
   });
+});
+
+/** Customer mini-dashboard — stats + recent turns */
+app.get('/api/v1/agents/:id/dashboard', (req, res) => {
+  const key = (req.get('Authorization') || '').replace(/^Bearer\s+/i, '');
+  const agent = verifyAgentKey(req.params.id, key);
+  if (!agent) return res.status(401).json({ error: 'Invalid credentials' });
+  const summary = buildActivitySummary(agent.id, 25);
+  const health = getAgentHealth(agent.id);
+  res.json({
+    ok: true,
+    agentId: agent.id,
+    businessName: agent.businessName,
+    selectedVoiceId: resolveAgentVoiceId(agent),
+    stats: summary.stats,
+    health,
+    recent: summary.items,
+    summaryText: summary.text,
+    platform: platformStatus(),
+  });
+});
+
+app.get('/api/v1/agents/:id/interactions', (req, res) => {
+  const key = (req.get('Authorization') || '').replace(/^Bearer\s+/i, '');
+  const agent = verifyAgentKey(req.params.id, key);
+  if (!agent) return res.status(401).json({ error: 'Invalid credentials' });
+  const limit = Math.min(Number(req.query.limit) || 40, 100);
+  res.json({
+    ok: true,
+    agentId: agent.id,
+    items: listInteractions(agent.id, limit),
+    stats: agentStats(agent.id),
+  });
+});
+
+/** Update knowledge / truth layer / owner notify contacts */
+app.put('/api/v1/agents/:id/knowledge', (req, res) => {
+  const key = (req.get('Authorization') || '').replace(/^Bearer\s+/i, '');
+  const agent = verifyAgentKey(req.params.id, key);
+  if (!agent) return res.status(401).json({ error: 'Invalid credentials' });
+  const result = setKnowledge(agent.id, req.body || {});
+  if (!result.ok) return res.status(400).json(result);
+  dispatchWebhook('agent.knowledge_updated', { agentId: agent.id }).catch(() => {});
+  res.json(result);
+});
+app.post('/api/v1/agents/:id/knowledge', (req, res) => {
+  req.url = req.url; // keep path
+  const key = (req.get('Authorization') || '').replace(/^Bearer\s+/i, '');
+  const agent = verifyAgentKey(req.params.id, key);
+  if (!agent) return res.status(401).json({ error: 'Invalid credentials' });
+  const result = setKnowledge(agent.id, req.body || {});
+  if (!result.ok) return res.status(400).json(result);
+  res.json(result);
+});
+
+/** Fetch website → draft websiteSummary (optional save) */
+app.post('/api/v1/agents/:id/knowledge/scrape', async (req, res) => {
+  const key = (req.get('Authorization') || '').replace(/^Bearer\s+/i, '');
+  const agent = verifyAgentKey(req.params.id, key);
+  if (!agent) return res.status(401).json({ error: 'Invalid credentials' });
+  const url = req.body?.url || agent.config?.website || agent.config?.websiteUrl || '';
+  const scraped = await fetchWebsiteSummary(url);
+  if (!scraped.ok) return res.status(400).json(scraped);
+  if (req.body?.save === true) {
+    setKnowledge(agent.id, { websiteSummary: scraped.summary });
+  }
+  // Remember website for weekly refresh
+  if (url && !agent.config?.website && !agent.config?.websiteUrl) {
+    setKnowledge(agent.id, { websiteSummary: req.body?.save ? scraped.summary : agent.config?.websiteSummary });
+    const { updateAgentConfig } = await import('./engine.mjs');
+    updateAgentConfig(agent.id, { website: url, websiteUrl: url });
+  }
+  res.json({ ...scraped, saved: req.body?.save === true });
+});
+
+/**
+ * Self-update: scan website → pending proposals (never auto-applied).
+ * Body: { force?: boolean }
+ */
+app.post('/api/v1/agents/:id/knowledge/refresh', async (req, res) => {
+  const key = (req.get('Authorization') || '').replace(/^Bearer\s+/i, '');
+  const agent = verifyAgentKey(req.params.id, key);
+  if (!agent) return res.status(401).json({ error: 'Invalid credentials' });
+  // Optional: persist website if provided
+  if (req.body?.url) {
+    const { updateAgentConfig } = await import('./engine.mjs');
+    updateAgentConfig(agent.id, {
+      website: String(req.body.url).slice(0, 500),
+      websiteUrl: String(req.body.url).slice(0, 500),
+    });
+  }
+  try {
+    const result = await refreshAgentKnowledge(agent.id, { force: req.body?.force === true });
+    res.status(result.ok ? 200 : 400).json(result);
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+/** List pending knowledge proposals */
+app.get('/api/v1/agents/:id/knowledge/proposals', (req, res) => {
+  const key = (req.get('Authorization') || '').replace(/^Bearer\s+/i, '');
+  const agent = verifyAgentKey(req.params.id, key);
+  if (!agent) return res.status(401).json({ error: 'Invalid credentials' });
+  const status = req.query.status || 'pending';
+  res.json({
+    ok: true,
+    agentId: agent.id,
+    proposals: listProposals(agent.id, { status, limit: 50 }),
+    status: knowledgeRefreshStatus(),
+  });
+});
+
+/** Approve one proposal → applies to truth layer */
+app.post('/api/v1/agents/:id/knowledge/proposals/:pid/approve', (req, res) => {
+  const key = (req.get('Authorization') || '').replace(/^Bearer\s+/i, '');
+  const agent = verifyAgentKey(req.params.id, key);
+  if (!agent) return res.status(401).json({ error: 'Invalid credentials' });
+  const result = approveProposal(agent.id, req.params.pid);
+  if (!result.ok) return res.status(400).json(result);
+  dispatchWebhook('agent.knowledge_approved', {
+    agentId: agent.id,
+    proposalId: req.params.pid,
+  }).catch(() => {});
+  res.json(result);
+});
+
+app.post('/api/v1/agents/:id/knowledge/proposals/:pid/reject', (req, res) => {
+  const key = (req.get('Authorization') || '').replace(/^Bearer\s+/i, '');
+  const agent = verifyAgentKey(req.params.id, key);
+  if (!agent) return res.status(401).json({ error: 'Invalid credentials' });
+  const result = rejectProposal(agent.id, req.params.pid, req.body?.reason);
+  if (!result.ok) return res.status(400).json(result);
+  res.json(result);
+});
+
+app.post('/api/v1/agents/:id/knowledge/proposals/approve-all', (req, res) => {
+  const key = (req.get('Authorization') || '').replace(/^Bearer\s+/i, '');
+  const agent = verifyAgentKey(req.params.id, key);
+  if (!agent) return res.status(401).json({ error: 'Invalid credentials' });
+  res.json(approveAll(agent.id));
+});
+
+app.post('/api/v1/agents/:id/knowledge/proposals/reject-all', (req, res) => {
+  const key = (req.get('Authorization') || '').replace(/^Bearer\s+/i, '');
+  const agent = verifyAgentKey(req.params.id, key);
+  if (!agent) return res.status(401).json({ error: 'Invalid credentials' });
+  res.json(rejectAll(agent.id));
+});
+
+/** Ops: weekly knowledge refresh for all agents with websites */
+app.post('/api/ops/knowledge/weekly', async (req, res) => {
+  if (!admin(req)) return res.status(401).json({ error: 'Unauthorized' });
+  try {
+    const out = await withExpertAndContainment(
+      'knowledge-refresh',
+      'openclaw.knowledge_refresh',
+      async (ctx) => {
+        const report = await runWeeklyKnowledgeRefresh({
+          force: req.body?.force === true,
+          maxAgents: Number(req.body?.max) || 40,
+          notify: req.body?.notify !== false,
+        });
+        return {
+          ...report,
+          expert: { path: ctx.expert.expertPath, hash: ctx.expert.expertHash, runId: ctx.runId },
+        };
+      },
+      { taskBrief: 'Weekly knowledge self-update: draft proposals only, human approve.' },
+    );
+    res.json(out.result || out);
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message, code: e.code });
+  }
+});
+
+app.get('/api/ops/knowledge/status', (req, res) => {
+  if (!admin(req)) return res.status(401).json({ error: 'Unauthorized' });
+  res.json({ ok: true, ...knowledgeRefreshStatus() });
+});
+
+/** Send activity summary to owner now */
+app.post('/api/v1/agents/:id/summary', async (req, res) => {
+  const key = (req.get('Authorization') || '').replace(/^Bearer\s+/i, '');
+  const agent = verifyAgentKey(req.params.id, key);
+  if (!agent) return res.status(401).json({ error: 'Invalid credentials' });
+  const built = buildActivitySummary(agent.id, Number(req.body?.limit) || 10);
+  const email = req.body?.email || agent.config?.ownerNotifyEmail;
+  if (email) {
+    const sent = await sendOwnerEmail({
+      to: email,
+      subject: `Meridian activity · ${agent.businessName}`,
+      text: built.text,
+    });
+    return res.json({ ok: true, emailed: sent, summary: built.text, stats: built.stats });
+  }
+  res.json({ ok: true, emailed: { skipped: true }, summary: built.text, stats: built.stats });
+});
+
+/**
+ * Log end of call + optional customer SMS + owner summary
+ * Body: { message?, reply?, phone?, name?, durationSec?, outcome? }
+ */
+app.post('/api/v1/agents/:id/call-ended', async (req, res) => {
+  const key = (req.get('Authorization') || '').replace(/^Bearer\s+/i, '');
+  const agent = verifyAgentKey(req.params.id, key);
+  if (!agent) return res.status(401).json({ error: 'Invalid credentials' });
+  const message = String(req.body?.message || req.body?.transcript || 'Call ended').slice(0, 2000);
+  const reply = String(req.body?.reply || req.body?.summary || '').slice(0, 2000);
+  const intent = analyzeIntent(message + ' ' + reply);
+  const row = logInteraction({
+    agentId: agent.id,
+    businessName: agent.businessName,
+    channel: 'voice',
+    message,
+    reply: reply || `(call ended · ${req.body?.outcome || 'completed'})`,
+    brainSource: 'call_ended',
+    intent,
+    meta: {
+      durationSec: req.body?.durationSec,
+      outcome: req.body?.outcome,
+      phone: req.body?.phone ? 'set' : null,
+    },
+  });
+  const summary = await sendInteractionSummary(agent, row, {
+    customerPhone: req.body?.phone || req.body?.customerPhone,
+  });
+  res.json({ ok: true, interactionId: row.id, summary });
+});
+
+/** Missed-call SMS text-back */
+app.post('/api/v1/agents/:id/missed-call', async (req, res) => {
+  const key = (req.get('Authorization') || '').replace(/^Bearer\s+/i, '');
+  const agent = verifyAgentKey(req.params.id, key);
+  if (!agent) return res.status(401).json({ error: 'Invalid credentials' });
+  const to = req.body?.phone || req.body?.to;
+  if (!to) return res.status(400).json({ error: 'phone required' });
+  const sms = await sendMissedCallTextBack(agent, { to, name: req.body?.name });
+  logInteraction({
+    agentId: agent.id,
+    businessName: agent.businessName,
+    channel: 'sms',
+    message: `missed-call → ${String(to).slice(0, 6)}…`,
+    reply: sms.ok ? 'textback_sent' : sms.reason || sms.error || 'failed',
+    brainSource: 'missed_call',
+    intent: { priority: 'lead', booking: false },
+    ok: sms.ok,
+  });
+  res.status(sms.ok || sms.skipped ? 200 : 502).json({ ok: sms.ok || Boolean(sms.skipped), sms });
+});
+
+/** Send arbitrary SMS (owner tooling) — Twilio must be configured */
+app.post('/api/v1/agents/:id/sms', async (req, res) => {
+  const key = (req.get('Authorization') || '').replace(/^Bearer\s+/i, '');
+  const agent = verifyAgentKey(req.params.id, key);
+  if (!agent) return res.status(401).json({ error: 'Invalid credentials' });
+  const to = req.body?.to || req.body?.phone;
+  const body = req.body?.body || req.body?.message;
+  if (!to || !body) return res.status(400).json({ error: 'to and body required' });
+  const sms = await sendSms({ to, body });
+  res.status(sms.ok || sms.skipped ? 200 : 502).json({ ok: sms.ok || Boolean(sms.skipped), sms });
+});
+
+/** Synthetic health probe for this agent */
+app.post('/api/v1/agents/:id/health', async (req, res) => {
+  const key = (req.get('Authorization') || '').replace(/^Bearer\s+/i, '');
+  const agent = verifyAgentKey(req.params.id, key);
+  if (!agent) return res.status(401).json({ error: 'Invalid credentials' });
+  const result = await probeAgent(agent.id, { apiKey: key });
+  res.json({ ok: result.ok, probe: result, cached: getAgentHealth(agent.id) });
+});
+app.get('/api/v1/agents/:id/health', (req, res) => {
+  const key = (req.get('Authorization') || '').replace(/^Bearer\s+/i, '');
+  const agent = verifyAgentKey(req.params.id, key);
+  if (!agent) return res.status(401).json({ error: 'Invalid credentials' });
+  res.json({ ok: true, health: getAgentHealth(agent.id), platform: platformStatus() });
+});
+
+/** Ops: probe all agents */
+app.post('/api/ops/health/probe', async (req, res) => {
+  if (!admin(req)) return res.status(401).json({ error: 'Unauthorized' });
+  try {
+    res.json(await probeAllAgents({ max: Number(req.body?.max) || 15 }));
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
 /**
@@ -1623,29 +2179,28 @@ async function handleClaudeAgentTurn(req, res) {
   if (!message) return res.status(400).json({ error: 'message required' });
   const history = Array.isArray(req.body?.history) ? req.body.history.slice(-12) : [];
 
-  const brain = await smartAgentChat(agent, message, { history });
-
-  await dispatchWebhook('agent.claude_turn', {
-    agentId: agent.id,
-    businessName: agent.businessName,
-    source: brain.source,
-    model: brain.model || null,
-    message: message.slice(0, 200),
-    reply: (brain.reply || '').slice(0, 200),
-  }).catch(() => {});
+  const turn = await runCustomerTurn(agent, message, {
+    channel: 'api',
+    history,
+    customerPhone: req.body?.phone || req.body?.customerPhone,
+  });
+  if (!turn.ok) return res.status(400).json(turn);
 
   res.json({
     ok: true,
     agentId: agent.id,
     businessName: agent.businessName,
-    reply: brain.reply,
-    say: brain.reply,
-    source: brain.source,
-    provider: brain.provider || (brain.source === 'llm' ? 'anthropic' : 'fallback'),
-    model: brain.model || null,
-    usage: brain.usage || null,
-    latencyMs: brain.claudeMs || null,
-    llmError: brain.llmError || null,
+    reply: turn.reply,
+    say: turn.reply,
+    source: turn.source,
+    provider: turn.provider || (turn.source === 'llm' ? 'anthropic' : 'fallback'),
+    model: turn.model || null,
+    usage: turn.usage || null,
+    latencyMs: turn.latencyMs || null,
+    llmError: turn.llmError || null,
+    intent: turn.intent,
+    transfer: turn.transfer,
+    interactionId: turn.interactionId,
     claudeConfigured: claudeConfigured(),
     systemPromptPreview: buildSystemPrompt(agent).slice(0, 280) + '…',
   });
@@ -1661,14 +2216,22 @@ app.post('/api/v1/agents/:id/chat', authedLimiter, async (req, res) => {
   const message = String(req.body?.message || '').slice(0, 2000);
   if (!message) return res.status(400).json({ error: 'message required' });
   const history = Array.isArray(req.body?.history) ? req.body.history.slice(-8) : [];
-  const brain = await smartAgentChat(agent, message, { history });
+  const turn = await runCustomerTurn(agent, message, {
+    channel: 'chat',
+    history,
+    customerPhone: req.body?.phone,
+  });
+  if (!turn.ok) return res.status(400).json(turn);
   res.json({
-    reply: brain.reply,
+    reply: turn.reply,
     agentId: agent.id,
-    source: brain.source,
-    provider: brain.provider || (brain.source === 'llm' ? 'anthropic' : 'fallback'),
-    model: brain.model || null,
-    usage: brain.usage || null,
+    source: turn.source,
+    provider: turn.provider || (turn.source === 'llm' ? 'anthropic' : 'fallback'),
+    model: turn.model || null,
+    usage: turn.usage || null,
+    intent: turn.intent,
+    transfer: turn.transfer,
+    interactionId: turn.interactionId,
   });
 });
 
@@ -2125,6 +2688,120 @@ app.get('/article', (_req, res) => {
 app.get(['/install', '/install-guide', '/docs', '/connect', '/onboard-guide'], (_req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'install-guide.html'));
 });
+app.get(['/status', '/system-status'], (_req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'status.html'));
+});
+app.get(['/security', '/trust'], (_req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'security.html'));
+});
+app.get(['/dashboard', '/app', '/portal'], (_req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
+});
+app.get(['/blog', '/insights'], (_req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'blog.html'));
+});
+app.get('/blog/:slug', (req, res) => {
+  // Public article shell — content loaded via /api/blog/:slug
+  res.sendFile(path.join(__dirname, 'public', 'article.html'));
+});
+
+// ── Public blog API ──────────────────────────────────────────────────────────
+app.get('/api/blog', (_req, res) => {
+  res.json({
+    ok: true,
+    articles: listPublished(50).map((a) => ({
+      slug: a.slug,
+      title: a.title,
+      subtitle: a.subtitle,
+      excerpt: a.excerpt,
+      publishedAt: a.publishedAt,
+      readingMinutes: a.readingMinutes,
+      tags: a.tags,
+    })),
+  });
+});
+app.get('/api/blog/:slug', (req, res) => {
+  const article = getPublishedArticle(req.params.slug);
+  if (!article) return res.status(404).json({ ok: false, error: 'Article not found' });
+  res.json({
+    ok: true,
+    article: {
+      slug: article.slug,
+      title: article.title,
+      subtitle: article.subtitle,
+      excerpt: article.excerpt,
+      bodyHtml: article.bodyHtml,
+      publishedAt: article.publishedAt,
+      readingMinutes: article.readingMinutes,
+      tags: article.tags,
+    },
+  });
+});
+
+// ── Ops: article pipeline (Claude draft → vet → fix → ready → publish) ───────
+app.get('/api/ops/articles', (req, res) => {
+  if (!admin(req)) return res.status(401).json({ error: 'Unauthorized' });
+  res.json({
+    ok: true,
+    status: articlesStatus(),
+    articles: listArticles({ limit: 40 }),
+  });
+});
+app.get('/api/ops/articles/status', (req, res) => {
+  if (!admin(req)) return res.status(401).json({ error: 'Unauthorized' });
+  res.json({ ok: true, ...articlesStatus() });
+});
+app.post('/api/ops/articles/cycle', async (req, res) => {
+  if (!admin(req)) return res.status(401).json({ error: 'Unauthorized' });
+  try {
+    const result = await runArticleCycle({
+      topic: req.body?.topic,
+      autoPublish: req.body?.autoPublish === true,
+    });
+    res.json(result);
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+app.post('/api/ops/articles/draft', async (req, res) => {
+  if (!admin(req)) return res.status(401).json({ error: 'Unauthorized' });
+  res.json(await draftArticle({ topic: req.body?.topic }));
+});
+app.post('/api/ops/articles/:id/vet', async (req, res) => {
+  if (!admin(req)) return res.status(401).json({ error: 'Unauthorized' });
+  res.json(await vetArticle(req.params.id));
+});
+app.post('/api/ops/articles/:id/fix', async (req, res) => {
+  if (!admin(req)) return res.status(401).json({ error: 'Unauthorized' });
+  res.json(await fixArticle(req.params.id));
+});
+app.post('/api/ops/articles/:id/publish', (req, res) => {
+  if (!admin(req)) return res.status(401).json({ error: 'Unauthorized' });
+  const force = req.body?.force === true;
+  const result = publishArticle(req.params.id, { source: force ? 'ops_force' : 'ops' });
+  // Allow ops force from ready only unless they set force with ready - already handled
+  if (!result.ok && force) {
+    const a = getArticle(req.params.id);
+    if (a && a.status === 'ready') {
+      return res.json(publishArticle(req.params.id, { source: 'ops' }));
+    }
+  }
+  res.status(result.ok ? 200 : 400).json(result);
+});
+app.post('/api/ops/articles/:id/unpublish', (req, res) => {
+  if (!admin(req)) return res.status(401).json({ error: 'Unauthorized' });
+  res.json(unpublishArticle(req.params.id));
+});
+app.post('/api/ops/articles/:id/reject', (req, res) => {
+  if (!admin(req)) return res.status(401).json({ error: 'Unauthorized' });
+  res.json(rejectArticleFinal(req.params.id, req.body?.reason));
+});
+app.get('/api/ops/articles/:id', (req, res) => {
+  if (!admin(req)) return res.status(401).json({ error: 'Unauthorized' });
+  const a = getArticle(req.params.id);
+  if (!a) return res.status(404).json({ error: 'Not found' });
+  res.json({ ok: true, article: a });
+});
 
 /** Interactive setup wizard — Next-block onboarding */
 app.get(['/setup', '/setup-wizard'], (_req, res) => {
@@ -2170,6 +2847,61 @@ app.post('/api/setup/:token/progress', (req, res) => {
     done: req.body?.done,
   });
   res.json({ ok: true, progress: p });
+});
+
+/** Voice catalog for setup wizard (token-scoped + selected voice). */
+app.get('/api/setup/:token/voices', async (req, res) => {
+  const g = guideMeta(req.params.token);
+  if (!g) return res.status(404).json({ error: 'Not found' });
+  try {
+    const catalog = await getVoiceCatalog();
+    const agent = getAgent(g.id);
+    res.json({
+      ...catalog,
+      agentId: g.id,
+      selectedVoiceId: agent ? resolveAgentVoiceId(agent) : catalog.defaultVoiceId || 'eve',
+    });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+/** Save preferred voice from setup wizard (delivery token auth). */
+app.post('/api/setup/:token/voice', (req, res) => {
+  const g = guideMeta(req.params.token);
+  if (!g) return res.status(404).json({ error: 'Not found' });
+  const voiceId = req.body?.voiceId || req.body?.xaiVoiceId || req.body?.voice_id;
+  const result = saveAgentVoicePreference(g.id, voiceId);
+  if (!result.ok) return res.status(400).json(result);
+  dispatchWebhook('agent.voice_selected', {
+    agentId: g.id,
+    xaiVoiceId: result.xaiVoiceId,
+    source: 'setup_wizard',
+  }).catch(() => {});
+  res.json(result);
+});
+
+/** Manual setup path: save voice with mdn_ key. */
+app.post('/api/setup/voice', (req, res) => {
+  const agentId = String(req.body?.agentId || '');
+  const apiKey = String(req.body?.apiKey || '');
+  if (!agentId || !verifyAgentKey(agentId, apiKey)) {
+    return res.status(401).json({ error: 'Valid agentId + apiKey required' });
+  }
+  const voiceId = req.body?.voiceId || req.body?.xaiVoiceId || req.body?.voice_id;
+  const result = saveAgentVoicePreference(agentId, voiceId);
+  if (!result.ok) return res.status(400).json(result);
+  res.json(result);
+});
+
+/** Save knowledge / owner alerts from setup wizard (delivery token). */
+app.post('/api/setup/:token/knowledge', (req, res) => {
+  const g = guideMeta(req.params.token);
+  if (!g) return res.status(404).json({ error: 'Not found' });
+  const result = saveSetupKnowledge(g.id, req.body || {});
+  if (!result.ok) return res.status(400).json(result);
+  dispatchWebhook('agent.knowledge_updated', { agentId: g.id, source: 'setup_wizard' }).catch(() => {});
+  res.json(result);
 });
 
 app.post('/api/setup/:token/test', async (req, res) => {
@@ -2307,6 +3039,38 @@ if (process.env.MERIDIAN_OPENCLAW_AUTO !== '0') {
 if (process.env.MERIDIAN_AUTOPILOT !== '0') {
   setTimeout(() => runAutopilot({ sendEmail }).catch((e) => console.error('[Autopilot]', e.message)), 3 * 60 * 1000);
   setInterval(() => runAutopilot({ sendEmail }).catch((e) => console.error('[Autopilot]', e.message)), 60 * 60 * 1000);
+}
+
+// Synthetic health probes — catch silent brain failures before customers do
+if (process.env.MERIDIAN_HEALTH_PROBE !== '0') {
+  const probeMs = Number(process.env.MERIDIAN_HEALTH_PROBE_MS || 15 * 60 * 1000);
+  setTimeout(() => probeAllAgents({ max: 12 }).catch((e) => console.error('[HealthProbe]', e.message)), 4 * 60 * 1000);
+  setInterval(() => probeAllAgents({ max: 12 }).catch((e) => console.error('[HealthProbe]', e.message)), probeMs);
+}
+
+// Weekly knowledge self-update (draft proposals only — human Approve/Reject)
+// Default: every 7 days; first run after 10 minutes if MERIDIAN_KNOWLEDGE_REFRESH=1
+if (process.env.MERIDIAN_KNOWLEDGE_REFRESH === '1') {
+  const weekMs = Number(process.env.MERIDIAN_KNOWLEDGE_REFRESH_MS || 7 * 24 * 60 * 60 * 1000);
+  const runWeekly = () =>
+    withExpertAndContainment(
+      'knowledge-refresh',
+      'openclaw.knowledge_refresh_cron',
+      async () => runWeeklyKnowledgeRefresh({ force: false, notify: true }),
+      { taskBrief: 'Scheduled weekly knowledge draft proposals' },
+    ).catch((e) => console.error('[KnowledgeRefresh]', e.message));
+  setTimeout(runWeekly, Number(process.env.MERIDIAN_KNOWLEDGE_REFRESH_START_MS || 10 * 60 * 1000));
+  setInterval(runWeekly, weekMs);
+}
+
+// Long-form AI articles every ~2.5 days: draft → Claude vet → fix → ready → (ops publish)
+// Set MERIDIAN_ARTICLES=1 to enable. Default auto-publish OFF (ops must publish).
+if (process.env.MERIDIAN_ARTICLES === '1') {
+  const articlePollMs = Number(process.env.MERIDIAN_ARTICLE_POLL_MS || 6 * 60 * 60 * 1000); // check every 6h
+  const runArticles = () =>
+    maybeRunScheduledCycle().catch((e) => console.error('[Articles]', e.message));
+  setTimeout(runArticles, Number(process.env.MERIDIAN_ARTICLE_START_MS || 15 * 60 * 1000));
+  setInterval(runArticles, articlePollMs);
 }
 
 app.listen(PORT, '0.0.0.0', () => {
