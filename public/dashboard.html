@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agent dashboard · Meridian</title>
+<meta name="description" content="Customer dashboard: interactions, health, knowledge, owner alerts.">
+<meta name="theme-color" content="#0C0C0B">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F7F6F3;--elev:#fff;--ink:#0C0C0B;--muted:#6B6A66;--line:rgba(12,12,11,.08);--good:#1F7A4C;--warn:#B45309;--serif:'Instrument Serif',Georgia,serif;--sans:Inter,system-ui,sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--sans);background:var(--bg);color:var(--ink);line-height:1.5;min-height:100vh}
+a{color:inherit}
+.top{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--line);background:rgba(247,246,243,.92);position:sticky;top:0;z-index:10}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;font-weight:600}
+.mark{width:28px;height:28px;border-radius:8px;background:var(--ink);display:grid;place-items:center}
+.mark svg{width:14px;height:14px}
+.ghost{font-size:.85rem;color:var(--muted);text-decoration:none;padding:8px 12px;border-radius:999px}
+.shell{max-width:800px;margin:0 auto;padding:28px 16px 80px}
+h1{font-family:var(--serif);font-weight:400;font-size:clamp(1.7rem,4vw,2.2rem);margin-bottom:6px}
+.sub{color:var(--muted);margin-bottom:20px}
+.card{background:var(--elev);border:1px solid var(--line);border-radius:18px;padding:20px;margin-bottom:14px}
+.card h2{font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:12px}
+.field{margin:10px 0}
+.field label{display:block;font-size:.72rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.field input,.field textarea{width:100%;padding:11px 12px;border-radius:12px;border:1px solid var(--line);font:inherit;background:#fff}
+.field textarea{min-height:90px;resize:vertical}
+.btn{display:inline-flex;align-items:center;justify-content:center;font:inherit;font-weight:600;font-size:.9rem;border-radius:999px;padding:11px 18px;border:1px solid transparent;cursor:pointer;background:var(--ink);color:#fff;margin:4px 6px 4px 0}
+.btn.light{background:#fff;color:var(--ink);border-color:rgba(12,12,11,.14)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+.stat{background:#F0EFEA;border-radius:14px;padding:14px}
+.stat b{display:block;font-size:1.4rem;font-family:var(--serif);font-weight:400}
+.stat span{font-size:.75rem;color:var(--muted)}
+.ix{border-top:1px solid var(--line);padding:12px 0;font-size:.88rem}
+.ix:first-child{border-top:0}
+.ix .meta{font-size:.72rem;color:var(--muted);margin-bottom:4px}
+.msg{font-size:.9rem;padding:10px 12px;border-radius:12px;margin-top:10px;display:none}
+.msg.show{display:block}
+.msg.ok{background:rgba(31,122,76,.1);color:var(--good)}
+.msg.err{background:#FDF2F2;color:#9B2C2C}
+.hidden{display:none}
+.mono{font-family:ui-monospace,Consolas,monospace;font-size:.82rem;word-break:break-all}
+</style>
+</head>
+<body>
+<header class="top">
+  <a class="brand" href="/"><span class="mark"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2"><path d="M4 12h16M12 4v16"/></svg></span>Meridian</a>
+  <div>
+    <a class="ghost" href="/status">Status</a>
+    <a class="ghost" href="/setup">Setup</a>
+    <a class="ghost" href="/install">Docs</a>
+  </div>
+</header>
+<main class="shell">
+  <h1>Agent dashboard</h1>
+  <p class="sub">See activity, probe health, update knowledge, and set owner alerts. Credentials stay in your browser session only.</p>
+
+  <div class="card" id="login-card">
+    <h2>Sign in with agent keys</h2>
+    <div class="field"><label>Agent ID</label><input id="agentId" class="mono" placeholder="agent_…" autocomplete="username"></div>
+    <div class="field"><label>Secret API key</label><input id="apiKey" class="mono" type="password" placeholder="mdn_…" autocomplete="current-password"></div>
+    <button type="button" class="btn" id="btn-load">Open dashboard</button>
+    <p class="sub" style="margin:12px 0 0;font-size:.85rem">From your connect guide or setup wizard. Never paste the secret key into a public website builder.</p>
+    <div class="msg err" id="login-err"></div>
+  </div>
+
+  <div id="app" class="hidden">
+    <div class="card">
+      <h2>Overview</h2>
+      <p style="margin-bottom:12px"><strong id="biz-name">—</strong> · <span class="mono" id="biz-id"></span></p>
+      <div class="grid" id="stats"></div>
+      <div style="margin-top:14px">
+        <button type="button" class="btn" id="btn-refresh">Refresh</button>
+        <button type="button" class="btn light" id="btn-probe">Run health probe</button>
+        <button type="button" class="btn light" id="btn-summary">Email summary to owner</button>
+      </div>
+      <div class="msg" id="app-msg"></div>
+    </div>
+
+    <div class="card">
+      <h2>Knowledge &amp; truth layer</h2>
+      <div class="field"><label>Hours</label><input id="k-hours"></div>
+      <div class="field"><label>Services</label><textarea id="k-services"></textarea></div>
+      <div class="field"><label>FAQs</label><textarea id="k-faqs"></textarea></div>
+      <div class="field"><label>Knowledge base (extra facts)</label><textarea id="k-kb" placeholder="Policies, parking, service area details…"></textarea></div>
+      <div class="field"><label>Human transfer number</label><input id="k-transfer" placeholder="+1…"></div>
+      <div class="field"><label>Calendar / booking URL</label><input id="k-cal" placeholder="https://calendly.com/…"></div>
+      <div class="field"><label>Owner notify email</label><input id="k-email" type="email"></div>
+      <div class="field"><label>Owner notify phone (SMS if Twilio on)</label><input id="k-phone" type="tel"></div>
+      <div class="field"><label>Website to scrape (optional)</label><input id="k-url" placeholder="https://yoursite.com"></div>
+      <button type="button" class="btn" id="btn-save-k">Save knowledge</button>
+      <button type="button" class="btn light" id="btn-scrape">Fetch website draft</button>
+    </div>
+
+    <div class="card">
+      <h2>Recent interactions</h2>
+      <div id="ix-list"><p class="sub">No activity yet.</p></div>
+    </div>
+  </div>
+</main>
+<script src="/js/dashboard.js"></script>
+</body>
+</html>
