@@ -82,14 +82,31 @@ transcript → Meridian brain → TTS (platform default OR ElevenLabs if key set
 
 | Env | Effect |
 |-----|--------|
-| No `ELEVENLABS_API_KEY` | `mode: platform` — full quality via Retell/Vapi |
-| `ELEVENLABS_API_KEY` set | `mode: elevenlabs` — plug-in TTS on `/speak` and `/voice-turn` |
+| `XAI_API_KEY` set | Hosted xAI TTS + live voice catalog + free previews |
+| No `XAI_API_KEY` | Catalog still shown (fallback); hosted audio/previews off; phone uses platform TTS |
+| `VOICE_ENABLE_ELEVENLABS=1` + key | ElevenLabs plug-in instead of / alongside xAI |
+
+**Full voice picker:** setup wizard step · intake select · `GET /api/voice/voices` ·
+`POST /api/voice/preview` · `PUT /api/v1/agents/:id/voice` → saves `config.xaiVoiceId`.
+
+**Product edge (2026 competitive pack):** see `PRODUCT-EDGE.md`
+- Truth layer + knowledge scrape · interaction log · owner alerts (email/SMS)
+- Unified turn pipeline · health probes · `/status` · `/security` · `/dashboard`
+- Call-ended summary · missed-call SMS · emergency transfer signals
 
 ```http
+GET  /api/status                    # public platform status
 GET  /api/voice/status
-POST /api/v1/agents/:id/voice-turn   # brain + optional audio
-POST /api/v1/agents/:id/speak        # TTS only
-GET  /api/v1/agents/:id/voice-spec
+GET  /api/voice/voices
+POST /api/voice/preview
+POST /api/v1/agents/:id/voice-turn
+POST /api/v1/agents/:id/speak
+GET  /api/v1/agents/:id/dashboard
+PUT  /api/v1/agents/:id/knowledge
+POST /api/v1/agents/:id/call-ended
+POST /api/v1/agents/:id/missed-call
+POST /api/v1/agents/:id/health
+PUT  /api/v1/agents/:id/voice
 ```
 
 ## Autonomous onboarding (start → sale)

@@ -37,9 +37,21 @@ OpenClaw on Meridian is a **caged automation worker**, not a general computer ag
 
 1. **Policy file (this doc)** — operators + agents  
 2. **`lib/openclaw-containment.mjs`** — deny patterns, path sandbox, job sanitizer  
-3. **Entrypoints wrap** — `daily.mjs`, `deploy-agent.mjs`, install queue  
-4. **No `--deliver`** — never pass deliver flags  
-5. **API keys** — only used server-side to build packs; never emailed in full to third parties; not logged in ops job lists  
+3. **Expert gate (mandatory)** — `lib/openclaw-expert-gate.mjs`  
+   - Loads `openclaw/experts/meridian/<agent>.md` **every task** before work  
+   - Hub policy: `~/.grok/openclaw-hub` + vendored `lib/openclaw-hub/`  
+   - Fail closed if expert missing/empty  
+4. **Entrypoints wrap** — `daily.mjs`, `deploy-agent.mjs`, install queue  
+5. **No `--deliver`** — never pass deliver flags  
+6. **API keys** — only used server-side to build packs; never emailed in full to third parties; not logged in ops job lists  
+
+### Expert status
+
+```http
+GET /api/openclaw/experts
+GET /api/openclaw/containment
+POST /api/ops/openclaw/run   # body: { "agentId": "daily-ops" }
+```
 
 ---
 

@@ -70,7 +70,9 @@ Authorization: Bearer mdn_…
 ```
 
 - Without `audio: true` → text/`say` only, **no Meridian TTS fee** (Retell/Vapi speak it).
-- With `audio: true` → balance check → xAI TTS → debit on success.
+- With `audio: true` → balance check → xAI TTS (agent’s saved `xaiVoiceId` or body `voiceId`) → debit on success.
+- **Voice picker** (free, not billed): setup wizard · `GET /api/voice/voices` · `POST /api/voice/preview` · `PUT /api/v1/agents/:id/voice`
+- Previews are short samples for choosing a voice; they **do not** debit prepaid packs.
 
 ```http
 GET /api/v1/agents/:id/billing

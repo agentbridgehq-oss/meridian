@@ -60,9 +60,9 @@ Use this kit as your SOP. Charge setup + monthly. Typical market:
 | CRM | GoHighLevel, HubSpot, spreadsheet start |
 | Brain | Meridian agent API + this kit |
 
-### Platform voice (default — no ElevenLabs)
+### Platform voice (default for phone) + xAI picker (hosted audio)
 
-Meridian is wired **platform-only** right now:
+**Phone (default):**
 
 ```
 Caller transcript → POST Meridian /voice-turn
@@ -70,14 +70,26 @@ Caller transcript → POST Meridian /voice-turn
                   → webhooks → CRM
 ```
 
-ElevenLabs stays off unless you later set `VOICE_ENABLE_ELEVENLABS=1` and an API key.
+**Hosted xAI speech (metered):** customer picks a voice in the setup wizard (full catalog from xAI). Saved as `config.xaiVoiceId`. Request with `{ "audio": true }`.
+
+**Voice picker**
+
+| Surface | Path |
+|---------|------|
+| Setup wizard | `/setup/<token>` → **Pick your voice** |
+| Catalog API | `GET /api/voice/voices` (public) |
+| Free sample | `POST /api/voice/preview` `{ "voiceId": "carina" }` |
+| Save preference | `PUT /api/v1/agents/{id}/voice` `{ "voiceId": "luna" }` |
+| List + selected | `GET /api/v1/agents/{id}/voices` |
 
 **Go-live with Retell/Vapi**
 
 1. Complete Meridian intake → get `agentId` + `mdn_` API key  
-2. `GET /api/v1/agents/{id}/voice-spec` → system prompt + endpoints  
-3. Each caller turn: `POST /voice-turn` with transcript  
-4. Speak the `reply` / `platform.say` field with the platform’s native voice  
+2. Pick xAI voice in setup wizard (optional for phone-native TTS)  
+3. `GET /api/v1/agents/{id}/voice-spec` → system prompt + endpoints  
+4. Each caller turn: `POST /voice-turn` with transcript  
+5. Speak the `reply` / `platform.say` field with the platform’s native voice  
+6. Or request Meridian audio: `{ "audio": true }` (uses saved `xaiVoiceId`, requires pack/sub)  
 
 ```http
 POST /api/v1/agents/{id}/voice-turn
@@ -88,8 +100,10 @@ Authorization: Bearer mdn_…
 ```
 
 ```http
-GET /api/voice/status          # mode: platform
+GET /api/voice/status
+GET /api/voice/voices
 GET /api/v1/agents/{id}/voice-spec
+GET /api/v1/agents/{id}/voices
 ```
 
 ---
