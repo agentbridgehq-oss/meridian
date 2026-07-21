@@ -21,6 +21,7 @@ import {
   withContainment,
   containmentStatus,
 } from '../lib/openclaw-containment.mjs';
+import { withExpertAndContainment } from '../lib/openclaw-expert-gate.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DATA = process.env.DATA_DIR || path.join(__dirname, '..', 'data');
@@ -115,14 +116,43 @@ async function runOpenClawDeployInner({ queuePath = QUEUE, max = 10 } = {}) {
   return report;
 }
 
-export const runOpenClawDeploy = withContainment('openclaw.deploy', runOpenClawDeployInner);
+/**
+ * Expert training loaded every deploy batch; then containment cage.
+ */
+export async function runOpenClawDeploy(opts = {}) {
+  const wrapped = await withExpertAndContainment(
+    'deploy-agent',
+    'openclaw.deploy',
+    async (ctx) => {
+      const report = await runOpenClawDeployInner(opts);
+      return {
+        ...report,
+        expert: {
+          path: ctx.expert.expertPath,
+          hash: ctx.expert.expertHash,
+          runId: ctx.runId,
+        },
+      };
+    },
+    {
+      payload: { max: opts.max || 10 },
+      taskBrief: 'Process Meridian deploy-queue jobs: provision agents + config packs only.',
+    },
+  );
+  return wrapped.result || wrapped;
+}
 
 const isMain = process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
 if (isMain) {
   let queuePath = QUEUE;
   const idx = process.argv.indexOf('--file');
   if (idx >= 0 && process.argv[idx + 1]) queuePath = path.resolve(process.argv[idx + 1]);
-  runOpenClawDeploy({ queuePath }).then((r) => {
-    console.log(JSON.stringify(r, null, 2));
-  });
+  runOpenClawDeploy({ queuePath })
+    .then((r) => {
+      console.log(JSON.stringify(r, null, 2));
+    })
+    .catch((e) => {
+      console.error(JSON.stringify({ ok: false, error: e.message, code: e.code }, null, 2));
+      process.exit(1);
+    });
 }

@@ -10,17 +10,20 @@ import {
   assertSafeText,
   withContainment,
 } from '../lib/openclaw-containment.mjs';
+import { withExpertAndContainment } from '../lib/openclaw-expert-gate.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DATA = process.env.DATA_DIR || path.join(__dirname, '..', 'data');
 
 /**
  * Contained OpenClaw daily cycle.
+ * Expert training MD loaded EVERY run before work.
  * Never banks, inboxes, personal files, account logins, money movement, or --deliver.
  */
-async function runOpenClawInner() {
+async function runOpenClawInner(expertCtx) {
   // Hard policy stamp into every run
   assertSafeText(containmentPreamble(), 'preamble');
+  assertSafeText(expertCtx?.context?.slice(0, 2000) || 'expert', 'expert_context');
 
   const date = new Date().toISOString().slice(0, 10);
   const actions = [];
@@ -190,14 +193,43 @@ See attached daily file on server: daily-${date}.md
     briefPath,
     emailed,
     containment: cage,
+    expert: expertCtx?.expert
+      ? {
+          path: expertCtx.expert.expertPath,
+          hash: expertCtx.expert.expertHash,
+          runId: expertCtx.runId,
+        }
+      : null,
   };
 }
 
-export const runOpenClaw = withContainment('openclaw.daily', runOpenClawInner);
+/**
+ * Public entry: expert MD loaded every time, then containment cage, then work.
+ */
+export async function runOpenClaw() {
+  const wrapped = await withExpertAndContainment(
+    'daily-ops',
+    'openclaw.daily',
+    async (ctx) => runOpenClawInner(ctx),
+    { taskBrief: 'Meridian daily ops cycle: funnel, drafts, deploy queue, install queue, brief.' },
+  );
+  // Flatten expert audit onto result for ops
+  return {
+    ...(wrapped.result || {}),
+    ok: wrapped.ok !== false,
+    expertGate: wrapped.expert,
+    runId: wrapped.runId,
+  };
+}
 
 const isMain = process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
 if (isMain) {
-  runOpenClaw().then((r) => {
-    console.log(JSON.stringify(r, null, 2));
-  });
+  runOpenClaw()
+    .then((r) => {
+      console.log(JSON.stringify(r, null, 2));
+    })
+    .catch((e) => {
+      console.error(JSON.stringify({ ok: false, error: e.message, code: e.code }, null, 2));
+      process.exit(1);
+    });
 }
