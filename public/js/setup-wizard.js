@@ -18,15 +18,28 @@
     autonomousJob: null,
     loading: true,
     error: '',
+    // Voice picker
+    voices: [],
+    voicesLoaded: false,
+    voicesLoading: false,
+    voicesError: '',
+    voicesSource: '',
+    hostedReady: false,
+    selectedVoiceId: 'eve',
+    voiceFilter: '',
+    voiceSaveMsg: '',
+    voicePreviewMsg: '',
+    previewingId: null,
   };
 
   const PATH_SKIP = {
-    website: { website: true, api: false, webhooks: false, phone: false, autonomous: true },
-    api: { website: false, api: true, webhooks: true, phone: false, autonomous: true },
-    webhooks: { website: false, api: true, webhooks: true, phone: false, autonomous: true },
-    phone: { website: false, api: true, webhooks: false, phone: true, autonomous: true },
-    full: { website: true, api: true, webhooks: true, phone: true, autonomous: true },
-    autonomous: { website: true, api: true, webhooks: true, phone: true, autonomous: true },
+    // voice step always shown (xAI picker) for every path
+    website: { voice: true, website: true, api: false, webhooks: false, phone: false, autonomous: true },
+    api: { voice: true, website: false, api: true, webhooks: true, phone: false, autonomous: true },
+    webhooks: { voice: true, website: false, api: true, webhooks: true, phone: false, autonomous: true },
+    phone: { voice: true, website: false, api: true, webhooks: false, phone: true, autonomous: true },
+    full: { voice: true, website: true, api: true, webhooks: true, phone: true, autonomous: true },
+    autonomous: { voice: true, website: true, api: true, webhooks: true, phone: true, autonomous: true },
   };
 
   function saveLocal() {
@@ -38,6 +51,7 @@
           path: state.path,
           done: state.done,
           agentId: state.ctx?.agentId,
+          selectedVoiceId: state.selectedVoiceId,
         }),
       );
     } catch (_) {}
@@ -68,8 +82,10 @@
   }
 
   function shouldShowStep(stepId) {
-    if (['welcome', 'credentials', 'path', 'test', 'done'].includes(stepId)) return true;
+    if (['welcome', 'credentials', 'path', 'voice', 'knowledge', 'test', 'done'].includes(stepId)) return true;
     const map = PATH_SKIP[state.path] || PATH_SKIP.full;
+    if (stepId === 'voice') return map.voice !== false;
+    if (stepId === 'knowledge') return true;
     if (stepId === 'website') return map.website;
     if (stepId === 'api') return map.api;
     if (stepId === 'webhooks') return map.webhooks;
@@ -96,11 +112,13 @@
         ctx = await (await fetch(`${BASE}/api/setup/blank`)).json();
       }
       state.ctx = ctx;
+      state.selectedVoiceId = ctx.selectedVoiceId || ctx.xaiVoiceId || 'eve';
       const saved = loadLocal();
       if (saved && saved.agentId === ctx.agentId) {
         state.step = Math.min(saved.step || 0, 99);
         state.path = saved.path || 'full';
         state.done = saved.done || {};
+        if (saved.selectedVoiceId) state.selectedVoiceId = saved.selectedVoiceId;
       }
     } catch (e) {
       state.error = e.message || 'Failed to load setup';
@@ -110,6 +128,187 @@
     const vis = visibleSteps();
     if (state.step >= vis.length) state.step = Math.max(0, vis.length - 1);
     render();
+    // Prefetch voice catalog in background
+    loadVoices().catch(() => {});
+  }
+
+  async function loadVoices() {
+    if (state.voicesLoading) return;
+    state.voicesLoading = true;
+    state.voicesError = '';
+    try {
+      let data;
+      if (token) {
+        const res = await fetch(`${BASE}/api/setup/${token}/voices`);
+        data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Could not load voices');
+      } else {
+        const res = await fetch(`${BASE}/api/voice/voices`);
+        data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Could not load voices');
+      }
+      state.voices = data.voices || [];
+      state.voicesSource = data.source || '';
+      state.hostedReady = Boolean(data.hostedReady);
+      if (data.selectedVoiceId) state.selectedVoiceId = data.selectedVoiceId;
+      else if (!state.selectedVoiceId && data.defaultVoiceId) state.selectedVoiceId = data.defaultVoiceId;
+      state.voicesLoaded = true;
+    } catch (e) {
+      state.voicesError = e.message || 'Failed to load voices';
+      state.voicesLoaded = true;
+    }
+    state.voicesLoading = false;
+    // Re-render only if currently on voice step
+    const vis = visibleSteps();
+    const cur = vis[state.step];
+    if (cur?.id === 'voice') render();
+  }
+
+  async function saveKnowledgeStep() {
+    const payload = {
+      hours: document.getElementById('k-hours')?.value || '',
+      services: document.getElementById('k-services')?.value || '',
+      faqs: document.getElementById('k-faqs')?.value || '',
+      knowledgeBase: document.getElementById('k-kb')?.value || '',
+      humanTransfer: document.getElementById('k-transfer')?.value || '',
+      calendarUrl: document.getElementById('k-cal')?.value || '',
+      ownerNotifyEmail: document.getElementById('k-email')?.value || '',
+      ownerNotifyPhone: document.getElementById('k-phone')?.value || '',
+    };
+    const status = document.getElementById('k-save-msg');
+    if (status) status.textContent = 'Saving…';
+    try {
+      let res;
+      if (token) {
+        res = await fetch(`${BASE}/api/setup/${token}/knowledge`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+      } else {
+        const agentId = state.ctx?.agentId || document.getElementById('manual-agent')?.value?.trim();
+        const apiKey = state.ctx?.apiKey || document.getElementById('manual-key')?.value?.trim();
+        if (!agentId || !apiKey) throw new Error('Need agent credentials first');
+        res = await fetch(`${BASE}/api/v1/agents/${encodeURIComponent(agentId)}/knowledge`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${apiKey}`,
+          },
+          body: JSON.stringify(payload),
+        });
+      }
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Save failed');
+      state.done.knowledge = true;
+      saveLocal();
+      saveProgressRemote();
+      if (status) status.textContent = 'Saved · truth layer live';
+    } catch (e) {
+      if (status) status.textContent = 'Error: ' + (e.message || 'failed');
+    }
+  }
+
+  async function saveVoice(voiceId) {
+    const id = (voiceId || state.selectedVoiceId || '').toLowerCase().trim();
+    if (!id) return;
+    state.selectedVoiceId = id;
+    state.voiceSaveMsg = 'Saving…';
+    render();
+    try {
+      let res;
+      if (token) {
+        res = await fetch(`${BASE}/api/setup/${token}/voice`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ voiceId: id }),
+        });
+      } else {
+        const agentId = state.ctx?.agentId || document.getElementById('manual-agent')?.value?.trim();
+        const apiKey = state.ctx?.apiKey || document.getElementById('manual-key')?.value?.trim();
+        if (!agentId || !apiKey) {
+          // Local-only pick until credentials exist
+          state.voiceSaveMsg = `Selected ${id} (save credentials first to persist on your agent)`;
+          state.done.voice = true;
+          try {
+            localStorage.setItem(
+              storageKey,
+              JSON.stringify({
+                ...(loadLocal() || {}),
+                step: state.step,
+                path: state.path,
+                done: state.done,
+                agentId: state.ctx?.agentId,
+                selectedVoiceId: id,
+              }),
+            );
+          } catch (_) {}
+          render();
+          return;
+        }
+        res = await fetch(`${BASE}/api/setup/voice`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ agentId, apiKey, voiceId: id }),
+        });
+      }
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Could not save voice');
+      state.selectedVoiceId = data.xaiVoiceId || id;
+      if (state.ctx) state.ctx.selectedVoiceId = state.selectedVoiceId;
+      state.voiceSaveMsg = `Saved · ${state.selectedVoiceId}`;
+      state.done.voice = true;
+      saveLocal();
+      saveProgressRemote();
+      try {
+        localStorage.setItem(
+          storageKey,
+          JSON.stringify({
+            ...(loadLocal() || {}),
+            step: state.step,
+            path: state.path,
+            done: state.done,
+            agentId: state.ctx?.agentId,
+            selectedVoiceId: state.selectedVoiceId,
+          }),
+        );
+      } catch (_) {}
+    } catch (e) {
+      state.voiceSaveMsg = `Error: ${e.message}`;
+    }
+    render();
+  }
+
+  async function previewVoiceSample(voiceId) {
+    const id = (voiceId || state.selectedVoiceId || 'eve').toLowerCase().trim();
+    state.previewingId = id;
+    state.voicePreviewMsg = `Loading sample · ${id}…`;
+    render();
+    try {
+      const res = await fetch(`${BASE}/api/voice/preview`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ voiceId: id }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Preview failed');
+      if (!data.audioBase64) throw new Error('No audio returned');
+      const mime = data.contentType || 'audio/mpeg';
+      const audio = new Audio(`data:${mime};base64,${data.audioBase64}`);
+      state.voicePreviewMsg = `Playing · ${id}`;
+      render();
+      await audio.play();
+      audio.addEventListener('ended', () => {
+        state.previewingId = null;
+        state.voicePreviewMsg = `Heard · ${id}`;
+        const vis = visibleSteps();
+        if (vis[state.step]?.id === 'voice') render();
+      });
+    } catch (e) {
+      state.previewingId = null;
+      state.voicePreviewMsg = e.message || 'Preview unavailable';
+      render();
+    }
   }
 
   async function runTest() {
@@ -368,6 +567,89 @@
         </div>`;
     }
 
+    if (step.id === 'voice') {
+      if (!state.voicesLoaded && !state.voicesLoading) {
+        loadVoices().catch(() => {});
+      }
+      const q = (state.voiceFilter || '').toLowerCase().trim();
+      const list = (state.voices || []).filter((v) => {
+        if (!q) return true;
+        const hay = `${v.id} ${v.name} ${v.tagline || ''} ${v.useCases || ''}`.toLowerCase();
+        return hay.includes(q);
+      });
+      const cards = list
+        .map((v) => {
+          const on = state.selectedVoiceId === v.id ? 'on' : '';
+          const playing = state.previewingId === v.id ? 'playing' : '';
+          return `
+            <div class="voice-card ${on} ${playing}" data-voice-id="${escapeHtml(v.id)}">
+              <div class="v-name">${escapeHtml(v.name || v.id)}</div>
+              <div class="v-tag">${escapeHtml(v.tagline || 'xAI neural voice')}</div>
+              <div class="v-use">${escapeHtml(v.useCases || '')}</div>
+              <div class="v-actions">
+                <button type="button" class="btn sm light" data-preview-voice="${escapeHtml(v.id)}">▶ Preview</button>
+                <button type="button" class="btn sm dark" data-select-voice="${escapeHtml(v.id)}">
+                  ${state.selectedVoiceId === v.id ? 'Selected ✓' : 'Use this'}
+                </button>
+                <span class="v-id">${escapeHtml(v.id)}</span>
+              </div>
+            </div>`;
+        })
+        .join('');
+      return `
+        <div class="block-body">
+          <p class="lead">Pick the neural voice for <strong>Meridian-hosted</strong> speech (xAI). This is used when your stack requests audio with <code>audio: true</code>, or on the speak API. Phone lines still use Retell/Vapi native voices unless you wire hosted audio.</p>
+          <div class="voice-toolbar">
+            <input class="voice-search" id="voice-filter" type="search" placeholder="Search voices…" value="${escapeHtml(state.voiceFilter || '')}" />
+            <button type="button" class="btn sm light" id="btn-reload-voices">Refresh list</button>
+          </div>
+          ${
+            state.voicesLoading
+              ? `<p class="voice-status">Loading xAI catalog…</p>`
+              : state.voicesError
+                ? `<p class="voice-status err">${escapeHtml(state.voicesError)}</p>`
+                : `<p class="voice-status">${list.length} voice${list.length === 1 ? '' : 's'}${
+                    state.voicesSource ? ` · ${escapeHtml(state.voicesSource)}` : ''
+                  }${state.hostedReady ? ' · previews ready' : ' · previews need XAI_API_KEY on Meridian'}</p>`
+          }
+          <div class="voice-grid">${cards || '<p class="voice-status">No voices match your search.</p>'}</div>
+          <div class="callout good">
+            <b>Selected: ${escapeHtml(state.selectedVoiceId || 'eve')}</b>
+            <p>Click <strong>Use this</strong> to save on your agent. Previews are free samples (rate-limited) and do not use your prepaid turn packs.</p>
+          </div>
+          ${
+            state.voiceSaveMsg
+              ? `<p class="voice-status ${state.voiceSaveMsg.startsWith('Error') ? 'err' : 'ok'}">${escapeHtml(state.voiceSaveMsg)}</p>`
+              : ''
+          }
+          ${
+            state.voicePreviewMsg
+              ? `<p class="voice-status">${escapeHtml(state.voicePreviewMsg)}</p>`
+              : ''
+          }
+          <label class="check"><input type="checkbox" data-mark="voice" ${state.done.voice ? 'checked' : ''}/> I picked and saved my preferred voice</label>
+        </div>`;
+    }
+
+    if (step.id === 'knowledge') {
+      return `
+        <div class="block-body">
+          <p class="lead">This is the <strong>truth layer</strong> competitors skip. The agent only answers from what you save here — no invented prices or hours.</p>
+          <div class="field"><label>Business hours</label><input id="k-hours" placeholder="Mon–Fri 8–6" value="" /></div>
+          <div class="field"><label>Services (how to talk about them)</label><textarea id="k-services" rows="3" placeholder="Drain cleaning from $149…" style="width:100%;padding:12px 14px;border-radius:12px;border:1px solid var(--line);font:inherit"></textarea></div>
+          <div class="field"><label>Top FAQs</label><textarea id="k-faqs" rows="3" style="width:100%;padding:12px 14px;border-radius:12px;border:1px solid var(--line);font:inherit"></textarea></div>
+          <div class="field"><label>Extra knowledge base</label><textarea id="k-kb" rows="3" placeholder="Parking, service area, policies…" style="width:100%;padding:12px 14px;border-radius:12px;border:1px solid var(--line);font:inherit"></textarea></div>
+          <div class="field"><label>Human / emergency transfer number</label><input id="k-transfer" placeholder="+1…" /></div>
+          <div class="field"><label>Calendar / booking link</label><input id="k-cal" placeholder="https://calendly.com/…" /></div>
+          <div class="field"><label>Owner alert email (emergencies &amp; human requests)</label><input id="k-email" type="email" placeholder="you@business.com" /></div>
+          <div class="field"><label>Owner alert phone (optional SMS)</label><input id="k-phone" type="tel" /></div>
+          <button type="button" class="btn dark" id="btn-save-knowledge">Save truth layer</button>
+          <p class="hint" id="k-save-msg"></p>
+          <div class="callout good"><b>Later</b><p>Full editor + website scrape + interaction history: <a href="/dashboard" target="_blank">/dashboard</a></p></div>
+          <label class="check"><input type="checkbox" data-mark="knowledge" ${state.done.knowledge ? 'checked' : ''}/> Hours, transfer number, and owner email saved</label>
+        </div>`;
+    }
+
     if (step.id === 'website') {
       return `
         <div class="block-body">
@@ -461,7 +743,7 @@ Authorization: Bearer ${escapeHtml(key)}
                 : ''
             }
           </div>
-          <div class="callout good"><b>Latency tip</b><p>Keep <code>audio:false</code> on phone. Use platform native voice. Premium Meridian TTS is for hosted audio apps.</p></div>
+          <div class="callout good"><b>Latency tip</b><p>Keep <code>audio:false</code> on phone for lowest lag — Retell/Vapi speaks Meridian’s text with a platform voice. Your saved xAI voice (<strong>${escapeHtml(state.selectedVoiceId || c.selectedVoiceId || 'eve')}</strong>) applies when you request Meridian-hosted audio.</p></div>
           <label class="check"><input type="checkbox" data-mark="phone" ${state.done.phone ? 'checked' : ''}/> Test call heard correct hours/services</label>
         </div>`;
     }
@@ -539,7 +821,8 @@ Authorization: Bearer ${escapeHtml(key)}
             <li>Full reference anytime: <a href="/install" target="_blank">/install</a></li>
           </ul>
           <div class="row">
-            <a class="btn dark" href="/">Meridian home</a>
+            <a class="btn dark" href="/dashboard">Open dashboard</a>
+            <a class="btn light" href="/status">System status</a>
             ${token ? `<a class="btn light" href="/guide/${token}">Static connect guide</a>` : ''}
             <a class="btn light" href="/install">Full docs</a>
           </div>
@@ -579,6 +862,47 @@ Authorization: Bearer ${escapeHtml(key)}
     document.getElementById('btn-test')?.addEventListener('click', runTest);
     document.getElementById('btn-auto')?.addEventListener('click', queueAutonomous);
     document.getElementById('btn-manual-save')?.addEventListener('click', applyManualCreds);
+    document.getElementById('btn-save-knowledge')?.addEventListener('click', saveKnowledgeStep);
+
+    // Voice picker
+    document.getElementById('btn-reload-voices')?.addEventListener('click', () => {
+      state.voicesLoaded = false;
+      loadVoices();
+      render();
+    });
+    const filter = document.getElementById('voice-filter');
+    if (filter) {
+      filter.addEventListener('input', () => {
+        state.voiceFilter = filter.value || '';
+        // soft re-render without full step reset
+        render();
+        const f2 = document.getElementById('voice-filter');
+        if (f2) {
+          f2.focus();
+          const len = f2.value.length;
+          f2.setSelectionRange(len, len);
+        }
+      });
+    }
+    document.querySelectorAll('[data-select-voice]').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        saveVoice(btn.getAttribute('data-select-voice'));
+      });
+    });
+    document.querySelectorAll('[data-preview-voice]').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        previewVoiceSample(btn.getAttribute('data-preview-voice'));
+      });
+    });
+    document.querySelectorAll('.voice-card[data-voice-id]').forEach((card) => {
+      card.addEventListener('click', (e) => {
+        if (e.target.closest('button')) return;
+        state.selectedVoiceId = card.getAttribute('data-voice-id');
+        render();
+      });
+    });
   }
 
   function render() {

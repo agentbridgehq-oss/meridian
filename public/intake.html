@@ -121,6 +121,24 @@
         <option value="direct">Direct / no-nonsense</option>
       </select>
 
+      <label for="xaiVoiceId">Agent voice (xAI — Meridian-hosted speech)</label>
+      <select id="xaiVoiceId" name="xaiVoiceId">
+        <option value="eve">Eve — energetic &amp; upbeat (default)</option>
+        <option value="ara">Ara — warm &amp; conversational</option>
+        <option value="leo">Leo — authoritative</option>
+        <option value="rex">Rex — clear professional</option>
+        <option value="sal">Sal — smooth balanced</option>
+        <option value="carina">Carina — soft empathetic</option>
+        <option value="luna">Luna — gentle nurturing</option>
+        <option value="orion">Orion — rich cinematic</option>
+        <option value="helix">Helix — bold dynamic</option>
+        <option value="zagan">Zagan — powerful dramatic</option>
+      </select>
+      <p style="font-size:0.8rem;color:var(--muted);margin-top:6px">
+        Preview &amp; change anytime in the setup wizard after provisioning.
+        <button type="button" id="btn-preview-voice" style="margin-left:6px;font:inherit;font-size:0.8rem;padding:4px 10px;border-radius:999px;border:1px solid var(--line);background:#fff;cursor:pointer">▶ Preview</button>
+      </p>
+
       <label for="primaryNeed">Primary agent focus</label>
       <select id="primaryNeed" name="primaryNeed">
         <option value="full">Full stack</option>
@@ -155,6 +173,49 @@
   const btn = document.getElementById('btn');
   const err = document.getElementById('err');
   const ok = document.getElementById('ok');
+
+  // Load full live catalog into the select when available
+  (async function loadVoiceSelect() {
+    try {
+      const res = await fetch('/api/voice/voices');
+      const data = await res.json();
+      const sel = document.getElementById('xaiVoiceId');
+      if (!sel || !data.voices || !data.voices.length) return;
+      const current = sel.value || 'eve';
+      sel.innerHTML = data.voices
+        .map(function (v) {
+          const label = (v.name || v.id) + (v.tagline ? ' — ' + v.tagline : '');
+          return '<option value="' + v.id + '">' + label.replace(/</g, '') + '</option>';
+        })
+        .join('');
+      sel.value = current;
+      if (!sel.value && data.voices[0]) sel.value = data.voices[0].id;
+    } catch (_) {}
+  })();
+
+  document.getElementById('btn-preview-voice')?.addEventListener('click', async function () {
+    const voiceId = document.getElementById('xaiVoiceId')?.value || 'eve';
+    const b = this;
+    b.disabled = true;
+    b.textContent = 'Loading…';
+    try {
+      const res = await fetch('/api/voice/preview', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ voiceId: voiceId }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Preview failed');
+      const audio = new Audio('data:' + (data.contentType || 'audio/mpeg') + ';base64,' + data.audioBase64);
+      await audio.play();
+      b.textContent = '▶ Preview';
+    } catch (ex) {
+      b.textContent = 'Preview unavailable';
+      setTimeout(function () { b.textContent = '▶ Preview'; }, 2000);
+    } finally {
+      b.disabled = false;
+    }
+  });
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
