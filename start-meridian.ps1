@@ -28,6 +28,18 @@ if (Test-MeridianUp) {
   exit 0
 }
 
+# Health check failed but something may still be holding the port (a hung/zombie
+# process from a previous restart) — clear it first or the new node process will
+# immediately crash with EADDRINUSE, which was causing repeated restart loops.
+try {
+  $stale = Get-NetTCPConnection -LocalPort $Port -State Listen -ErrorAction SilentlyContinue
+  foreach ($conn in $stale) {
+    Write-Log "Killing stale process on :$Port (PID=$($conn.OwningProcess))"
+    Stop-Process -Id $conn.OwningProcess -Force -ErrorAction SilentlyContinue
+  }
+  if ($stale) { Start-Sleep -Milliseconds 500 }
+} catch {}
+
 $env:PORT = "$Port"
 if (-not $env:PUBLIC_BASE_URL) { $env:PUBLIC_BASE_URL = "http://localhost:$Port" }
 if (-not $env:DATA_DIR) { $env:DATA_DIR = Join-Path $Root 'data' }

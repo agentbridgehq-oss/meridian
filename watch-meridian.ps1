@@ -12,5 +12,5 @@ try {
   # down — start
 }
 
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File $Start
+powershell.exe -NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File $Start
 exit $LASTEXITCODE
