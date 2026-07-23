@@ -205,7 +205,7 @@ const PRODUCTS = {
   voice: {
     name: 'Meridian Voice Agent Kit',
     amount: 49700,
-    description: '24/7 voice receptionist install kit (platform TTS). Add prepaid turns or Voice Premium for hosted xAI speech.',
+    description: '24/7 voice receptionist install kit (platform TTS). Add prepaid turns or Voice Premium for hosted neural speech.',
     files: ['kits/voice/VOICE-AGENT-KIT.md'],
   },
   sales: {
@@ -613,7 +613,7 @@ async function handleVoiceBillingCheckout(session) {
         `+${pack.turns} Meridian voice turns ready`,
         `Your pay-as-you-go top-up is live.\n\n` +
           `Turns added: ${pack.turns}\n` +
-          `Use them on your Meridian Voice agent (hosted xAI speech).\n` +
+          `Use them on your Meridian Voice agent (hosted neural speech).\n` +
           `Billing account: ${acc.id}\n\n` +
           `Meridian only bills what you use — top up again anytime:\n` +
           `${BASE}/checkout/voice-pack/starter\n\n${BASE}`,
@@ -1270,7 +1270,7 @@ app.post('/api/v1/agents/:id/speak', async (req, res) => {
       billed: false,
       platform,
       message:
-        'Platform TTS — speak `say` in Retell/Vapi. For Meridian-hosted xAI audio, pass { "audio": true } (requires prepaid turns or subscription).',
+        'Platform TTS — speak `say` in Retell/Vapi. For Meridian-hosted audio, pass { "audio": true } (requires prepaid turns or subscription).',
     });
   }
 
@@ -1419,7 +1419,7 @@ app.post('/api/v1/agents/:id/voice-turn', async (req, res) => {
         }
       : null,
     elevenlabs: elevenlabsConfigured(),
-    xai: xaiTtsConfigured(),
+    premiumVoice: xaiTtsConfigured(),
   });
 });
 
@@ -2482,7 +2482,7 @@ async function startVoiceSubscriptionCheckout(req, res, planId) {
             recurring: { interval: 'month' },
             product_data: {
               name: plan.name,
-              description: `${plan.includedTurns} hosted xAI turns/mo · overage $${((plan.overageCents || 55) / 100).toFixed(2)}/turn`,
+              description: `${plan.includedTurns} hosted voice turns/mo · overage $${((plan.overageCents || 55) / 100).toFixed(2)}/turn`,
             },
           },
           quantity: 1,
