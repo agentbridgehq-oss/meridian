@@ -47,7 +47,8 @@
     --max: 1120px;
     --serif: 'Instrument Serif', 'Instrument Serif Fallback', Georgia, serif;
     --sans: 'Inter', 'Inter Fallback', system-ui, sans-serif;
-    --hero-title-size: clamp(2.5rem, 4.2vw + 0.85rem, 3.65rem);
+    /* Professional agency scale: a step up from compact, not billboard */
+    --hero-title-size: clamp(2.85rem, 5vw + 0.9rem, 4.05rem);
   }
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   html { scroll-behavior: smooth; }
@@ -127,24 +128,24 @@
     font-family: var(--serif);
     font-weight: 400;
     font-size: var(--hero-title-size);
-    line-height: 1.14;
-    letter-spacing: -0.018em;
+    line-height: 1.08;
+    letter-spacing: -0.028em;
     /* rem max-width = stable across font swap (ch changes with glyph metrics) */
-    max-width: 18rem;
+    max-width: min(22rem, 100%);
     width: 100%;
-    margin: 0 auto 0.85rem;
+    margin: 0 auto 1rem;
     color: var(--ink);
     font-feature-settings: "liga" 1, "kern" 1;
     text-wrap: balance;
     /* Reserve ~2 lines so layout doesn't collapse when wrapping changes */
-    min-height: calc(var(--hero-title-size) * 1.14 * 2);
+    min-height: calc(var(--hero-title-size) * 1.08 * 2);
     font-synthesis: none;
   }
   .hero h1 em {
     font-style: italic;
     font-weight: 400;
-    color: #4A4945;
-    letter-spacing: -0.012em;
+    color: #2C2B28;
+    letter-spacing: -0.022em;
     font-family: var(--serif);
   }
   .hero-lede {
