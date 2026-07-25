@@ -10,8 +10,30 @@
 <meta name="theme-color" content="#0C0C0B">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&display=optional" rel="stylesheet">
+<!-- Preload hero serif early so size doesn't jump when webfont arrives -->
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&display=swap">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
+  /*
+   * Metric-matched fallbacks: Georgia/system paint first at nearly the same
+   * size as Instrument Serif / Inter so the hero title does not "pop" big→small.
+   */
+  @font-face {
+    font-family: 'Instrument Serif Fallback';
+    src: local('Georgia'), local('Times New Roman');
+    size-adjust: 108%;
+    ascent-override: 92%;
+    descent-override: 22%;
+    line-gap-override: 0%;
+  }
+  @font-face {
+    font-family: 'Inter Fallback';
+    src: local('Segoe UI'), local('Helvetica Neue'), local('Arial');
+    size-adjust: 100%;
+    ascent-override: 90%;
+    descent-override: 22%;
+    line-gap-override: 0%;
+  }
   :root {
     --bg: #F7F6F3;
     --bg-elev: #FFFFFF;
@@ -23,8 +45,9 @@
     --good: #1F7A4C;
     --radius: 20px;
     --max: 1120px;
-    --serif: 'Instrument Serif', Georgia, serif;
-    --sans: 'Inter', system-ui, sans-serif;
+    --serif: 'Instrument Serif', 'Instrument Serif Fallback', Georgia, serif;
+    --sans: 'Inter', 'Inter Fallback', system-ui, sans-serif;
+    --hero-title-size: clamp(2.5rem, 4.2vw + 0.85rem, 3.65rem);
   }
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   html { scroll-behavior: smooth; }
@@ -34,6 +57,7 @@
     color: var(--ink);
     line-height: 1.55;
     -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
   }
   a { color: inherit; }
   .mist {
@@ -95,30 +119,33 @@
     box-shadow: 0 0 0 3px rgba(31,122,76,0.14);
   }
   /*
-   * Hero title — premium B2B / agency scale (not billboard).
-   * Research: serif = trust/authority for services; oversized display
-   * reads “loud startup,” refined 2.5–3.75rem range + open tracking
-   * reads high-ticket, calm confidence. Ideal measure ~14–18ch.
-   * Hierarchy: title leads eye → lede → CTA (Fitts + scan order).
+   * Hero title — premium B2B scale. Size is stable on first paint:
+   * rem/vw clamp (not ch-based max that reflows when webfont loads),
+   * metric-matched fallback, no transform scale animation.
    */
   .hero h1 {
     font-family: var(--serif);
     font-weight: 400;
-    font-size: clamp(2.65rem, 5.3vw + 0.75rem, 4.5rem);
-    line-height: 1.12;
+    font-size: var(--hero-title-size);
+    line-height: 1.14;
     letter-spacing: -0.018em;
-    max-width: 15.5ch;
+    /* rem max-width = stable across font swap (ch changes with glyph metrics) */
+    max-width: 18rem;
     width: 100%;
     margin: 0 auto 0.85rem;
     color: var(--ink);
     font-feature-settings: "liga" 1, "kern" 1;
     text-wrap: balance;
+    /* Reserve ~2 lines so layout doesn't collapse when wrapping changes */
+    min-height: calc(var(--hero-title-size) * 1.14 * 2);
+    font-synthesis: none;
   }
   .hero h1 em {
     font-style: italic;
     font-weight: 400;
     color: #4A4945;
     letter-spacing: -0.012em;
+    font-family: var(--serif);
   }
   .hero-lede {
     font-size: clamp(1rem, 1.4vw + 0.75rem, 1.125rem);
