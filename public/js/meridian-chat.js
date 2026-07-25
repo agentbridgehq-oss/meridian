@@ -177,7 +177,7 @@
     padding: 12px 14px; border-radius: 999px;
     border: 1px solid rgba(255,255,255,0.14); background: #0A0A09; outline: none; min-width: 0;
   }
-  .mdn-chat-input input:focus { outline: 2px solid #0C0C0B; outline-offset: 1px; }
+  .mdn-chat-input input:focus { outline: 2px solid #F5F5F4; outline-offset: 1px; }
   .mdn-chat-input button.send {
     font: inherit; font-weight: 600; font-size: 0.88rem; cursor: pointer;
     padding: 0 16px; height: 42px; border-radius: 999px; border: none;
