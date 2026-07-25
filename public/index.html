@@ -364,6 +364,58 @@
     .nav { padding: 12px 16px; }
     .hero, .wrap, .live-strip { padding-left: 16px; padding-right: 16px; }
   }
+  /* xAI voice demo studio */
+  .voice-demo {
+    max-width: var(--max);
+    margin: 0 auto 8px;
+    padding: 0 24px 8px;
+    opacity: 0.92;
+    transform: translateY(8px);
+    transition: opacity .45s ease, transform .45s ease;
+  }
+  .voice-demo.vd-visible { opacity: 1; transform: none; }
+  .voice-demo-panel {
+    background: var(--bg-elev);
+    border: 1px solid var(--line);
+    border-radius: calc(var(--radius) + 4px);
+    padding: 28px 24px;
+    box-shadow: 0 1px 0 rgba(255,255,255,0.8) inset, 0 24px 60px rgba(12,12,11,0.04);
+  }
+  .voice-demo-panel .live-label { margin-bottom: 8px; }
+  .voice-demo-panel h2 {
+    font-family: var(--serif); font-weight: 400;
+    font-size: clamp(1.6rem, 3vw, 2.1rem);
+    letter-spacing: -0.02em; line-height: 1.15; margin-bottom: 8px;
+  }
+  .voice-demo-panel .vd-lede {
+    color: var(--muted); font-size: 0.98rem; max-width: 48ch; margin-bottom: 18px;
+  }
+  .vd-voices {
+    display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px;
+  }
+  .vd-voice {
+    font: inherit; text-align: left; cursor: pointer;
+    border: 1px solid var(--line); background: var(--bg);
+    border-radius: 14px; padding: 10px 14px; min-width: 120px;
+    transition: border-color .15s, background .15s;
+  }
+  .vd-voice strong { display: block; font-size: 0.9rem; }
+  .vd-voice span { font-size: 0.72rem; color: var(--muted); }
+  .vd-voice.active, .vd-voice:hover {
+    border-color: var(--ink); background: #fff;
+  }
+  .vd-text {
+    width: 100%; min-height: 72px; font: inherit; font-size: 0.92rem;
+    padding: 12px 14px; border-radius: 14px; border: 1px solid var(--line-strong);
+    background: #fff; resize: vertical; margin-bottom: 12px;
+  }
+  .vd-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+  .vd-status { font-size: 0.8rem; color: var(--muted); margin-top: 12px; }
+  .vd-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 0.7rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--good); margin-bottom: 10px;
+  }
 </style>
 </head>
 <body>
@@ -379,6 +431,7 @@
   </a>
   <div class="nav-links">
     <a class="ghost" href="#agents">Agents</a>
+    <a class="ghost" href="#voice-demo">Try voice</a>
     <a class="ghost" href="#method">Method</a>
     <a class="ghost" href="/why-agents">Why agents</a>
     <a class="ghost" href="/install">Install guide</a>
@@ -397,10 +450,31 @@
   </p>
   <div class="hero-cta">
     <a class="btn btn-dark btn-lg" href="#stack">Get the full stack — $997</a>
+    <a class="btn btn-light btn-lg" href="#voice-demo">Try xAI voice live</a>
     <a class="btn btn-light btn-lg" href="#proposal">Get a proposal</a>
-    <a class="btn btn-light btn-lg" href="/why-agents">Why these agents</a>
   </div>
-  <p class="hero-note">Meridian Agency · Instant kits · Stripe · Email + webhooks · CASL-aware</p>
+  <p class="hero-note">Meridian Agency · AI Guide on every page · Instant kits · CASL-aware</p>
+</section>
+
+<section class="voice-demo" id="voice-demo" aria-label="xAI voice live demo">
+  <div class="voice-demo-panel">
+    <div class="vd-badge"><span style="width:6px;height:6px;border-radius:50%;background:var(--good)"></span> Live demo · xAI neural voices</div>
+    <div class="live-label">Try it out</div>
+    <h2>Hear the receptionist quality before you buy.</h2>
+    <p class="vd-lede">
+      Free short samples powered by xAI speech on Meridian’s servers. Production phone agents still use Retell/Vapi for calls —
+      this is the premium voice layer customers can hear and pick.
+    </p>
+    <div class="vd-voices" data-vd-voices></div>
+    <label class="live-label" for="vd-text">Sample line</label>
+    <textarea class="vd-text" id="vd-text" data-vd-text maxlength="220" rows="3"></textarea>
+    <div class="vd-row">
+      <button type="button" class="btn btn-dark" data-vd-play>Play sample</button>
+      <a class="btn btn-light" href="#stack">Deploy Voice agent</a>
+      <button type="button" class="btn btn-light" data-vd-guide>Open AI Guide · Voice</button>
+    </div>
+    <p class="vd-status" data-vd-status>Loading voices…</p>
+  </div>
 </section>
 
 <div class="live-strip">
@@ -695,6 +769,7 @@
 <div class="toast" id="toast"></div>
 
 <script src="/js/meridian-chat.js" defer></script>
+<script src="/js/voice-demo.js" defer></script>
 <script>
 (function () {
   const params = new URLSearchParams(location.search);

@@ -69,6 +69,8 @@ import {
   verifyAgentWorks,
 } from './lib/onboard.mjs';
 import { guideChat } from './lib/guide-chat.mjs';
+import { webSearch, formatSearchForPrompt, wantsWebSearch } from './lib/web-search.mjs';
+import { callXaiGuide, xaiGuideConfigured } from './lib/xai-guide.mjs';
 import {
   buildSetupContext,
   testAgentChat,
@@ -152,11 +154,6 @@ import {
   getAgentHealth,
 } from './lib/reliability.mjs';
 import {
-  draftArticle,
-  vetArticle,
-  fixArticle,
-  runArticleCycle,
-  maybeRunScheduledCycle,
   publishArticle,
   unpublishArticle,
   rejectArticleFinal,
@@ -166,6 +163,11 @@ import {
   getPublishedArticle,
   articlesStatus,
 } from './lib/articles.mjs';
+import {
+  runOpenClawArticles,
+  runOpenClawArticlesScheduled,
+  runOpenClawArticleStep,
+} from './lib/openclaw-articles.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -843,6 +845,7 @@ app.post('/api/ops/openclaw/run', async (req, res) => {
     'sales-pipeline',
     'usage-report',
     'knowledge-refresh',
+    'content-articles',
   ]);
   if (!allowed.has(agentId)) {
     return res.status(400).json({ error: 'Unknown agentId', allowed: [...allowed] });
@@ -856,6 +859,18 @@ app.post('/api/ops/openclaw/run', async (req, res) => {
     }
     if (agentId === 'install-pack') {
       return res.json(await processInstallQueue({ sendEmail, max: Number(req.body?.max) || 10 }));
+    }
+    if (agentId === 'content-articles') {
+      // force=true → full cycle now; else interval-aware scheduled cycle
+      if (req.body?.force === true || req.body?.cycle === true) {
+        return res.json(
+          await runOpenClawArticles({
+            topic: req.body?.topic,
+            autoPublish: req.body?.autoPublish === true,
+          }),
+        );
+      }
+      return res.json(await runOpenClawArticlesScheduled());
     }
     if (agentId === 'health-probe') {
       const out = await withExpertAndContainment(
@@ -1081,17 +1096,22 @@ app.get('/api/handoff', (_req, res) => {
 
 /** Public AI guide chat (site assistant — no API key). Stateful concierge:
  *  client echoes back `state` each turn; can create real leads with consent.
- *  When Claude is configured, freeform turns use Claude Agent API; funnel steps stay deterministic. */
+ *  Freeform: web search + xAI (preferred) or Claude; funnel steps stay deterministic. */
 app.post('/api/guide-chat', chatLimiter, async (req, res) => {
   const message = String(req.body?.message || '').slice(0, 2000);
   const history = Array.isArray(req.body?.history) ? req.body.history.slice(-16) : [];
   const state = req.body?.state && typeof req.body.state === 'object' ? req.body.state : {};
+  const forceSearch = req.body?.webSearch === true || req.body?.search === true;
   try {
     const base = guideChat(message, history, state);
     // Funnel / action turns: keep deterministic pipeline
     const step = base?.state?.step || state?.step || 'discover';
     const funnelSteps = new Set([
       'need',
+      'business',
+      'niche',
+      'hours',
+      'services',
       'email',
       'consent',
       'proposal',
@@ -1099,31 +1119,100 @@ app.post('/api/guide-chat', chatLimiter, async (req, res) => {
       'intake',
       'connect',
     ]);
-    const wantsClaude =
-      claudeConfigured() &&
-      req.body?.claude !== false &&
-      !funnelSteps.has(step) &&
-      !(base.actions && base.actions.length) &&
-      message.length > 2;
+    const inFunnel = funnelSteps.has(step) || (base.actions && base.actions.length && step !== 'discover');
+    const freeform =
+      !inFunnel &&
+      message.length > 2 &&
+      (step === 'discover' || step === 'done' || step === 'faq' || !step);
 
-    // Only upgrade generic FAQ-style replies when Claude available
-    if (wantsClaude && (step === 'discover' || step === 'done' || step === 'faq')) {
-      const claude = await callClaudeGuide({ message, history });
-      if (claude.ok && claude.reply) {
-        return res.json({
-          ...base,
-          reply: claude.reply,
-          brain: { source: 'llm', provider: 'anthropic', model: claude.model },
-        });
+    let searchMeta = null;
+    let searchContext = '';
+    if (freeform && (forceSearch || wantsWebSearch(message) || req.body?.mode === 'research')) {
+      try {
+        const s = await webSearch(message, { max: 5 });
+        searchMeta = { provider: s.provider, ok: s.ok, n: (s.results || []).length };
+        searchContext = formatSearchForPrompt(s);
+      } catch (e) {
+        searchMeta = { ok: false, error: e.message };
       }
+    }
+
+    if (freeform && req.body?.llm !== false) {
+      // Prefer xAI Grok for public guide quality when key present
+      if (xaiGuideConfigured()) {
+        const xai = await callXaiGuide({
+          message,
+          history,
+          searchContext,
+          systemExtra: 'Offer Deploy Agent when they want install. Point to Try Voice demo on homepage for xAI speech samples.',
+        });
+        if (xai.ok && xai.reply) {
+          return res.json({
+            ...base,
+            reply: xai.reply,
+            brain: { source: 'llm', provider: 'xai', model: xai.model },
+            webSearch: searchMeta,
+            features: ['chat', 'web_search', 'deploy', 'voice_demo'],
+          });
+        }
+      }
+      if (claudeConfigured()) {
+        const claude = await callClaudeGuide({
+          message,
+          history,
+          systemExtra: searchContext ? `Web notes:\n${searchContext}` : '',
+        });
+        if (claude.ok && claude.reply) {
+          return res.json({
+            ...base,
+            reply: claude.reply,
+            brain: { source: 'llm', provider: 'anthropic', model: claude.model },
+            webSearch: searchMeta,
+          });
+        }
+      }
+    }
+
+    // Script reply; append search notes if we have them and no LLM
+    let reply = base.reply;
+    if (searchContext && freeform && searchMeta?.ok) {
+      reply = `${reply}\n\n— From the web —\n${(searchContext || '').slice(0, 900)}`;
     }
     res.json({
       ...base,
+      reply,
       brain: { source: 'guide_script', provider: 'meridian' },
+      webSearch: searchMeta,
+      features: ['chat', 'web_search', 'deploy', 'voice_demo'],
+      llm: { xai: xaiGuideConfigured(), claude: claudeConfigured() },
     });
   } catch (e) {
     res.status(500).json({ error: e.message || 'guide chat failed' });
   }
+});
+
+/** Public status for site guide + voice demo UI */
+app.get('/api/guide-status', (_req, res) => {
+  res.json({
+    ok: true,
+    guide: {
+      xaiChat: xaiGuideConfigured(),
+      claude: claudeConfigured(),
+      webSearch: Boolean(process.env.BRAVE_API_KEY || process.env.SERPER_API_KEY) || true,
+    },
+    voice: {
+      xaiTts: xaiTtsConfigured(),
+      preview: '/api/voice/preview',
+      voices: '/api/voice/voices',
+    },
+    deploy: {
+      checkoutVoice: `${BASE}/checkout/voice`,
+      checkoutSales: `${BASE}/checkout/sales`,
+      checkoutBooking: `${BASE}/checkout/booking`,
+      checkoutStack: `${BASE}/checkout/stack`,
+      setup: `${BASE}/setup`,
+    },
+  });
 });
 
 // ── Voice pipeline (platform-first; full xAI picker) ─────────────────────────
@@ -2754,39 +2843,57 @@ app.get('/api/ops/articles/status', (req, res) => {
 app.post('/api/ops/articles/cycle', async (req, res) => {
   if (!admin(req)) return res.status(401).json({ error: 'Unauthorized' });
   try {
-    const result = await runArticleCycle({
+    // Always OpenClaw expert-gated (content-articles.md)
+    const result = await runOpenClawArticles({
       topic: req.body?.topic,
       autoPublish: req.body?.autoPublish === true,
     });
     res.json(result);
   } catch (e) {
-    res.status(500).json({ ok: false, error: e.message });
+    res.status(e.code === 'OPENCLAW_EXPERT_MISSING' || e.code === 'OPENCLAW_CONTAINMENT' ? 403 : 500).json({
+      ok: false,
+      error: e.message,
+      code: e.code,
+    });
   }
 });
 app.post('/api/ops/articles/draft', async (req, res) => {
   if (!admin(req)) return res.status(401).json({ error: 'Unauthorized' });
-  res.json(await draftArticle({ topic: req.body?.topic }));
+  try {
+    res.json(await runOpenClawArticleStep('draft', { topic: req.body?.topic }));
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message, code: e.code });
+  }
 });
 app.post('/api/ops/articles/:id/vet', async (req, res) => {
   if (!admin(req)) return res.status(401).json({ error: 'Unauthorized' });
-  res.json(await vetArticle(req.params.id));
+  try {
+    res.json(await runOpenClawArticleStep('vet', { articleId: req.params.id }));
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message, code: e.code });
+  }
 });
 app.post('/api/ops/articles/:id/fix', async (req, res) => {
   if (!admin(req)) return res.status(401).json({ error: 'Unauthorized' });
-  res.json(await fixArticle(req.params.id));
-});
-app.post('/api/ops/articles/:id/publish', (req, res) => {
-  if (!admin(req)) return res.status(401).json({ error: 'Unauthorized' });
-  const force = req.body?.force === true;
-  const result = publishArticle(req.params.id, { source: force ? 'ops_force' : 'ops' });
-  // Allow ops force from ready only unless they set force with ready - already handled
-  if (!result.ok && force) {
-    const a = getArticle(req.params.id);
-    if (a && a.status === 'ready') {
-      return res.json(publishArticle(req.params.id, { source: 'ops' }));
-    }
+  try {
+    res.json(await runOpenClawArticleStep('fix', { articleId: req.params.id }));
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message, code: e.code });
   }
-  res.status(result.ok ? 200 : 400).json(result);
+});
+app.post('/api/ops/articles/:id/publish', async (req, res) => {
+  if (!admin(req)) return res.status(401).json({ error: 'Unauthorized' });
+  try {
+    // Publish still expert-gated for audit trail; human must call this for go-live
+    const result = await runOpenClawArticleStep('publish', { articleId: req.params.id });
+    if (!result.ok && req.body?.force === true) {
+      const fallback = publishArticle(req.params.id, { source: 'ops_force' });
+      return res.status(fallback.ok ? 200 : 400).json(fallback);
+    }
+    res.status(result.ok ? 200 : 400).json(result);
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message, code: e.code });
+  }
 });
 app.post('/api/ops/articles/:id/unpublish', (req, res) => {
   if (!admin(req)) return res.status(401).json({ error: 'Unauthorized' });
@@ -3063,12 +3170,12 @@ if (process.env.MERIDIAN_KNOWLEDGE_REFRESH === '1') {
   setInterval(runWeekly, weekMs);
 }
 
-// Long-form AI articles every ~2.5 days: draft → Claude vet → fix → ready → (ops publish)
-// Set MERIDIAN_ARTICLES=1 to enable. Default auto-publish OFF (ops must publish).
+// Long-form AI articles every ~2.5 days via OpenClaw content-articles expert
+// draft → Claude vet → fix → ready → (ops publish). Set MERIDIAN_ARTICLES=1.
 if (process.env.MERIDIAN_ARTICLES === '1') {
   const articlePollMs = Number(process.env.MERIDIAN_ARTICLE_POLL_MS || 6 * 60 * 60 * 1000); // check every 6h
   const runArticles = () =>
-    maybeRunScheduledCycle().catch((e) => console.error('[Articles]', e.message));
+    runOpenClawArticlesScheduled().catch((e) => console.error('[OpenClaw Articles]', e.message));
   setTimeout(runArticles, Number(process.env.MERIDIAN_ARTICLE_START_MS || 15 * 60 * 1000));
   setInterval(runArticles, articlePollMs);
 }
