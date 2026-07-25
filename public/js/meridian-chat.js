@@ -1,5 +1,5 @@
-/**
- * Meridian AI Guide — ChatGPT-style side panel + open bar + assist popup.
+﻿/**
+ * Meridian AI Guide â€” ChatGPT-style side panel + open bar + assist popup.
  * Features: chat, web research, agent deploy shortcuts, xAI voice speak, deep-link to voice demo.
  * Loaded on public pages. Talks to POST /api/guide-chat.
  */
@@ -11,54 +11,54 @@
   .mdn-chat-root { font-family: Inter, system-ui, sans-serif; }
   .mdn-hamburger {
     display: inline-flex; align-items: center; justify-content: center;
-    width: 40px; height: 40px; border-radius: 10px; border: 1px solid rgba(12,12,11,0.12);
-    background: #fff; cursor: pointer; padding: 0; flex-shrink: 0;
+    width: 40px; height: 40px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.12);
+    background: #141413; cursor: pointer; padding: 0; flex-shrink: 0;
   }
-  .mdn-hamburger:hover { background: #E8E6E1; }
+  .mdn-hamburger:hover { background: #1C1C1A; }
   .mdn-hamburger span {
-    display: block; width: 18px; height: 2px; background: #0C0C0B; border-radius: 1px;
+    display: block; width: 18px; height: 2px; background: #0A0A09; border-radius: 1px;
     position: relative;
   }
   .mdn-hamburger span::before, .mdn-hamburger span::after {
     content: ''; position: absolute; left: 0; width: 18px; height: 2px;
-    background: #0C0C0B; border-radius: 1px;
+    background: #0A0A09; border-radius: 1px;
   }
   .mdn-hamburger span::before { top: -6px; }
   .mdn-hamburger span::after { top: 6px; }
   .mdn-nav-guide {
     display: inline-flex; align-items: center; gap: 6px;
     font-size: 0.875rem; font-weight: 600; text-decoration: none;
-    color: #0C0C0B; padding: 8px 12px; border-radius: 999px;
-    border: 1px solid rgba(12,12,11,0.12); background: #fff; cursor: pointer;
+    color: #F5F5F4; padding: 8px 12px; border-radius: 999px;
+    border: 1px solid rgba(255,255,255,0.12); background: #141413; cursor: pointer;
     font-family: inherit;
   }
-  .mdn-nav-guide:hover { background: #E8E6E1; }
+  .mdn-nav-guide:hover { background: #1C1C1A; }
   .mdn-nav-guide i {
     width: 6px; height: 6px; border-radius: 50%; background: #1F7A4C;
     box-shadow: 0 0 0 3px rgba(31,122,76,0.15);
   }
   .mdn-chat-backdrop {
-    position: fixed; inset: 0; background: rgba(12,12,11,0.35); z-index: 90;
+    position: fixed; inset: 0; background: rgba(0,0,0,0.65); z-index: 90;
     opacity: 0; pointer-events: none; transition: opacity .2s;
   }
   .mdn-chat-backdrop.open { opacity: 1; pointer-events: auto; }
   .mdn-chat-drawer {
     position: fixed; top: 0; right: 0; z-index: 100;
     width: min(460px, 100vw); height: 100%;
-    background: #F7F6F3; border-left: 1px solid rgba(12,12,11,0.08);
-    box-shadow: -24px 0 60px rgba(12,12,11,0.12);
+    background: #0A0A09; border-left: 1px solid rgba(255,255,255,0.08);
+    box-shadow: -24px 0 60px rgba(255,255,255,0.12);
     display: flex; flex-direction: column;
     transform: translateX(100%); transition: transform .28s cubic-bezier(.2,.8,.2,1);
   }
   .mdn-chat-drawer.open { transform: translateX(0); }
   .mdn-chat-head {
     display: flex; align-items: center; justify-content: space-between; gap: 12px;
-    padding: 16px 16px 12px; border-bottom: 1px solid rgba(12,12,11,0.08);
+    padding: 16px 16px 12px; border-bottom: 1px solid rgba(255,255,255,0.08);
     background: rgba(247,246,243,0.95); backdrop-filter: blur(12px);
   }
   .mdn-chat-brand { display: flex; align-items: center; gap: 9px; }
   .mdn-chat-brand-mark {
-    width: 28px; height: 28px; border-radius: 8px; background: #0C0C0B;
+    width: 28px; height: 28px; border-radius: 8px; background: #0A0A09;
     display: grid; place-items: center; flex-shrink: 0;
   }
   .mdn-chat-brand-mark svg { width: 13px; height: 13px; }
@@ -69,7 +69,7 @@
   .mdn-chat-status {
     display: inline-flex; align-items: center; gap: 6px;
     font-size: 0.65rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase;
-    color: #6B6A66; margin-top: 2px;
+    color: #A1A1AA; margin-top: 2px;
   }
   .mdn-chat-status i {
     width: 5px; height: 5px; border-radius: 50%; background: #1F7A4C;
@@ -77,47 +77,47 @@
   }
   .mdn-feat-tabs {
     display: flex; gap: 4px; padding: 10px 12px;
-    border-bottom: 1px solid rgba(12,12,11,0.08); background: #fff;
+    border-bottom: 1px solid rgba(255,255,255,0.08); background: #141413;
     overflow-x: auto;
   }
   .mdn-feat-tabs button {
     font: inherit; font-size: 0.72rem; font-weight: 600; cursor: pointer;
     padding: 7px 11px; border-radius: 999px; border: 1px solid transparent;
-    background: transparent; color: #6B6A66; white-space: nowrap;
+    background: transparent; color: #A1A1AA; white-space: nowrap;
   }
   .mdn-feat-tabs button.active {
-    background: #0C0C0B; color: #fff; border-color: #0C0C0B;
+    background: #0A0A09; color: #fff; border-color: #F5F5F4;
   }
-  .mdn-feat-tabs button:hover:not(.active) { background: #E8E6E1; color: #0C0C0B; }
+  .mdn-feat-tabs button:hover:not(.active) { background: #1C1C1A; color: #F5F5F4; }
   .mdn-panel { display: none; flex: 1; flex-direction: column; min-height: 0; }
   .mdn-panel.active { display: flex; }
   .mdn-feat-body {
     flex: 1; overflow-y: auto; padding: 16px;
-    font-size: 0.9rem; line-height: 1.5; color: #3F3F3A;
+    font-size: 0.9rem; line-height: 1.5; color: #A1A1AA;
   }
   .mdn-feat-body h3 {
     font-family: 'Instrument Serif', Georgia, serif; font-weight: 400;
-    font-size: 1.25rem; color: #0C0C0B; margin: 0 0 8px;
+    font-size: 1.25rem; color: #F5F5F4; margin: 0 0 8px;
   }
   .mdn-feat-body p { margin: 0 0 12px; }
   .mdn-feat-card {
-    background: #fff; border: 1px solid rgba(12,12,11,0.08);
+    background: #141413; border: 1px solid rgba(255,255,255,0.08);
     border-radius: 14px; padding: 14px; margin-bottom: 10px;
   }
-  .mdn-feat-card strong { display: block; color: #0C0C0B; margin-bottom: 4px; }
+  .mdn-feat-card strong { display: block; color: #F5F5F4; margin-bottom: 4px; }
   .mdn-feat-card button, .mdn-feat-card a.btnish {
     display: inline-flex; margin-top: 10px; font: inherit; font-weight: 600; font-size: 0.82rem;
     padding: 9px 14px; border-radius: 999px; border: none; cursor: pointer;
-    background: #0C0C0B; color: #fff; text-decoration: none;
+    background: #0A0A09; color: #fff; text-decoration: none;
   }
   .mdn-feat-card a.btnish.light, .mdn-feat-card button.light {
-    background: #fff; color: #0C0C0B; border: 1px solid rgba(12,12,11,0.14);
+    background: #141413; color: #F5F5F4; border: 1px solid rgba(255,255,255,0.14);
   }
   .mdn-chat-close {
-    width: 36px; height: 36px; border-radius: 999px; border: 1px solid rgba(12,12,11,0.12);
-    background: #fff; cursor: pointer; font-size: 1.1rem; line-height: 1; color: #0C0C0B;
+    width: 36px; height: 36px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.12);
+    background: #141413; cursor: pointer; font-size: 1.1rem; line-height: 1; color: #F5F5F4;
   }
-  .mdn-chat-close:hover { background: #E8E6E1; }
+  .mdn-chat-close:hover { background: #1C1C1A; }
   .mdn-chat-msgs {
     flex: 1; overflow-y: auto; padding: 16px 14px;
     display: flex; flex-direction: column; gap: 12px;
@@ -127,12 +127,12 @@
     font-size: 0.92rem; line-height: 1.5; white-space: pre-wrap;
   }
   .mdn-bubble.ai {
-    align-self: flex-start; background: #fff;
-    border: 1px solid rgba(12,12,11,0.08);
-    border-bottom-left-radius: 4px; color: #0C0C0B;
+    align-self: flex-start; background: #141413;
+    border: 1px solid rgba(255,255,255,0.08);
+    border-bottom-left-radius: 4px; color: #F5F5F4;
   }
   .mdn-bubble.user {
-    align-self: flex-end; background: #0C0C0B; color: #F5F5F4;
+    align-self: flex-end; background: #F5F5F4; color: #0A0A09;
     border-bottom-right-radius: 4px;
   }
   .mdn-bubble .who {
@@ -140,61 +140,61 @@
     opacity: 0.55; margin-bottom: 4px; font-weight: 600;
   }
   .mdn-bubble .mdn-meta {
-    margin-top: 8px; font-size: 0.68rem; color: #9B9A96;
+    margin-top: 8px; font-size: 0.68rem; color: #71717A;
     display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
   }
   .mdn-bubble .mdn-speak {
     font: inherit; font-size: 0.68rem; font-weight: 600; cursor: pointer;
-    padding: 4px 10px; border-radius: 999px; border: 1px solid rgba(12,12,11,0.12);
-    background: #F7F6F3; color: #0C0C0B;
+    padding: 4px 10px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.12);
+    background: #0A0A09; color: #F5F5F4;
   }
-  .mdn-bubble .mdn-speak:hover { background: #E8E6E1; }
+  .mdn-bubble .mdn-speak:hover { background: #1C1C1A; }
   .mdn-suggest {
     display: flex; flex-wrap: wrap; gap: 6px; padding: 0 14px 10px;
   }
   .mdn-suggest button {
     font: inherit; font-size: 0.75rem; font-weight: 500; cursor: pointer;
-    padding: 7px 11px; border-radius: 999px; border: 1px solid rgba(12,12,11,0.12);
-    background: #fff; color: #0C0C0B;
+    padding: 7px 11px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.12);
+    background: #141413; color: #F5F5F4;
   }
-  .mdn-suggest button:hover { background: #E8E6E1; }
+  .mdn-suggest button:hover { background: #1C1C1A; }
   .mdn-chat-input {
     display: flex; gap: 8px; padding: 12px 14px;
     padding-bottom: max(12px, env(safe-area-inset-bottom));
-    border-top: 1px solid rgba(12,12,11,0.08); background: #fff;
+    border-top: 1px solid rgba(255,255,255,0.08); background: #141413;
     align-items: center;
   }
   .mdn-chat-input .mdn-tools {
     display: flex; gap: 4px;
   }
   .mdn-chat-input .mdn-tools button {
-    width: 34px; height: 34px; border-radius: 999px; border: 1px solid rgba(12,12,11,0.12);
-    background: #F7F6F3; cursor: pointer; font-size: 0.85rem;
+    width: 34px; height: 34px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.12);
+    background: #0A0A09; cursor: pointer; font-size: 0.85rem;
   }
-  .mdn-chat-input .mdn-tools button.on { background: #0C0C0B; color: #fff; border-color: #0C0C0B; }
+  .mdn-chat-input .mdn-tools button.on { background: #0A0A09; color: #fff; border-color: #F5F5F4; }
   .mdn-chat-input input {
     flex: 1; font: inherit; font-size: 0.95rem;
     padding: 12px 14px; border-radius: 999px;
-    border: 1px solid rgba(12,12,11,0.14); background: #F7F6F3; outline: none; min-width: 0;
+    border: 1px solid rgba(255,255,255,0.14); background: #0A0A09; outline: none; min-width: 0;
   }
   .mdn-chat-input input:focus { outline: 2px solid #0C0C0B; outline-offset: 1px; }
   .mdn-chat-input button.send {
     font: inherit; font-weight: 600; font-size: 0.88rem; cursor: pointer;
     padding: 0 16px; height: 42px; border-radius: 999px; border: none;
-    background: #0C0C0B; color: #fff;
+    background: #0A0A09; color: #fff;
   }
   .mdn-chat-input button.send:disabled { opacity: 0.5; cursor: wait; }
   .mdn-chat-foot {
     padding: 8px 16px calc(10px + env(safe-area-inset-bottom));
-    border-top: 1px solid rgba(12,12,11,0.06);
-    font-size: 0.7rem; color: #9B9A96; text-align: center;
+    border-top: 1px solid rgba(255,255,255,0.06);
+    font-size: 0.7rem; color: #71717A; text-align: center;
   }
-  .mdn-chat-foot a { color: #6B6A66; text-decoration: none; }
+  .mdn-chat-foot a { color: #A1A1AA; text-decoration: none; }
   .mdn-fab {
     position: fixed; bottom: 22px; right: 22px; z-index: 80;
     display: none; align-items: center; gap: 8px;
     padding: 12px 16px; border-radius: 999px; border: none;
-    background: #0C0C0B; color: #fff; font: inherit; font-weight: 600; font-size: 0.88rem;
+    background: #0A0A09; color: #fff; font: inherit; font-weight: 600; font-size: 0.88rem;
     cursor: pointer; box-shadow: 0 12px 40px rgba(0,0,0,0.2);
   }
   @media (max-width: 720px) {
@@ -203,7 +203,7 @@
   .mdn-openbar-backdrop {
     position: fixed; left: 0; right: 0; bottom: 0; height: 180px;
     z-index: 78; pointer-events: none;
-    background: linear-gradient(to top, #F7F6F3 0px, #F7F6F3 140px, rgba(247,246,243,0) 180px);
+    background: linear-gradient(to top, #0A0A09 0px, #0A0A09 140px, rgba(10,10,9,0) 180px);
     transition: opacity .2s;
   }
   .mdn-openbar-backdrop.hidden { opacity: 0; }
@@ -211,14 +211,14 @@
     position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%);
     z-index: 79; width: min(660px, calc(100vw - 32px));
     display: flex; gap: 10px; align-items: center;
-    background: #FFFFFF; border: 1px solid rgba(12,12,11,0.09);
+    background: #141413; border: 1px solid rgba(255,255,255,0.09);
     border-radius: 28px; padding: 15px 15px 15px 22px;
-    box-shadow: 0 1px 2px rgba(12,12,11,0.04), 0 2px 6px rgba(12,12,11,0.05), 0 18px 48px rgba(12,12,11,0.11);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.3), 0 2px 6px rgba(0,0,0,0.35), 0 18px 48px rgba(0,0,0,0.45);
     transition: opacity .2s, transform .2s, border-color .18s, box-shadow .18s;
   }
   .mdn-openbar:focus-within {
-    border-color: rgba(12,12,11,0.16);
-    box-shadow: 0 1px 2px rgba(12,12,11,0.04), 0 2px 6px rgba(12,12,11,0.05), 0 18px 48px rgba(12,12,11,0.13), 0 0 0 4px rgba(12,12,11,0.045);
+    border-color: rgba(255,255,255,0.16);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.3), 0 2px 6px rgba(0,0,0,0.35), 0 18px 48px rgba(0,0,0,0.5), 0 0 0 4px rgba(255,255,255,0.04);
   }
   .mdn-openbar.hidden { opacity: 0; pointer-events: none; transform: translateX(-50%) translateY(8px); }
   .mdn-openbar .mdn-spark {
@@ -227,50 +227,50 @@
   }
   .mdn-openbar input {
     flex: 1; border: none; outline: none; background: transparent;
-    font: inherit; font-size: 1.05rem; color: #0C0C0B; min-width: 0;
+    font: inherit; font-size: 1.05rem; color: #F5F5F4; min-width: 0;
   }
-  .mdn-openbar input::placeholder { color: #8B8A86; }
+  .mdn-openbar input::placeholder { color: #71717A; }
   .mdn-openbar button {
     display: grid; place-items: center; flex-shrink: 0;
     width: 36px; height: 36px; border-radius: 50%; border: none;
-    background: #E8E6E1; color: #A6A49E; cursor: pointer;
+    background: #1C1C1A; color: #71717A; cursor: pointer;
   }
-  .mdn-openbar.has-text button { background: #0C0C0B; color: #fff; }
+  .mdn-openbar.has-text button { background: #0A0A09; color: #fff; }
   .mdn-openbar button svg { width: 15px; height: 15px; }
   @media (max-width: 720px) { .mdn-openbar { display: none; } }
   .mdn-actions { display: flex; flex-wrap: wrap; gap: 6px; align-self: flex-start; max-width: 92%; }
   .mdn-actions button, .mdn-actions a {
     font: inherit; font-size: 0.78rem; font-weight: 600; cursor: pointer;
-    padding: 8px 13px; border-radius: 999px; border: 1px solid rgba(12,12,11,0.14);
-    background: #fff; color: #0C0C0B; text-decoration: none; display: inline-block;
+    padding: 8px 13px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.14);
+    background: #141413; color: #F5F5F4; text-decoration: none; display: inline-block;
   }
-  .mdn-actions a { background: #0C0C0B; color: #fff; border-color: #0C0C0B; }
+  .mdn-actions a { background: #0A0A09; color: #fff; border-color: #F5F5F4; }
   /* Proactive assist popup */
   .mdn-assist {
     position: fixed; bottom: 100px; right: 22px; z-index: 85;
     width: min(320px, calc(100vw - 32px));
-    background: #fff; border: 1px solid rgba(12,12,11,0.1);
+    background: #141413; border: 1px solid rgba(255,255,255,0.1);
     border-radius: 18px; padding: 16px 16px 14px;
-    box-shadow: 0 20px 50px rgba(12,12,11,0.14);
+    box-shadow: 0 20px 50px rgba(255,255,255,0.14);
     transform: translateY(12px); opacity: 0; pointer-events: none;
     transition: opacity .25s, transform .25s;
   }
   .mdn-assist.show { opacity: 1; pointer-events: auto; transform: translateY(0); }
   .mdn-assist h4 {
     font-family: 'Instrument Serif', Georgia, serif; font-weight: 400;
-    font-size: 1.15rem; margin: 0 0 6px; color: #0C0C0B;
+    font-size: 1.15rem; margin: 0 0 6px; color: #F5F5F4;
   }
-  .mdn-assist p { margin: 0 0 12px; font-size: 0.88rem; color: #6B6A66; line-height: 1.45; }
+  .mdn-assist p { margin: 0 0 12px; font-size: 0.88rem; color: #A1A1AA; line-height: 1.45; }
   .mdn-assist-row { display: flex; gap: 8px; flex-wrap: wrap; }
   .mdn-assist-row button {
     font: inherit; font-weight: 600; font-size: 0.82rem; cursor: pointer;
     padding: 9px 14px; border-radius: 999px; border: none;
   }
-  .mdn-assist-row .yes { background: #0C0C0B; color: #fff; }
-  .mdn-assist-row .no { background: #F7F6F3; color: #0C0C0B; border: 1px solid rgba(12,12,11,0.12); }
+  .mdn-assist-row .yes { background: #0A0A09; color: #fff; }
+  .mdn-assist-row .no { background: #0A0A09; color: #F5F5F4; border: 1px solid rgba(255,255,255,0.12); }
   .mdn-assist .x {
     position: absolute; top: 10px; right: 12px; border: none; background: none;
-    cursor: pointer; font-size: 1.1rem; color: #9B9A96;
+    cursor: pointer; font-size: 1.1rem; color: #71717A;
   }
   body.mdn-guide-pad { padding-bottom: 100px; }
   `;
@@ -329,7 +329,7 @@
   const openBar = el('form', 'mdn-openbar');
   openBar.innerHTML = `
     <span class="mdn-spark" aria-hidden="true"></span>
-    <input type="text" placeholder="Ask Meridian AI — research, deploy, or say start…" maxlength="2000" autocomplete="off" />
+    <input type="text" placeholder="Ask Meridian AI â€” research, deploy, or say startâ€¦" maxlength="2000" autocomplete="off" />
     <button type="submit" aria-label="Send">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
     </button>
@@ -355,10 +355,10 @@
         </span>
         <div>
           <h2>Meridian AI</h2>
-          <span class="mdn-chat-status"><i aria-hidden="true"></i>Guide · Web · Deploy · xAI voice</span>
+          <span class="mdn-chat-status"><i aria-hidden="true"></i>Guide Â· Web Â· Deploy Â· xAI voice</span>
         </div>
       </div>
-      <button type="button" class="mdn-chat-close" aria-label="Close">×</button>
+      <button type="button" class="mdn-chat-close" aria-label="Close">Ã—</button>
     </div>
     <div class="mdn-feat-tabs" role="tablist">
       <button type="button" data-tab="chat" class="active">Chat</button>
@@ -371,29 +371,29 @@
       <div class="mdn-suggest" id="mdn-suggest"></div>
       <form class="mdn-chat-input" id="mdn-chat-form">
         <div class="mdn-tools">
-          <button type="button" id="mdn-research-toggle" title="Force web research" aria-label="Web research">🔎</button>
+          <button type="button" id="mdn-research-toggle" title="Force web research" aria-label="Web research">ðŸ”Ž</button>
         </div>
-        <input type="text" id="mdn-chat-input" placeholder="Ask anything — pricing, install, industry tips…" autocomplete="off" maxlength="2000" />
+        <input type="text" id="mdn-chat-input" placeholder="Ask anything â€” pricing, install, industry tipsâ€¦" autocomplete="off" maxlength="2000" />
         <button type="submit" class="send">Send</button>
       </form>
     </div>
     <div class="mdn-panel" data-panel="deploy">
       <div class="mdn-feat-body">
         <h3>Deploy an agent</h3>
-        <p>Same path as a guided install call — pick a kit, pay, get a connect guide. Or start setup in chat.</p>
+        <p>Same path as a guided install call â€” pick a kit, pay, get a connect guide. Or start setup in chat.</p>
         <div class="mdn-feat-card">
           <strong>Voice Agent</strong>
-          24/7 phone answering for local business. Brain on Meridian · speak via Retell/Vapi · optional xAI premium TTS.
+          24/7 phone answering for local business. Brain on Meridian Â· speak via Retell/Vapi Â· optional xAI premium TTS.
           <div>
-            <button type="button" data-deploy-chat="I want the Voice Agent — start my setup">Start in chat</button>
+            <button type="button" data-deploy-chat="I want the Voice Agent â€” start my setup">Start in chat</button>
             <a class="btnish light" href="/checkout/voice">Checkout $497</a>
           </div>
         </div>
         <div class="mdn-feat-card">
           <strong>Sales Agent</strong>
-          Instant lead follow-up so hot leads don’t go cold.
+          Instant lead follow-up so hot leads donâ€™t go cold.
           <div>
-            <button type="button" data-deploy-chat="I want the Sales Agent — start setup">Start in chat</button>
+            <button type="button" data-deploy-chat="I want the Sales Agent â€” start setup">Start in chat</button>
             <a class="btnish light" href="/checkout/sales">Checkout $497</a>
           </div>
         </div>
@@ -401,7 +401,7 @@
           <strong>Booking Agent</strong>
           Calendar filling + no-show recovery.
           <div>
-            <button type="button" data-deploy-chat="I want the Booking Agent — start setup">Start in chat</button>
+            <button type="button" data-deploy-chat="I want the Booking Agent â€” start setup">Start in chat</button>
             <a class="btnish light" href="/checkout/booking">Checkout $497</a>
           </div>
         </div>
@@ -409,7 +409,7 @@
           <strong>Full stack</strong>
           Voice + Sales + Booking together.
           <div>
-            <button type="button" data-deploy-chat="I want the full stack — start setup">Start in chat</button>
+            <button type="button" data-deploy-chat="I want the full stack â€” start setup">Start in chat</button>
             <a class="btnish light" href="/checkout/stack">Checkout $997</a>
           </div>
         </div>
@@ -423,25 +423,25 @@
     <div class="mdn-panel" data-panel="voice">
       <div class="mdn-feat-body">
         <h3>xAI voice quality</h3>
-        <p>Hear Meridian’s premium neural voices (hosted xAI TTS). Free short samples — not billed as usage packs.</p>
+        <p>Hear Meridianâ€™s premium neural voices (hosted xAI TTS). Free short samples â€” not billed as usage packs.</p>
         <div class="mdn-feat-card">
           <strong>Live demo on homepage</strong>
-          Scroll to the voice studio — pick a voice and play a receptionist sample.
-          <div><a class="btnish" href="/#voice-demo">Open voice demo ↓</a></div>
+          Scroll to the voice studio â€” pick a voice and play a receptionist sample.
+          <div><a class="btnish" href="/#voice-demo">Open voice demo â†“</a></div>
         </div>
         <div class="mdn-feat-card">
           <strong>Speak chat replies</strong>
           On any AI answer, tap <em>Hear</em> to play it in your preferred voice (${preferredVoice}).
           <div>
             <label style="font-size:0.8rem;color:#6B6A66">Preferred voice
-              <select id="mdn-voice-select" style="display:block;margin-top:6px;width:100%;padding:8px;border-radius:10px;border:1px solid rgba(12,12,11,0.14)">
-                <option value="eve">Eve — energetic</option>
-                <option value="ara">Ara — warm</option>
-                <option value="leo">Leo — authoritative</option>
-                <option value="rex">Rex — professional</option>
-                <option value="luna">Luna — gentle</option>
-                <option value="carina">Carina — soft</option>
-                <option value="orion">Orion — cinematic</option>
+              <select id="mdn-voice-select" style="display:block;margin-top:6px;width:100%;padding:8px;border-radius:10px;border:1px solid rgba(255,255,255,0.14)">
+                <option value="eve">Eve â€” energetic</option>
+                <option value="ara">Ara â€” warm</option>
+                <option value="leo">Leo â€” authoritative</option>
+                <option value="rex">Rex â€” professional</option>
+                <option value="luna">Luna â€” gentle</option>
+                <option value="carina">Carina â€” soft</option>
+                <option value="orion">Orion â€” cinematic</option>
               </select>
             </label>
           </div>
@@ -455,17 +455,17 @@
     <div class="mdn-panel" data-panel="research">
       <div class="mdn-feat-body">
         <h3>Web research</h3>
-        <p>Ask industry, competitor, or “how do I…” questions. The guide can search the public web and answer with notes (no fake stats).</p>
+        <p>Ask industry, competitor, or â€œhow do Iâ€¦â€ questions. The guide can search the public web and answer with notes (no fake stats).</p>
         <div class="mdn-feat-card">
           <strong>Try a research question</strong>
           <button type="button" data-research="What should an HVAC company say on a missed after-hours call?">HVAC after-hours script</button>
           <button type="button" class="light" data-research="Best practices for dental office appointment reminder SMS CASL Canada">Dental SMS CASL tips</button>
         </div>
-        <p style="font-size:0.8rem;color:#9B9A96">Toggle 🔎 in chat to force research mode on every message.</p>
+        <p style="font-size:0.8rem;color:#9B9A96">Toggle ðŸ”Ž in chat to force research mode on every message.</p>
       </div>
     </div>
     <div class="mdn-chat-foot">
-      Meridian Agency · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · No fake social proof
+      Meridian Agency Â· <a href="/privacy">Privacy</a> Â· <a href="/terms">Terms</a> Â· No fake social proof
     </div>`;
 
   document.body.appendChild(backdrop);
@@ -474,9 +474,9 @@
   // Assist popup
   const assist = el('div', 'mdn-assist');
   assist.innerHTML = `
-    <button type="button" class="x" aria-label="Dismiss">×</button>
+    <button type="button" class="x" aria-label="Dismiss">Ã—</button>
     <h4>Need a hand?</h4>
-    <p>I’m Meridian AI — I can explain agents, research your niche, demo xAI voice, or start a deploy.</p>
+    <p>Iâ€™m Meridian AI â€” I can explain agents, research your niche, demo xAI voice, or start a deploy.</p>
     <div class="mdn-assist-row">
       <button type="button" class="yes">Yes, help me</button>
       <button type="button" class="no">Not now</button>
@@ -622,7 +622,7 @@
       }
       if (meta?.webSearch?.ok) {
         const tag = document.createElement('span');
-        tag.textContent = `Web · ${meta.webSearch.provider || 'search'}`;
+        tag.textContent = `Web Â· ${meta.webSearch.provider || 'search'}`;
         metaRow.appendChild(tag);
       }
       const hear = document.createElement('button');
@@ -692,12 +692,12 @@
 
   addBubble(
     'ai',
-    'Hi — I’m Meridian AI. I can guide Voice, Sales & Booking, search the web for niche answers, start an agent deploy, or play xAI voice samples. What do you need?',
+    'Hi â€” Iâ€™m Meridian AI. I can guide Voice, Sales & Booking, search the web for niche answers, start an agent deploy, or play xAI voice samples. What do you need?',
   );
   history.push({
     role: 'assistant',
     content:
-      'Hi — I’m Meridian AI. I can guide agents, research, deploy, and xAI voice.',
+      'Hi â€” Iâ€™m Meridian AI. I can guide agents, research, deploy, and xAI voice.',
   });
 
   ['Start my setup', 'What does Voice do?', 'Pricing', 'Research HVAC scripts'].forEach((label) => {
@@ -721,7 +721,7 @@
       if (a.href) {
         const link = document.createElement('a');
         link.href = a.href;
-        link.textContent = (a.label || 'Open') + ' ↗';
+        link.textContent = (a.label || 'Open') + ' â†—';
         link.target = a.href.startsWith('/') ? '_self' : '_blank';
         link.rel = 'noopener';
         wrap.appendChild(link);
@@ -757,7 +757,7 @@
         }),
       });
       const data = await res.json();
-      const reply = data.reply || data.error || 'Something went wrong — try again.';
+      const reply = data.reply || data.error || 'Something went wrong â€” try again.';
       if (data.state && typeof data.state === 'object') guideState = data.state;
       addBubble('ai', reply, { brain: data.brain, webSearch: data.webSearch });
       history.push({ role: 'assistant', content: reply });
