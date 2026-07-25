@@ -26,7 +26,7 @@
 ## Footer template (copy exactly — clickable)
 
 ### Live URLs
-- [Meridian Agency](https://meridian-production-2eb0.up.railway.app/)
+- [Meridian Agency](https://meridian-production-915d.up.railway.app/)
 - [Central Command](https://ultra-command-center-production.up.railway.app/)
 - [ClaudeCraft](https://claudecraft.ca/)
 - [AgentBridge](https://agentbridge-final-production.up.railway.app/)
@@ -34,9 +34,9 @@
 - [GiantBiteAI](https://giantbiteai-production.up.railway.app/)
 
 ### Meridian extras (when relevant)
-- [Meridian Health](https://meridian-production-2eb0.up.railway.app/health)
-- [Meridian Ops](https://meridian-production-2eb0.up.railway.app/ops)
-- [Meridian Agents](https://meridian-production-2eb0.up.railway.app/#agents)
+- [Meridian Health](https://meridian-production-915d.up.railway.app/health)
+- [Meridian Ops](https://meridian-production-915d.up.railway.app/ops)
+- [Meridian Agents](https://meridian-production-915d.up.railway.app/#agents)
 
 ## Meridian facts (this chat)
 
