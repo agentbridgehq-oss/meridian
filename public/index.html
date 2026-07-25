@@ -574,17 +574,17 @@
 
     <div class="stack" id="voice-usage" style="margin-bottom:28px">
       <div>
-        <div class="live-label" style="color:#A1A1AA">Usage billing · high margin</div>
-        <h2>Premium voice — pay as you go</h2>
+        <div class="live-label" style="color:#A1A1AA">Usage billing · cash first</div>
+        <h2>Premium voice — customer pays first</h2>
         <p>
-          Hosted neural speech runs through Meridian. Customers prepay packs or subscribe.
-          You only spend on TTS when a turn succeeds — list price is set far above provider cost so ROI stays locked in.
+          Hosted neural speech runs only after the customer prepays. Meridian holds a turn, then spends on speech,
+          then commits. If audio fails, the turn is refunded. Free site demos never spend your speech budget.
         </p>
         <ul class="stack-list">
-          <li><strong>Pay as you go packs</strong> — cash first, turns second</li>
-          <li><strong>Voice Premium $197/mo</strong> — 300 turns included, then overage</li>
-          <li><strong>Voice Pro $497/mo</strong> — 1,200 turns included</li>
-          <li>Failed audio is not charged · platform Retell/Vapi text path stays free at Meridian</li>
+          <li><strong>Pay-as-you-go packs</strong> — Stripe cash first, turns second</li>
+          <li><strong>Voice Premium $197/mo</strong> — 300 turns included (prepaid monthly)</li>
+          <li><strong>Voice Pro $497/mo</strong> — 1,200 turns included; then top up a pack</li>
+          <li>No unpaid overage by default · Retell/Vapi text path stays free at Meridian</li>
         </ul>
         <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:8px">
           <a class="btn btn-dark" href="/checkout/voice-pack/starter">100 turns · $49</a>
@@ -598,7 +598,7 @@
         <div class="sub">/mo Voice Premium · 300 hosted turns</div>
         <a class="btn btn-dark" href="/checkout/voice-sub" style="width:100%;margin-bottom:10px">Start subscription</a>
         <a class="btn btn-light" href="/checkout/voice-pro" style="width:100%">Pro $497/mo · 1,200 turns</a>
-        <p class="fine" style="margin-top:16px">Overage billed as you go on the next invoice.</p>
+        <p class="fine" style="margin-top:16px">When included turns run out, buy a pack — pay first, speak second.</p>
       </div>
     </div>
 

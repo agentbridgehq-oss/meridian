@@ -1,21 +1,27 @@
-# Meridian Voice — usage billing (guaranteed high ROI)
+# Meridian Voice — usage billing (cash first · never reverse)
 
-**Model:** customers pay **as they go** (prepaid packs) or **subscription + overage**.  
-Meridian calls **xAI TTS only after** balance is confirmed, and **charges only after** audio succeeds.
+**Model:** customer pays **first** (prepaid packs or monthly included turns).  
+Meridian **reserves** a turn, **then** calls xAI, **then** commits.  
+If TTS fails → turn is **refunded** to the customer.  
+You never run xAI against unpaid balance.
 
-Your list prices are set **far above** estimated provider cost so unit economics stay profitable by design.
+**Default: no postpaid overage** (`VOICE_ALLOW_OVERAGE=0`). Included sub turns are prepaid monthly cash. When used up → buy a pack (pay first).
+
+Your list prices stay **far above** estimated xAI cost so unit economics stay profitable.
 
 ---
 
-## How profit is locked in
+## How you never “owe X before you got paid”
 
-| Layer | Who pays | When |
-|-------|----------|------|
-| xAI TTS | **You** (XAI_API_KEY on Railway) | Only after customer has balance |
-| Customer | **Them** via Stripe pack or sub | Before / as they use turns |
-| Margin | List price ≫ cost est. | Default ~**$0.55/turn** customer vs ~**$0.04** cost est. |
+| Step | Who pays | When |
+|------|----------|------|
+| 1. Pack / Voice Premium | **Customer → you** (Stripe) | **Before** any neural TTS |
+| 2. `reserveTurn` | Internal hold | Balance must exist |
+| 3. xAI TTS | **You → xAI** | Only after hold succeeds |
+| 4. Commit / release | Ledger | Success keeps debit; fail refunds hold |
+| Free site “Play sample” | Nobody / demo TTS | **Never** uses `XAI_API_KEY` |
 
-If balance is empty → API returns **402 payment_required** → **no xAI call** → no surprise cost on your xAI bill.
+If balance is empty → **402 payment_required** → **no xAI call**.
 
 ---
 
@@ -70,9 +76,9 @@ Authorization: Bearer mdn_…
 ```
 
 - Without `audio: true` → text/`say` only, **no Meridian TTS fee** (Retell/Vapi speak it).
-- With `audio: true` → balance check → xAI TTS (agent’s saved `xaiVoiceId` or body `voiceId`) → debit on success.
-- **Voice picker** (free, not billed): setup wizard · `GET /api/voice/voices` · `POST /api/voice/preview` · `PUT /api/v1/agents/:id/voice`
-- Previews are short samples for choosing a voice; they **do not** debit prepaid packs.
+- With `audio: true` → **reserveTurn** → xAI TTS → **commit** (or **release** if TTS fails).
+- **Voice picker** (free demo audio only): `GET /api/voice/voices` · `POST /api/voice/preview` — **does not call xAI**, does not debit packs.
+- Platform path (`audio` omitted/false): Retell/Vapi speak text — **$0 Meridian TTS**, no xAI.
 
 ```http
 GET /api/v1/agents/:id/billing
@@ -98,6 +104,7 @@ XAI_TTS_VOICE=eve
 # Optional margin knobs (cents)
 VOICE_CENTS_PER_TURN=55              # customer list per turn
 VOICE_COST_CENTS_PER_TURN=4          # your cost estimate for ROI
+VOICE_ALLOW_OVERAGE=0                # keep 0 so you never fund unpaid overage
 VOICE_SUB_MONTHLY_CENTS=19700
 VOICE_SUB_INCLUDED_TURNS=300
 # Optional fixed Stripe Price IDs

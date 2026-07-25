@@ -97,6 +97,11 @@ import {
   activateSubscription,
   canConsumeTurn,
   consumeTurn,
+  reserveTurn,
+  releaseReservedTurn,
+  commitReservedTurn,
+  cashFlowPolicy,
+  overageAllowed,
   attachAgentBilling,
   listBillingAccounts,
   roiSummary,
@@ -465,8 +470,8 @@ function billingForAgent(agent) {
 }
 
 /**
- * Pre-check only — never call xAI unless customer can pay.
- * Charge happens AFTER successful audio via settlePremiumTts().
+ * Cash-first gate: customer must already have prepaid/sub allowance.
+ * Never call xAI until reserveTurn succeeds (balance held).
  */
 function assertPremiumBalance(agent) {
   const account = billingForAgent(agent);
@@ -481,24 +486,85 @@ function assertPremiumBalance(agent) {
         reason: gate.reason,
         message: gate.message,
         checkout: gate.checkout,
-        pricing: gate.pricing,
+        pricing: gate.pricing || pricingSnapshot(),
         billingAccountId: account.id,
+        policy: cashFlowPolicy(),
       },
     };
   }
   return { ok: true, account, gate };
 }
 
-/** Debit after successful TTS + optional Stripe overage line item. */
-function settlePremiumTts(agent, { chars = 0, provider = 'xai' } = {}) {
+/**
+ * Hold customer turn → call xAI only after hold → commit cost on success / refund hold on fail.
+ * You never spend xAI against unpaid customer balance.
+ */
+async function runMeteredHostedTts(agent, text, { voiceId } = {}) {
   const account = billingForAgent(agent);
-  const consume = consumeTurn(account.id, { chars, provider, agentId: agent.id });
-  if (!consume.ok) return consume;
-  if (consume.mode === 'subscription_overage' && stripe && consume.account?.stripeCustomerId) {
-    const cents = consume.revenueCents || customerCentsPerTurn();
+  const hold = reserveTurn(account.id, { agentId: agent.id });
+  if (!hold.ok) {
+    return {
+      ok: false,
+      status: 402,
+      body: {
+        ok: false,
+        error: 'payment_required',
+        reason: hold.reason,
+        message: hold.message,
+        checkout: hold.checkout,
+        pricing: hold.pricing || pricingSnapshot(),
+        policy: cashFlowPolicy(),
+      },
+    };
+  }
+
+  const result = await hostedTextToSpeech(text, {
+    voiceId: resolveAgentVoiceId(agent, voiceId),
+    provider: preferredHostedTts(),
+  });
+
+  if (!result.ok || result.skipped || !result.audioBuffer) {
+    releaseReservedTurn(account.id, hold);
+    return {
+      ok: false,
+      status: result.ok === false ? 502 : 200,
+      holdReleased: true,
+      body: {
+        ok: result.ok !== false,
+        agentId: agent.id,
+        mode: result.mode || 'platform',
+        say: text,
+        speak: text,
+        audioBase64: null,
+        billed: false,
+        error: result.error,
+        message:
+          result.message ||
+          result.error ||
+          'TTS unavailable — turn refunded to customer balance. Use platform say field.',
+        policy: cashFlowPolicy(),
+      },
+    };
+  }
+
+  const settled = commitReservedTurn(account.id, hold, {
+    chars: result.chars || text.length,
+    provider: result.mode || preferredHostedTts(),
+    agentId: agent.id,
+  });
+
+  // Optional: only if VOICE_ALLOW_OVERAGE=1 (off by default)
+  if (
+    settled.ok &&
+    settled.mode === 'subscription_overage' &&
+    overageAllowed() &&
+    stripe &&
+    settled.account?.stripeCustomerId
+  ) {
+    const cents = settled.revenueCents || customerCentsPerTurn();
     stripe.invoiceItems
       .create({
-        customer: consume.account.stripeCustomerId,
+        customer: settled.account.stripeCustomerId,
         amount: cents,
         currency: 'usd',
         description: `Meridian Voice overage turn · agent ${agent.id}`,
@@ -511,7 +577,8 @@ function settlePremiumTts(agent, { chars = 0, provider = 'xai' } = {}) {
       })
       .catch((e) => console.error('[stripe overage]', e.message));
   }
-  return consume;
+
+  return { ok: true, result, settled, account };
 }
 
 /**
@@ -1364,34 +1431,18 @@ app.post('/api/v1/agents/:id/speak', async (req, res) => {
     });
   }
 
-  // Hosted premium TTS — balance check BEFORE xAI; charge AFTER success only
-  const pre = assertPremiumBalance(agent);
-  if (!pre.ok) return res.status(pre.status || 402).json(pre.body);
-
-  const result = await hostedTextToSpeech(text, {
-    voiceId: resolveAgentVoiceId(agent, req.body?.voiceId || req.body?.voice_id),
-    provider: preferredHostedTts(),
+  // Hosted premium: reserve customer funds FIRST → xAI → commit/refund
+  const metered = await runMeteredHostedTts(agent, text, {
+    voiceId: req.body?.voiceId || req.body?.voice_id,
   });
-
-  if (!result.ok || result.skipped || !result.audioBuffer) {
-    return res.status(result.ok === false ? 502 : 200).json({
-      ok: result.ok !== false,
-      agentId: agent.id,
-      mode: result.mode || 'platform',
-      say: text,
-      speak: text,
-      audioBase64: null,
-      billed: false,
-      error: result.error,
+  if (!metered.ok) {
+    return res.status(metered.status || 402).json({
+      ...metered.body,
       platform,
-      message: result.message || result.error || 'TTS unavailable — use platform say field',
     });
   }
 
-  const settled = settlePremiumTts(agent, {
-    chars: result.chars || text.length,
-    provider: result.mode || preferredHostedTts(),
-  });
+  const { result, settled } = metered;
 
   await dispatchWebhook('agent.voice_speak', {
     agentId: agent.id,
@@ -1399,6 +1450,7 @@ app.post('/api/v1/agents/:id/speak', async (req, res) => {
     textLength: text.length,
     billed: true,
     revenueCents: settled.revenueCents,
+    cashFirst: true,
   }).catch(() => {});
 
   return res.json({
@@ -1411,11 +1463,13 @@ app.post('/api/v1/agents/:id/speak', async (req, res) => {
     contentType: result.contentType,
     voiceId: result.voiceId,
     billed: true,
+    cashFirst: true,
     billing: {
       mode: settled.mode,
       prepaidLeft: settled.account?.prepaidTurns,
       periodUsed: settled.account?.periodTurnsUsed,
       profitCentsEst: settled.profitCentsEst,
+      policy: cashFlowPolicy(),
     },
     platform,
   });
@@ -1434,24 +1488,51 @@ app.post('/api/v1/agents/:id/voice-turn', async (req, res) => {
 
   const wantAudio = req.body?.audio === true || req.query.audio === '1';
   let settled = null;
+  let turn;
 
+  // Cash-first for hosted audio: reserve → brain+TTS only with hold → commit/release
   if (wantAudio && preferredHostedTts() !== 'platform') {
     const pre = assertPremiumBalance(agent);
     if (!pre.ok) return res.status(pre.status || 402).json(pre.body);
-  }
 
-  const turn = await runVoiceTurn(agent, message, {
-    baseUrl: BASE,
-    wantAudio,
-    voiceId: req.body?.voiceId || req.body?.voice_id || undefined,
-  });
-  if (!turn.ok) return res.status(400).json(turn);
+    const account = billingForAgent(agent);
+    const hold = reserveTurn(account.id, { agentId: agent.id });
+    if (!hold.ok) {
+      return res.status(402).json({
+        ok: false,
+        error: 'payment_required',
+        reason: hold.reason,
+        message: hold.message,
+        policy: cashFlowPolicy(),
+      });
+    }
 
-  if (wantAudio && turn.audioBase64) {
-    settled = settlePremiumTts(agent, {
-      chars: turn.chars || (turn.reply || '').length,
-      provider: turn.mode || preferredHostedTts(),
+    turn = await runVoiceTurn(agent, message, {
+      baseUrl: BASE,
+      wantAudio: true,
+      voiceId: req.body?.voiceId || req.body?.voice_id || undefined,
     });
+    if (!turn.ok) {
+      releaseReservedTurn(account.id, hold);
+      return res.status(400).json(turn);
+    }
+    if (turn.audioBase64) {
+      settled = commitReservedTurn(account.id, hold, {
+        chars: turn.chars || (turn.reply || '').length,
+        provider: turn.mode || preferredHostedTts(),
+        agentId: agent.id,
+      });
+    } else {
+      // Brain replied but no audio — refund hold (no xAI spend should have happened)
+      releaseReservedTurn(account.id, hold);
+    }
+  } else {
+    turn = await runVoiceTurn(agent, message, {
+      baseUrl: BASE,
+      wantAudio: false,
+      voiceId: req.body?.voiceId || req.body?.voice_id || undefined,
+    });
+    if (!turn.ok) return res.status(400).json(turn);
   }
 
   const intent = analyzeIntent(message);
@@ -2449,9 +2530,10 @@ app.get('/api/v1/agents/:id/sales/recipe', (req, res) => {
 app.get('/api/pricing/voice', (_req, res) => {
   res.json({
     ok: true,
-    model: 'pay_as_you_go_and_subscription',
+    model: 'customer_pays_first',
     guarantee:
-      'Customer pays only for prepaid packs or subscription/overage. Meridian calls xAI only after balance is reserved. List price >> estimated provider cost.',
+      'Customer pays Stripe first (pack or monthly included). Meridian reserves a turn, then calls xAI, then commits. TTS failure refunds the hold. Free site previews never use XAI_API_KEY. Postpaid overage off unless VOICE_ALLOW_OVERAGE=1.',
+    policy: cashFlowPolicy(),
     pricing: pricingSnapshot(),
     packs: TOPUP_PACKS,
     subscriptions: SUBSCRIPTION_PLANS,
