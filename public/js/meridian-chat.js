@@ -638,21 +638,31 @@
   }
 
   async function speakText(text) {
+    const slice = String(text).slice(0, 200);
     try {
       const res = await fetch('/api/voice/preview', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           voiceId: preferredVoice,
-          text: String(text).slice(0, 200),
+          text: slice,
         }),
       });
-      const data = await res.json();
+      let data = {};
+      try {
+        data = await res.json();
+      } catch {
+        data = {};
+      }
       if (!res.ok || !data.ok) {
-        addBubble('ai', data.error || 'Voice preview unavailable (needs XAI_API_KEY on server).');
+        if (window.speechSynthesis) {
+          window.speechSynthesis.cancel();
+          window.speechSynthesis.speak(new SpeechSynthesisUtterance(slice));
+          return;
+        }
+        addBubble('ai', data.error || 'Voice preview unavailable.');
         return;
       }
-      // API may return base64 audio or url
       let src = data.audioUrl || data.url;
       if (!src && data.audioBase64) {
         src = `data:${data.contentType || 'audio/mpeg'};base64,${data.audioBase64}`;
@@ -661,16 +671,22 @@
         src = `data:audio/mpeg;base64,${data.audio}`;
       }
       if (!src) {
+        if (window.speechSynthesis) {
+          window.speechSynthesis.speak(new SpeechSynthesisUtterance(slice));
+          return;
+        }
         addBubble('ai', 'Preview returned no audio payload.');
         return;
       }
-      if (audioEl) {
-        audioEl.pause();
-      }
+      if (audioEl) audioEl.pause();
       audioEl = new Audio(src);
       await audioEl.play();
     } catch (e) {
-      addBubble('ai', 'Could not play voice preview.');
+      if (window.speechSynthesis) {
+        window.speechSynthesis.speak(new SpeechSynthesisUtterance(slice));
+      } else {
+        addBubble('ai', 'Could not play voice preview.');
+      }
     }
   }
 

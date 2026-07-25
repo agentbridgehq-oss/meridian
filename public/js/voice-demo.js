@@ -69,16 +69,33 @@
     const text = (textEl?.value || DEFAULT_TEXT).trim().slice(0, 220);
     if (!text) return;
     playBtn.disabled = true;
-    setStatus('Generating xAI sample…');
+    setStatus('Generating sample…');
     try {
       const res = await fetch('/api/voice/preview', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ voiceId: selected, text }),
       });
-      const data = await res.json();
+      let data = {};
+      try {
+        data = await res.json();
+      } catch {
+        data = {};
+      }
       if (!res.ok || !data.ok) {
-        setStatus(data.error || 'Preview failed — is XAI_API_KEY set on the server?');
+        // Last-resort browser speech so the control never feels broken
+        if (window.speechSynthesis) {
+          window.speechSynthesis.cancel();
+          const u = new SpeechSynthesisUtterance(text);
+          u.rate = 1;
+          window.speechSynthesis.speak(u);
+          setStatus(
+            (data.error || 'Server preview offline') +
+              ' · playing browser voice. Set XAI_API_KEY on Railway for neural audio.',
+          );
+          return;
+        }
+        setStatus(data.error || 'Preview failed — set XAI_API_KEY on Meridian Railway for neural demos.');
         return;
       }
       let src = data.audioUrl || data.url;
@@ -91,9 +108,23 @@
       if (audio) audio.pause();
       audio = new Audio(src);
       await audio.play();
-      setStatus(`Playing ${selected} · free sample (not usage-billed)`);
+      if (data.mode === 'xai') {
+        setStatus(`Playing ${selected} · xAI neural · free sample (not usage-billed)`);
+      } else if (data.mode === 'demo_fallback') {
+        setStatus(
+          `Playing demo voice · set XAI_API_KEY on Railway for premium ${selected} neural quality`,
+        );
+      } else {
+        setStatus(`Playing ${selected} · free sample`);
+      }
     } catch (e) {
-      setStatus('Network error playing sample');
+      if (window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.speak(new SpeechSynthesisUtterance(text));
+        setStatus('Network issue · browser voice fallback');
+      } else {
+        setStatus('Network error playing sample');
+      }
     } finally {
       playBtn.disabled = false;
     }

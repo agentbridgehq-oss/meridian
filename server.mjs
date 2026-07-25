@@ -1242,7 +1242,8 @@ app.get('/api/voice/voices', async (_req, res) => {
 
 /**
  * Free short sample for the picker — NOT billed to customer packs.
- * Requires XAI_API_KEY on Meridian. Rate-limited.
+ * Prefers xAI when XAI_API_KEY set; otherwise demo TTS so Play never hard-fails.
+ * Rate-limited.
  */
 app.post('/api/voice/preview', async (req, res) => {
   const ip = req.ip || req.socket?.remoteAddress || 'unknown';
@@ -1253,7 +1254,7 @@ app.post('/api/voice/preview', async (req, res) => {
   const text = String(req.body?.text || '').slice(0, 220);
   try {
     const result = await previewVoice(voiceId, text);
-    if (!result.ok) return res.status(result.error?.includes('XAI_API_KEY') ? 503 : 400).json(result);
+    if (!result.ok) return res.status(503).json(result);
     res.json(result);
   } catch (e) {
     res.status(500).json({ ok: false, error: e.message });
