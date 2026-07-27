@@ -58,6 +58,8 @@ import {
   hostedTextToSpeech,
   previewVoice,
   resolveAgentVoiceId,
+  buildPreviewCallScript,
+  runPreviewAgentTurn,
 } from './lib/voice-pipeline.mjs';
 import { deployAgent, listDeployTemplates } from './lib/deploy-agent.mjs';
 import { runOpenClawDeploy } from './openclaw/deploy-agent.mjs';
@@ -113,6 +115,7 @@ import {
   updateBillingAccount,
 } from './lib/usage-billing.mjs';
 import { xaiTtsConfigured } from './lib/xai-tts.mjs';
+import { vendorPaygSnapshot } from './lib/vendor-payg.mjs';
 import {
   ingestSalesLead,
   salesTurn,
@@ -195,13 +198,37 @@ app.use(
         imgSrc: ["'self'", 'data:', 'https:'],
         connectSrc: ["'self'"],
         objectSrc: ["'none'"],
+        baseUri: ["'self'"],
+        formAction: ["'self'", 'https://checkout.stripe.com'],
+        frameSrc: ["'self'", 'https://checkout.stripe.com', 'https://js.stripe.com'],
         frameAncestors: ["'self'"],
         upgradeInsecureRequests: [],
       },
     },
+    // Reduce browser "risky site" / mixed-content / clickjack surface
+    referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+    crossOriginOpenerPolicy: { policy: 'same-origin-allow-popups' },
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
     crossOriginEmbedderPolicy: false,
+    hsts: { maxAge: 31536000, includeSubDomains: true, preload: false },
+    permissionsPolicy: {
+      camera: [],
+      microphone: [],
+      geolocation: [],
+      payment: ['self', 'https://checkout.stripe.com'],
+      usb: [],
+      interestCohort: [],
+    },
   }),
 );
+// Extra browser-hardening headers (some scanners look for these by name)
+app.use((_req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+  res.setHeader('X-DNS-Prefetch-Control', 'off');
+  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), usb=(), interest-cohort=()');
+  next();
+});
 
 // Public-endpoint rate limits — mitigates scraping/abuse without a login wall.
 const publicLimiter = rateLimit({ windowMs: 60_000, max: 30, standardHeaders: true, legacyHeaders: false });
@@ -1317,14 +1344,76 @@ app.post('/api/voice/preview', async (req, res) => {
   if (!previewRateOk(ip)) {
     return res.status(429).json({ ok: false, error: 'Too many previews — wait a minute and try again.' });
   }
-  const voiceId = String(req.body?.voiceId || req.body?.voice_id || 'eve').slice(0, 64);
-  const text = String(req.body?.text || '').slice(0, 220);
+  const voiceId = String(req.body?.voiceId || req.body?.voice_id || 'ara').slice(0, 64);
+  const text = String(req.body?.text || '').slice(0, 480);
   try {
     const result = await previewVoice(voiceId, text);
     if (!result.ok) return res.status(503).json(result);
     res.json(result);
   } catch (e) {
     res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+/**
+ * Premium voice agent studio:
+ *  - script: multi-turn example call for their business
+ *  - line: TTS one script line (premium xAI when configured)
+ *  - turn: live customer line → brain + neural voice
+ */
+app.post('/api/voice/preview-agent', async (req, res) => {
+  const ip = req.ip || req.socket?.remoteAddress || 'unknown';
+  if (!previewRateOk(ip)) {
+    return res.status(429).json({ ok: false, error: 'Too many demos — wait a minute and try again.' });
+  }
+  const action = String(req.body?.action || 'script').toLowerCase().slice(0, 24);
+  const businessName = String(req.body?.businessName || req.body?.business || '').slice(0, 80);
+  const description = String(req.body?.description || req.body?.services || '').slice(0, 400);
+  const voiceId = String(req.body?.voiceId || req.body?.voice_id || 'ara').slice(0, 64);
+
+  try {
+    if (action === 'script') {
+      const lines = buildPreviewCallScript(businessName, description);
+      return res.json({
+        ok: true,
+        businessName: businessName || 'your business',
+        description: description || '',
+        voiceId,
+        premium: xaiTtsConfigured(),
+        lines,
+        pitch:
+          'Hear how Meridian Voice handles a real inbound call. Then try a live test line as the customer.',
+        cta: {
+          voice: '/checkout/voice',
+          sales: '/checkout/sales',
+          stack: '/checkout/stack',
+        },
+      });
+    }
+
+    if (action === 'line') {
+      const text = String(req.body?.text || '').slice(0, 480);
+      const result = await previewVoice(voiceId, text);
+      if (!result.ok) return res.status(503).json(result);
+      return res.json(result);
+    }
+
+    if (action === 'turn') {
+      const result = await runPreviewAgentTurn({
+        businessName,
+        description,
+        message: req.body?.message || req.body?.text,
+        history: req.body?.history,
+        voiceId,
+        wantAudio: req.body?.audio !== false,
+      });
+      if (!result.ok) return res.status(400).json(result);
+      return res.json(result);
+    }
+
+    return res.status(400).json({ ok: false, error: 'action must be script | line | turn' });
+  } catch (e) {
+    return res.status(500).json({ ok: false, error: e.message || 'preview-agent failed' });
   }
 });
 
@@ -1749,28 +1838,93 @@ app.get('/api/outreach', (req, res) => {
   if (!admin(req)) return res.status(401).json({ error: 'Unauthorized' });
   res.json({ drafts: listOutreachDrafts() });
 });
-app.post('/api/outreach', (req, res) => {
+app.get('/api/outreach/status', async (req, res) => {
   if (!admin(req)) return res.status(401).json({ error: 'Unauthorized' });
+  try {
+    const { outreachCaslStatus } = await import('./lib/outreach-casl.mjs');
+    res.json({ ok: true, ...outreachCaslStatus() });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+app.post('/api/outreach', async (req, res) => {
+  if (!admin(req)) return res.status(401).json({ error: 'Unauthorized' });
+  // Prefer CASL vertical draft when email present
+  try {
+    const { draftCaslOutreach } = await import('./lib/outreach-casl.mjs');
+    if (req.body?.email || req.body?.to) {
+      const r = draftCaslOutreach(req.body || {});
+      if (!r.ok) return res.status(400).json(r);
+      return res.json({ draft: r.draft, casl: true });
+    }
+  } catch {
+    /* fall through */
+  }
   res.json({ draft: draftOutreach(req.body || {}) });
+});
+app.post('/api/outreach/queue/process', async (req, res) => {
+  if (!admin(req)) return res.status(401).json({ error: 'Unauthorized' });
+  try {
+    const { processOutreachQueue } = await import('./lib/outreach-casl.mjs');
+    const { withExpertAndContainment } = await import('./lib/openclaw-expert-gate.mjs');
+    const wrapped = await withExpertAndContainment(
+      'outreach-casl',
+      'api.outreach.queue',
+      async () => processOutreachQueue({ max: Number(req.body?.max) || 15 }),
+      { taskBrief: 'Process outreach-queue.json into CASL drafts only.' },
+    );
+    res.json(wrapped.result || wrapped);
+  } catch (e) {
+    res.status(e.code === 'OPENCLAW_CONTAINMENT' ? 403 : 500).json({
+      ok: false,
+      error: e.message,
+      code: e.code,
+    });
+  }
 });
 app.post('/api/outreach/:id/approve', (req, res) => {
   if (!admin(req)) return res.status(401).json({ error: 'Unauthorized' });
   const d = approveOutreach(req.params.id);
   if (!d) return res.status(404).json({ error: 'Not found' });
-  res.json({ draft: d });
+  res.json({ draft: d, note: 'approved_send=true — still must call send-approved with confirm APPROVED_SEND' });
 });
+app.post('/api/outreach/approve-batch', async (req, res) => {
+  if (!admin(req)) return res.status(401).json({ error: 'Unauthorized' });
+  const ids = Array.isArray(req.body?.ids) ? req.body.ids : [];
+  if (!ids.length) return res.status(400).json({ error: 'ids[] required' });
+  const { approveDrafts } = await import('./lib/outreach-casl.mjs');
+  res.json(approveDrafts(ids));
+});
+app.post('/api/outreach/unsub', async (req, res) => {
+  if (!admin(req)) return res.status(401).json({ error: 'Unauthorized' });
+  const email = (req.body?.email || '').trim().toLowerCase();
+  if (!email) return res.status(400).json({ error: 'email required' });
+  const { addUnsub } = await import('./lib/outreach-casl.mjs');
+  addUnsub(email);
+  res.json({ ok: true, email, note: 'Will never receive Meridian cold outreach' });
+});
+/**
+ * CASL send gate — does NOT send on OpenClaw daily.
+ * Requires: admin + confirm "APPROVED_SEND" + MERIDIAN_OUTREACH_SEND=1 + prior approved_send per draft.
+ */
 app.post('/api/outreach/send-approved', async (req, res) => {
   if (!admin(req)) return res.status(401).json({ error: 'Unauthorized' });
-  const drafts = listApprovedUnsent();
-  const results = [];
-  for (const d of drafts.slice(0, 20)) {
-    const text = d.text + (d.text?.includes('STOP') ? '' : '\n\nReply STOP to unsubscribe.');
-    const emailed = await sendEmail(d.to, d.subject, text, `<pre>${text.replace(/</g, '&lt;')}</pre>`);
-    await dispatchWebhook('outreach.sent', { draftId: d.id, to: d.to, emailed });
-    markOutreachSent(d.id, { emailed });
-    results.push({ id: d.id, emailed });
+  try {
+    const { sendApprovedOutreach } = await import('./lib/outreach-casl.mjs');
+    const result = await sendApprovedOutreach({
+      confirm: req.body?.confirm,
+      max: Number(req.body?.max) || 5,
+      draftIds: req.body?.draftIds || null,
+    });
+    if (result.ok && result.results?.length) {
+      for (const r of result.results) {
+        if (r.emailed) await dispatchWebhook('outreach.sent', { draftId: r.id, to: r.to, emailed: true });
+      }
+    }
+    res.status(result.ok ? 200 : 400).json(result);
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
   }
-  res.json({ ok: true, sent: results.length, results });
 });
 app.post('/api/webhooks/test', async (req, res) => {
   if (!admin(req)) return res.status(401).json({ error: 'Unauthorized' });
@@ -2530,9 +2684,15 @@ app.get('/api/v1/agents/:id/sales/recipe', (req, res) => {
 app.get('/api/pricing/voice', (_req, res) => {
   res.json({
     ok: true,
-    model: 'customer_pays_first',
+    model: 'pay_as_you_go',
+    customerBilling: 'prepaid_packs_or_included_sub_turns',
+    vendorBilling: {
+      xai: 'pay_as_you_go_per_tts',
+      anthropic: 'pay_as_you_go_per_token',
+      groq: 'pay_as_you_go_per_token',
+    },
     guarantee:
-      'Customer pays Stripe first (pack or monthly included). Meridian reserves a turn, then calls xAI, then commits. TTS failure refunds the hold. Free site previews never use XAI_API_KEY. Postpaid overage off unless VOICE_ALLOW_OVERAGE=1.',
+      'Customer pays Stripe first (pack or monthly included). Meridian reserves a turn, then calls xAI, then commits. TTS failure refunds the hold. Free site previews never use XAI_API_KEY. Postpaid overage off unless VOICE_ALLOW_OVERAGE=1. Claude + Groq + xAI are all usage-based (PAYG) on the vendor side.',
     policy: cashFlowPolicy(),
     pricing: pricingSnapshot(),
     packs: TOPUP_PACKS,
@@ -2546,13 +2706,26 @@ app.get('/api/pricing/voice', (_req, res) => {
       kit: `${BASE}/checkout/voice`,
     },
     voice: voiceStatus(),
+    defaultPremiumVoice: process.env.XAI_TTS_VOICE || 'ara',
   });
 });
 
 // Ops ROI dashboard (your profit, not shared with customers)
 app.get('/api/ops/billing/roi', (req, res) => {
   if (!admin(req)) return res.status(401).json({ error: 'Unauthorized' });
-  res.json({ ok: true, ...roiSummary(), accounts: listBillingAccounts(), recent: listUsage(40) });
+  res.json({
+    ok: true,
+    ...roiSummary(),
+    accounts: listBillingAccounts(),
+    recent: listUsage(40),
+    vendorPayg: vendorPaygSnapshot(),
+  });
+});
+
+/** Vendor PAYG spend (xAI + Claude + Groq) — ops only */
+app.get('/api/ops/billing/vendor-payg', (req, res) => {
+  if (!admin(req)) return res.status(401).json({ error: 'Unauthorized' });
+  res.json({ ok: true, ...vendorPaygSnapshot() });
 });
 
 app.get('/api/ops/billing/accounts', (req, res) => {
@@ -2740,7 +2913,7 @@ app.get('/checkout/:product', publicLimiter, async (req, res) => {
       cancel_url: fullAuto ? `${BASE}/#full-auto` : `${BASE}/#agents`,
     };
 
-    // Collect business facts at checkout so we can auto-provision with almost zero customer work
+    // Stripe Checkout allows max 3 custom_fields — keep under limit or checkout crashes
     if (fullAuto) {
       sessionParams.custom_fields = [
         {
@@ -2750,12 +2923,6 @@ app.get('/checkout/:product', publicLimiter, async (req, res) => {
           optional: false,
         },
         {
-          key: 'website',
-          label: { type: 'custom', custom: 'Website URL (optional)' },
-          type: 'text',
-          optional: true,
-        },
-        {
           key: 'hours',
           label: { type: 'custom', custom: 'Business hours (e.g. Mon-Fri 9-5)' },
           type: 'text',
@@ -2763,15 +2930,9 @@ app.get('/checkout/:product', publicLimiter, async (req, res) => {
         },
         {
           key: 'services',
-          label: { type: 'custom', custom: 'Main services (short list)' },
+          label: { type: 'custom', custom: 'Main services + phone (short)' },
           type: 'text',
           optional: false,
-        },
-        {
-          key: 'phone',
-          label: { type: 'custom', custom: 'Business phone (for transfer)' },
-          type: 'text',
-          optional: true,
         },
       ];
     }
@@ -2852,6 +3013,19 @@ app.get('/ops', (_req, res) => {
 });
 app.get('/why-agents', (_req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'why-agents.html'));
+});
+/** Agents hub + per-agent detail pages (description · special instructions · checkout) */
+app.get('/agents', (_req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'agents.html'));
+});
+app.get(['/agents/voice', '/agent/voice', '/voice-agent'], (_req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'agent-voice.html'));
+});
+app.get(['/agents/sales', '/agent/sales', '/sales-agent'], (_req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'agent-sales.html'));
+});
+app.get(['/agents/booking', '/agent/booking', '/booking-agent'], (_req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'agent-booking.html'));
 });
 app.get('/article', (_req, res) => {
   res.redirect(302, '/why-agents');
