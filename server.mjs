@@ -896,20 +896,35 @@ async function sendEmail(to, subject, text, html) {
   }
 }
 
-app.get('/health', (_req, res) => {
-  const plat = platformStatus();
-  res.json({
-    status: plat.status === 'operational' ? 'online' : plat.status,
-    product: 'meridian',
-    uptime: process.uptime(),
-    voice: voiceStatus(),
-    brain: brainStatus(),
-    claudeAgent: claudeAgentStatus(),
-    openclaw: containmentStatus(),
-    notify: notifyConfig(),
-    platform: plat,
-    ...funnelStats(),
-  });
+// Healthcheck must be cheap and always 200 when the process is up (Railway kills on fail).
+app.get(['/health', '/healthz'], (_req, res) => {
+  try {
+    const plat = platformStatus();
+    const voice = voiceStatus();
+    res.status(200).json({
+      status: plat.status === 'operational' ? 'online' : plat.status || 'online',
+      ok: true,
+      product: 'meridian',
+      uptime: process.uptime(),
+      voice: {
+        mode: voice?.mode,
+        xaiConfigured: Boolean(voice?.xai?.configured),
+        defaultVoice: voice?.defaultVoice || 'ara',
+      },
+      brain: brainStatus(),
+      openclaw: { mode: 'contained' },
+      platform: { status: plat.status },
+    });
+  } catch (e) {
+    // Still 200 so the replica stays up; details for ops
+    res.status(200).json({
+      status: 'degraded',
+      ok: true,
+      product: 'meridian',
+      uptime: process.uptime(),
+      error: e.message,
+    });
+  }
 });
 
 /** Public status JSON — safe for customers & status pages */
