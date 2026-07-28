@@ -1,0 +1,216 @@
+{
+  "name": "Meridian Premium Voice Agent (xAI + Claude + Groq)",
+  "meta": {
+    "templateCredsSetupCompleted": false,
+    "description": "Automate Meridian voice agents: webhook turn → voice-turn with audio → optional notify. Cash-first PAYG on Meridian server; n8n never holds XAI/Claude keys for customer audio.",
+    "version": "1.0.0"
+  },
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "meridian-voice-turn",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-in",
+      "name": "Webhook Voice Turn",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "webhookId": "meridian-voice-turn"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.body.transcript || $json.body.message || '' }}",
+              "operation": "isNotEmpty"
+            }
+          ]
+        }
+      },
+      "id": "if-has-message",
+      "name": "Has Transcript?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ ($env.MERIDIAN_BASE_URL || 'http://127.0.0.1:8891').replace(/\\/$/, '') + '/api/v1/agents/' + ($json.body.agentId || $env.MERIDIAN_DEFAULT_AGENT_ID) + '/voice-turn' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $json.body.apiKey || $env.MERIDIAN_AGENT_API_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"transcript\": {{ JSON.stringify($json.body.transcript || $json.body.message) }},\n  \"audio\": {{ $json.body.audio !== false }},\n  \"voiceId\": {{ JSON.stringify($json.body.voiceId || $env.XAI_TTS_VOICE || 'ara') }}\n}",
+        "options": {
+          "timeout": 60000,
+          "response": {
+            "response": {
+              "fullResponse": false,
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "http-voice-turn",
+      "name": "Meridian Voice-Turn (PAYG)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [700, 220]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ Boolean($json.ok && ($json.reply || $json.speak)) }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "if-ok",
+      "name": "Turn OK?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [920, 220]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ ok: true, reply: $json.reply || $json.speak, speak: $json.speak || $json.reply, audioBase64: $json.audioBase64 || null, contentType: $json.contentType || 'audio/mpeg', voiceId: $json.voiceId || 'ara', mode: $json.mode, pipeline: $json.pipeline, brainProvider: $json.brainProvider, neverSilent: true }) }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "respond-ok",
+      "name": "Respond Success",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1160, 140]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ ok: false, error: $json.error || $json.message || 'voice_turn_failed', status: $json.statusCode || 502, neverSilent: true, speak: $json.speak || 'I am having a brief connection issue. Please hold or leave a callback number.' }) }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "respond-soft-fail",
+      "name": "Respond Soft Fail (never hang)",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1160, 320]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={ \"ok\": false, \"error\": \"transcript_required\", \"speak\": \"I did not catch that. Could you please repeat?\" }",
+        "options": {
+          "responseCode": 400
+        }
+      },
+      "id": "respond-empty",
+      "name": "Respond Empty",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [700, 400]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 6
+            }
+          ]
+        }
+      },
+      "id": "cron-health",
+      "name": "Every 6h Health",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [240, 560]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ ($env.MERIDIAN_BASE_URL || 'http://127.0.0.1:8891').replace(/\\/$/, '') + '/api/voice/status' }}",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "http-voice-status",
+      "name": "GET Voice Status",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [480, 560]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ ($env.MERIDIAN_BASE_URL || 'http://127.0.0.1:8891').replace(/\\/$/, '') + '/health' }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "http-health",
+      "name": "GET Health",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [700, 560]
+    }
+  ],
+  "connections": {
+    "Webhook Voice Turn": {
+      "main": [[{ "node": "Has Transcript?", "type": "main", "index": 0 }]]
+    },
+    "Has Transcript?": {
+      "main": [
+        [{ "node": "Meridian Voice-Turn (PAYG)", "type": "main", "index": 0 }],
+        [{ "node": "Respond Empty", "type": "main", "index": 0 }]
+      ]
+    },
+    "Meridian Voice-Turn (PAYG)": {
+      "main": [[{ "node": "Turn OK?", "type": "main", "index": 0 }]]
+    },
+    "Turn OK?": {
+      "main": [
+        [{ "node": "Respond Success", "type": "main", "index": 0 }],
+        [{ "node": "Respond Soft Fail (never hang)", "type": "main", "index": 0 }]
+      ]
+    },
+    "Every 6h Health": {
+      "main": [[{ "node": "GET Voice Status", "type": "main", "index": 0 }]]
+    },
+    "GET Voice Status": {
+      "main": [[{ "node": "GET Health", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [
+    { "name": "meridian" },
+    { "name": "voice" },
+    { "name": "xai" }
+  ]
+}
