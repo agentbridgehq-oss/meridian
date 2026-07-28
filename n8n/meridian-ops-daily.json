@@ -1,0 +1,160 @@
+{
+  "name": "Meridian Ops Daily (health + OpenClaw)",
+  "meta": {
+    "description": "Daily autonomous ops glue: health probe → OpenClaw daily-ops → optional notify. No banks, no cold email, no social deliver. Keys stay on Meridian server.",
+    "version": "1.0.0",
+    "kenPolicy": "contained-ops-only"
+  },
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [{ "field": "hours", "hoursInterval": 24 }]
+        }
+      },
+      "id": "sched-daily",
+      "name": "Every 24h",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [200, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ ($env.MERIDIAN_BASE_URL || 'https://meridian-production-2eb0.up.railway.app').replace(/\\/$/, '') + '/api/openclaw/containment' }}",
+        "options": {
+          "timeout": 20000,
+          "response": { "response": { "neverError": true, "fullResponse": true } }
+        }
+      },
+      "id": "http-containment",
+      "name": "OpenClaw Containment Status",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [440, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ ($env.MERIDIAN_BASE_URL || 'https://meridian-production-2eb0.up.railway.app').replace(/\\/$/, '') + '/api/ops/openclaw/run' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.MERIDIAN_OPS_TOKEN || $env.OPS_TOKEN }}"
+            },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={ \"agentId\": \"daily-ops\" }",
+        "options": {
+          "timeout": 180000,
+          "response": { "response": { "neverError": true, "fullResponse": true } }
+        }
+      },
+      "id": "http-openclaw-daily",
+      "name": "Run OpenClaw daily-ops",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ ($env.MERIDIAN_BASE_URL || 'https://meridian-production-2eb0.up.railway.app').replace(/\\/$/, '') + '/api/ops/health/probe' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.MERIDIAN_OPS_TOKEN || $env.OPS_TOKEN }}"
+            },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{}",
+        "options": {
+          "timeout": 60000,
+          "response": { "response": { "neverError": true } }
+        }
+      },
+      "id": "http-health-probe",
+      "name": "Ops Health Probe",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [920, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $env.OPS_NOTIFY_WEBHOOK || '' }}",
+              "operation": "isNotEmpty"
+            }
+          ]
+        }
+      },
+      "id": "if-notify",
+      "name": "Notify webhook set?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [1160, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.OPS_NOTIFY_WEBHOOK }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"text\": \"Meridian ops daily ran\",\n  \"containment\": {{ JSON.stringify($('OpenClaw Containment Status').item.json) }},\n  \"openclaw\": {{ JSON.stringify($('Run OpenClaw daily-ops').item.json) }},\n  \"health\": {{ JSON.stringify($json) }}\n}",
+        "options": { "timeout": 15000, "response": { "response": { "neverError": true } } }
+      },
+      "id": "http-notify",
+      "name": "Optional Notify",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1400, 220]
+    },
+    {
+      "parameters": {
+        "content": "## Meridian Ops Daily\n\n1. Import this workflow into n8n\n2. Set env: `MERIDIAN_BASE_URL`, `MERIDIAN_OPS_TOKEN` (or `OPS_TOKEN`)\n3. Optional: `OPS_NOTIFY_WEBHOOK` (Slack/Discord)\n4. Activate schedule\n\n**Never** add bank, inbox, or cold-email nodes.\nVoice customer audio stays on Meridian PAYG — use `meridian-premium-voice-agent.json` for turns.",
+        "height": 340,
+        "width": 380
+      },
+      "id": "note",
+      "name": "README",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [200, 40]
+    }
+  ],
+  "connections": {
+    "Every 24h": {
+      "main": [[{ "node": "OpenClaw Containment Status", "type": "main", "index": 0 }]]
+    },
+    "OpenClaw Containment Status": {
+      "main": [[{ "node": "Run OpenClaw daily-ops", "type": "main", "index": 0 }]]
+    },
+    "Run OpenClaw daily-ops": {
+      "main": [[{ "node": "Ops Health Probe", "type": "main", "index": 0 }]]
+    },
+    "Ops Health Probe": {
+      "main": [[{ "node": "Notify webhook set?", "type": "main", "index": 0 }]]
+    },
+    "Notify webhook set?": {
+      "main": [
+        [{ "node": "Optional Notify", "type": "main", "index": 0 }],
+        []
+      ]
+    }
+  },
+  "settings": { "executionOrder": "v1" },
+  "pinData": {},
+  "active": false
+}
