@@ -1,5 +1,7 @@
 /**
- * Homepage xAI voice studio — live try-it samples via /api/voice/preview
+ * Homepage voice studio — free try-it samples via /api/voice/preview.
+ * Public previews always use demo TTS (never xAI — see voice-pipeline.mjs),
+ * so status text must never claim "xAI"/"neural" for what's actually playing.
  */
 (function () {
   const root = document.getElementById('voice-demo');
@@ -10,8 +12,8 @@
   const textEl = root.querySelector('[data-vd-text]');
   const playBtn = root.querySelector('[data-vd-play]');
   const openGuide = root.querySelector('[data-vd-guide]');
+  const audio = root.querySelector('[data-vd-audio]');
   let selected = 'eve';
-  let audio;
 
   const DEFAULT_TEXT =
     "Thanks for calling. You've reached the Meridian demo receptionist. I can answer after hours, book appointments, and follow up with leads — how can I help you today?";
@@ -23,7 +25,7 @@
   }
 
   async function loadVoices() {
-    setStatus('Loading xAI voices…');
+    setStatus('Loading voices…');
     try {
       const res = await fetch('/api/voice/voices');
       const data = await res.json();
@@ -43,7 +45,7 @@
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.className = 'vd-voice' + (id === selected ? ' active' : '');
-        btn.innerHTML = `<strong>${v.name || id}</strong><span>${v.tagline || v.useCases || 'xAI neural'}</span>`;
+        btn.innerHTML = `<strong>${v.name || id}</strong><span>${v.tagline || v.useCases || 'Voice'}</span>`;
         btn.addEventListener('click', () => {
           selected = id;
           listEl.querySelectorAll('.vd-voice').forEach((b) => b.classList.remove('active'));
@@ -57,7 +59,7 @@
       const ready = data.hostedReady !== false;
       setStatus(
         ready
-          ? data.message || 'xAI catalog ready — pick a voice and press Play'
+          ? data.message || 'Pick a voice and press Play for a free sample'
           : data.message || 'Catalog only — set XAI_API_KEY on Meridian for live audio',
       );
     } catch {
@@ -89,13 +91,10 @@
           const u = new SpeechSynthesisUtterance(text);
           u.rate = 1;
           window.speechSynthesis.speak(u);
-          setStatus(
-            (data.error || 'Server preview offline') +
-              ' · playing browser voice. Set XAI_API_KEY on Railway for neural audio.',
-          );
+          setStatus((data.error || 'Server preview offline') + ' · playing browser voice instead.');
           return;
         }
-        setStatus(data.error || 'Preview failed — set XAI_API_KEY on Meridian Railway for neural demos.');
+        setStatus(data.error || 'Preview failed — try again shortly.');
         return;
       }
       let src = data.audioUrl || data.url;
@@ -105,9 +104,12 @@
         setStatus('No audio in response');
         return;
       }
-      if (audio) audio.pause();
-      audio = new Audio(src);
-      await audio.play();
+      if (audio) {
+        audio.pause();
+        audio.src = src;
+        audio.hidden = false;
+        await audio.play();
+      }
       if (data.mode === 'xai') {
         setStatus(`Playing ${selected} · xAI neural · free sample (not usage-billed)`);
       } else if (data.mode === 'demo_fallback') {

@@ -414,6 +414,8 @@
   }
   .vd-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
   .vd-status { font-size: 0.8rem; color: var(--muted); margin-top: 12px; }
+  .vd-audio { width: 100%; margin-top: 10px; }
+  .vd-audio[hidden] { display: none; }
   .vd-badge {
     display: inline-flex; align-items: center; gap: 6px;
     font-size: 0.7rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
@@ -453,20 +455,20 @@
   </p>
   <div class="hero-cta">
     <a class="btn btn-dark btn-lg" href="#stack">Get the full stack — $997</a>
-    <a class="btn btn-light btn-lg" href="#voice-demo">Try xAI voice live</a>
+    <a class="btn btn-light btn-lg" href="#voice-demo">Hear a voice sample</a>
     <a class="btn btn-light btn-lg" href="#proposal">Get a proposal</a>
   </div>
   <p class="hero-note">Meridian Agency · AI Guide on every page · Instant kits · CASL-aware</p>
 </section>
 
-<section class="voice-demo" id="voice-demo" aria-label="xAI voice live demo">
+<section class="voice-demo" id="voice-demo" aria-label="Voice agent live demo">
   <div class="voice-demo-panel">
-    <div class="vd-badge"><span style="width:6px;height:6px;border-radius:50%;background:var(--good)"></span> Live demo · xAI neural voices</div>
+    <div class="vd-badge"><span style="width:6px;height:6px;border-radius:50%;background:var(--good)"></span> Live demo · free voice sample</div>
     <div class="live-label">Try it out</div>
     <h2>Hear the receptionist quality before you buy.</h2>
     <p class="vd-lede">
-      Free short samples powered by xAI speech on Meridian’s servers. Production phone agents still use Retell/Vapi for calls —
-      this is the premium voice layer customers can hear and pick.
+      Free short samples so you can hear Meridian talk before you buy. Production phone agents run on Retell/Vapi for calls,
+      with premium xAI neural voice available as a paid, metered upgrade — pick a voice card below and play a sample.
     </p>
     <div class="vd-voices" data-vd-voices></div>
     <label class="live-label" for="vd-text">Sample line</label>
@@ -477,6 +479,7 @@
       <button type="button" class="btn btn-light" data-vd-guide>Open AI Guide · Voice</button>
     </div>
     <p class="vd-status" data-vd-status>Loading voices…</p>
+    <audio class="vd-audio" data-vd-audio controls hidden></audio>
   </div>
 </section>
 
@@ -828,6 +831,40 @@
       btn.disabled = false;
       btn.textContent = 'Send my proposal';
     }
+  });
+})();
+</script>
+
+<div class="cc-consent-banner" id="cc-consent-banner" role="region" aria-label="Terms and privacy notice" hidden>
+  <style>
+    #cc-consent-banner{position:fixed;left:0;right:0;bottom:0;z-index:9999;background:#0B0D14;color:#EDF0F7;border-top:1px solid rgba(255,255,255,0.12);padding:14px 20px;font-size:0.85rem;line-height:1.45;transition:opacity .25s ease,transform .25s ease;}
+    #cc-consent-banner.cc-consent-hide{opacity:0;transform:translateY(14px);pointer-events:none;}
+    #cc-consent-banner .cc-consent-inner{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:center;max-width:1100px;margin:0 auto;width:100%;}
+    #cc-consent-banner p{margin:0;flex:1 1 420px;color:#B7BECF;}
+    #cc-consent-banner a{color:#fff;text-decoration:underline;}
+    #cc-consent-banner label{display:flex;align-items:center;gap:8px;white-space:nowrap;cursor:pointer;font-weight:700;}
+    #cc-consent-banner input{width:18px;height:18px;cursor:pointer;}
+    @media (max-width:640px){#cc-consent-banner{padding:12px 16px;}}
+  </style>
+  <div class="cc-consent-inner">
+    <p>We use essential cookies to run the site and keep you signed in, plus basic analytics. By checking the box you agree to our <a href="/terms">Terms</a> and <a href="/privacy">Privacy Policy</a>.</p>
+    <label><input type="checkbox" id="cc-consent-checkbox"><span>I agree</span></label>
+  </div>
+</div>
+<script>
+(function(){
+  var KEY = 'cc_consent_accepted_v1';
+  var banner = document.getElementById('cc-consent-banner');
+  var checkbox = document.getElementById('cc-consent-checkbox');
+  if (!banner || !checkbox) return;
+  var accepted = false;
+  try { accepted = localStorage.getItem(KEY) === '1'; } catch (e) {}
+  if (!accepted) banner.hidden = false;
+  checkbox.addEventListener('change', function () {
+    if (!checkbox.checked) return;
+    try { localStorage.setItem(KEY, '1'); } catch (e) {}
+    banner.classList.add('cc-consent-hide');
+    setTimeout(function () { banner.hidden = true; }, 260);
   });
 })();
 </script>

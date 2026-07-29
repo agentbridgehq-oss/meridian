@@ -584,7 +584,7 @@
           return `
             <div class="voice-card ${on} ${playing}" data-voice-id="${escapeHtml(v.id)}">
               <div class="v-name">${escapeHtml(v.name || v.id)}</div>
-              <div class="v-tag">${escapeHtml(v.tagline || 'xAI neural voice')}</div>
+              <div class="v-tag">${escapeHtml(v.tagline || 'Neural voice')}</div>
               <div class="v-use">${escapeHtml(v.useCases || '')}</div>
               <div class="v-actions">
                 <button type="button" class="btn sm light" data-preview-voice="${escapeHtml(v.id)}">▶ Preview</button>
@@ -605,12 +605,12 @@
           </div>
           ${
             state.voicesLoading
-              ? `<p class="voice-status">Loading xAI catalog…</p>`
+              ? `<p class="voice-status">Loading voice catalog…</p>`
               : state.voicesError
                 ? `<p class="voice-status err">${escapeHtml(state.voicesError)}</p>`
                 : `<p class="voice-status">${list.length} voice${list.length === 1 ? '' : 's'}${
                     state.voicesSource ? ` · ${escapeHtml(state.voicesSource)}` : ''
-                  }${state.hostedReady ? ' · previews ready' : ' · previews need XAI_API_KEY on Meridian'}</p>`
+                  } · Preview plays a free demo sample; your selected voice is used for real hosted speech.</p>`
           }
           <div class="voice-grid">${cards || '<p class="voice-status">No voices match your search.</p>'}</div>
           <div class="callout good">
