@@ -440,11 +440,14 @@
    */
   .hero-cta-chips-wrap {
     width: 100%;
-    max-width: min(720px, 100%);
+    /* Narrower than the 3-pill content width on purpose: only ~2.3 pills fit,
+       so there's always one dissolving into the mask at each edge — otherwise
+       all 3 pills fit at once and the slide reads as static. */
+    max-width: min(480px, 100%);
     margin: 0 auto 1.5rem;
     overflow: hidden;
     position: relative;
-    padding: 10px 0;
+    padding: 26px 0 10px; /* extra top room for the 30px arc dip so it isn't clipped */
     /* Match ClaudeCraft: soft dissolve both edges, strongest on left exit */
     -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 14%, #000 86%, transparent 100%);
     mask-image: linear-gradient(90deg, transparent 0%, #000 14%, #000 86%, transparent 100%);
@@ -1355,7 +1358,7 @@
     var chipData = [];
     var raf = 0;
     var GAP = 14; /* must match CSS gap */
-    var SPEED = 0.35; /* same pace as ClaudeCraft chips */
+    var SPEED = 0.7; /* only 3 pills total (vs ClaudeCraft's many short chips) — faster so the loop reads as motion, not drift */
 
     function measure() {
       halfWidth = track.scrollWidth / 2;
@@ -1405,9 +1408,10 @@
             var item = chipData[i];
             var d = Math.max(-1, Math.min(1, (item.center + x - halfSpan) / halfSpan));
             var arc = 1 - d * d;
-            /* Center: full size; edges: sink + shrink + fade — left disappears into mask */
-            item.el.style.transform = 'translate3d(0,' + ((1 - arc) * 10) + 'px,0) scale(' + (0.88 + arc * 0.12) + ')';
-            item.el.style.opacity = String(0.4 + arc * 0.6);
+            /* Center: full size, riding high on the arc; edges: sink into a shallow
+               half-circle path, shrink, and fade — pills dissolve into the background there */
+            item.el.style.transform = 'translate3d(0,' + ((1 - arc) * 30) + 'px,0) scale(' + (0.8 + arc * 0.2) + ')';
+            item.el.style.opacity = String(0.15 + arc * 0.85);
           }
         }
       }
