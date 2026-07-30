@@ -8,32 +8,11 @@
 <meta property="og:title" content="Meridian — Agents that answer, sell, and book">
 <meta property="og:description" content="Professional AI agent systems for local business. Voice · Sales · Booking.">
 <meta name="theme-color" content="#0C0C0B">
+<!-- Body UI font only; hero title uses local Georgia so first paint never reflows -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<!-- Preload hero serif early so size doesn't jump when webfont arrives -->
-<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&display=swap">
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=optional" rel="stylesheet">
 <style>
-  /*
-   * Metric-matched fallbacks: Georgia/system paint first at nearly the same
-   * size as Instrument Serif / Inter so the hero title does not "pop" big→small.
-   */
-  @font-face {
-    font-family: 'Instrument Serif Fallback';
-    src: local('Georgia'), local('Times New Roman');
-    size-adjust: 108%;
-    ascent-override: 92%;
-    descent-override: 22%;
-    line-gap-override: 0%;
-  }
-  @font-face {
-    font-family: 'Inter Fallback';
-    src: local('Segoe UI'), local('Helvetica Neue'), local('Arial');
-    size-adjust: 100%;
-    ascent-override: 90%;
-    descent-override: 22%;
-    line-gap-override: 0%;
-  }
   :root {
     /* Black / charcoal agency theme */
     --bg: #0A0A09;
@@ -46,10 +25,17 @@
     --good: #3DDC84;
     --radius: 20px;
     --max: 1120px;
-    --serif: 'Instrument Serif', 'Instrument Serif Fallback', Georgia, serif;
-    --sans: 'Inter', 'Inter Fallback', system-ui, sans-serif;
-    /* Professional agency scale: a step up from compact, not billboard */
-    --hero-title-size: clamp(2.85rem, 5vw + 0.9rem, 4.05rem);
+    /* Local-only display face = zero FOUT / no big→small title jump */
+    --serif: Georgia, 'Times New Roman', Times, serif;
+    --sans: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    /* Fixed steps (not fluid ch/vw chaos) — stable premium scale */
+    --hero-title-size: 3rem;
+  }
+  @media (min-width: 640px) {
+    :root { --hero-title-size: 3.5rem; }
+  }
+  @media (min-width: 960px) {
+    :root { --hero-title-size: 4.1rem; }
   }
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   html { scroll-behavior: smooth; color-scheme: dark; }
@@ -62,6 +48,10 @@
     text-rendering: optimizeLegibility;
   }
   a { color: inherit; }
+  .sr-only {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+  }
   .mist {
     position: fixed; inset: 0; z-index: -1; pointer-events: none;
     background:
@@ -92,6 +82,194 @@
     padding: 8px 12px; border-radius: 999px;
   }
   .nav-links a.ghost:hover { color: var(--ink); background: var(--soft); }
+  .nav-drop { position: relative; }
+  .nav-drop summary {
+    list-style: none; cursor: pointer;
+    font-size: 0.875rem; font-weight: 500; color: var(--muted);
+    padding: 8px 12px; border-radius: 999px; user-select: none;
+  }
+  .nav-drop summary::-webkit-details-marker { display: none; }
+  .nav-drop summary:hover { color: var(--ink); background: var(--soft); }
+  .nav-drop[open] summary { color: var(--ink); background: var(--soft); }
+  .nav-drop-panel {
+    position: absolute; top: calc(100% + 6px); left: 0; min-width: 200px;
+    background: var(--bg-elev); border: 1px solid var(--line); border-radius: 14px;
+    padding: 8px; box-shadow: 0 16px 40px rgba(0,0,0,0.45); z-index: 60;
+  }
+  .nav-drop-panel a {
+    display: block; text-decoration: none; color: var(--ink);
+    font-size: 0.875rem; font-weight: 500; padding: 10px 12px; border-radius: 10px;
+  }
+  .nav-drop-panel a:hover { background: var(--soft); }
+  .nav-drop-panel a span { display: block; font-size: 0.72rem; color: var(--muted); font-weight: 400; margin-top: 2px; }
+  /* Premium agent cards — home */
+  .agents-entry {
+    max-width: var(--max);
+    margin: 0 auto 56px;
+    padding: 8px 24px 0;
+  }
+  .agents-entry-head {
+    text-align: center;
+    max-width: 32rem;
+    margin: 0 auto 28px;
+  }
+  .agents-entry-head h2 {
+    font-family: var(--serif);
+    font-weight: 400;
+    font-size: clamp(1.75rem, 3.5vw, 2.25rem);
+    letter-spacing: -0.03em;
+    line-height: 1.15;
+    margin-bottom: 10px;
+  }
+  .agents-entry-head p {
+    color: var(--muted);
+    font-size: 0.98rem;
+    line-height: 1.55;
+  }
+  .agents-entry-grid {
+    display: grid;
+    gap: 16px;
+    align-items: stretch;
+  }
+  @media (min-width: 860px) {
+    .agents-entry-grid {
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+    }
+  }
+  .agent-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 280px;
+    text-decoration: none;
+    color: inherit;
+    padding: 26px 24px 22px;
+    border-radius: 22px;
+    background:
+      linear-gradient(165deg, rgba(255,255,255,0.04) 0%, transparent 42%),
+      var(--bg-elev);
+    border: 1px solid rgba(255,255,255,0.09);
+    box-shadow:
+      0 1px 0 rgba(255,255,255,0.05) inset,
+      0 18px 40px rgba(0,0,0,0.28);
+    transition:
+      transform 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+      border-color 0.22s ease,
+      box-shadow 0.28s ease;
+    overflow: hidden;
+  }
+  .agent-card::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.18), transparent);
+    opacity: 0.9;
+  }
+  .agent-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(255,255,255,0.18);
+    box-shadow:
+      0 1px 0 rgba(255,255,255,0.07) inset,
+      0 28px 56px rgba(0,0,0,0.42),
+      0 0 0 1px rgba(255,255,255,0.04);
+  }
+  .agent-card:active { transform: translateY(-1px); }
+  .agent-card-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 18px;
+  }
+  .agent-card-num {
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .agent-card-price {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #D4D4D8;
+    letter-spacing: -0.01em;
+    padding: 5px 10px;
+    border-radius: 999px;
+    border: 1px solid rgba(255,255,255,0.1);
+    background: rgba(0,0,0,0.25);
+  }
+  .agent-card h3 {
+    font-family: var(--serif);
+    font-weight: 400;
+    font-size: 1.7rem;
+    letter-spacing: -0.025em;
+    line-height: 1.15;
+    margin: 0 0 10px;
+  }
+  .agent-card p {
+    color: var(--muted);
+    font-size: 0.92rem;
+    line-height: 1.55;
+    margin: 0 0 18px;
+    flex: 1;
+  }
+  .agent-card-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 20px;
+  }
+  .agent-card-meta span {
+    font-size: 0.7rem;
+    font-weight: 500;
+    color: #A1A1AA;
+    padding: 5px 9px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.07);
+  }
+  .agent-card-go {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: auto;
+    font-size: 0.86rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+  }
+  .agent-card-go i {
+    display: inline-block;
+    width: 28px;
+    height: 28px;
+    border-radius: 999px;
+    border: 1px solid rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.04);
+    font-style: normal;
+    font-size: 0.85rem;
+    line-height: 26px;
+    text-align: center;
+    transition: background 0.2s, border-color 0.2s, transform 0.2s;
+  }
+  .agent-card:hover .agent-card-go i {
+    background: #F5F5F4;
+    color: #0A0A09;
+    border-color: #F5F5F4;
+    transform: translateX(2px);
+  }
+  .agent-card.featured {
+    border-color: rgba(255,255,255,0.16);
+    background:
+      linear-gradient(165deg, rgba(255,255,255,0.07) 0%, transparent 48%),
+      #161614;
+  }
+  .agent-card.featured .agent-card-price {
+    border-color: rgba(61,220,132,0.35);
+    color: #B6F0D0;
+  }
   .btn {
     display: inline-flex; align-items: center; justify-content: center; gap: 8px;
     font-family: var(--sans); font-weight: 600; font-size: 0.9rem;
@@ -105,13 +283,101 @@
   .btn-light { background: transparent; color: var(--ink); border-color: var(--line-strong); }
   .btn-light:hover { background: var(--soft); }
   .btn-lg { padding: 16px 26px; font-size: 0.95rem; }
+
+  /*
+   * HERO VIDEO — easy on/off
+   * Turn OFF: set data-hero-video="off" on #hero-stage  (or ?novideo=1 in URL)
+   * Turn ON:  data-hero-video="on"
+   */
+  .hero-stage {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    min-height: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .hero-stage[data-hero-video="on"] {
+    min-height: min(70vh, 720px);
+  }
+  .hero-video-layer {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background: #050505;
+  }
+  .hero-video-layer video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    display: block;
+    /* Slow cinematic feel */
+    transform: scale(1.06);
+    filter: saturate(0.55) brightness(0.55) contrast(1.05);
+  }
+  .hero-video-scrim {
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(180deg, rgba(10,10,9,0.55) 0%, rgba(10,10,9,0.72) 45%, rgba(10,10,9,0.92) 100%),
+      radial-gradient(ellipse 70% 55% at 50% 35%, rgba(10,10,9,0.15), rgba(10,10,9,0.75) 70%);
+  }
+  /* OFF state — no video, clean dark hero */
+  .hero-stage[data-hero-video="off"] .hero-video-layer {
+    display: none;
+  }
+  .hero-stage[data-hero-video="off"] {
+    min-height: 0;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .hero-video-layer video { display: none; }
+  }
   .hero {
-    /* Premium agency frame: content-width, not full-bleed shout */
+    position: relative;
+    z-index: 1;
     max-width: var(--max);
+    width: 100%;
     margin: 0 auto;
-    padding: clamp(22px, 4.5vw, 52px) 24px clamp(40px, 7vw, 72px);
+    padding: clamp(48px, 7vw, 88px) 24px clamp(40px, 6vw, 64px);
     text-align: center;
   }
+  .hero-stage[data-hero-video="on"] .hero h1 {
+    text-shadow: 0 2px 28px rgba(0,0,0,0.55), 0 1px 0 rgba(0,0,0,0.3);
+  }
+  .hero-stage[data-hero-video="on"] .hero-lede {
+    text-shadow: 0 1px 16px rgba(0,0,0,0.5);
+  }
+  /* Quiet control — premium sites hide chrome until needed */
+  .hero-video-toggle {
+    position: absolute;
+    right: 14px;
+    bottom: 12px;
+    z-index: 2;
+    font: inherit;
+    font-size: 0.65rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgba(161,161,170,0.55);
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    padding: 6px 10px;
+    cursor: pointer;
+    opacity: 0.45;
+    transition: opacity .2s, color .2s, border-color .2s, background .2s;
+  }
+  .hero-stage:hover .hero-video-toggle,
+  .hero-video-toggle:focus-visible {
+    opacity: 1;
+    color: var(--muted);
+    border-color: rgba(255,255,255,0.1);
+    background: rgba(10,10,9,0.4);
+  }
+  .hero-video-toggle:hover { color: var(--ink); border-color: rgba(255,255,255,0.18); }
   .eyebrow {
     display: inline-flex; align-items: center; gap: 8px;
     font-size: 0.6875rem; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase;
@@ -122,45 +388,250 @@
     box-shadow: 0 0 0 3px rgba(31,122,76,0.14);
   }
   /*
-   * Hero title — premium B2B scale. Size is stable on first paint:
-   * rem/vw clamp (not ch-based max that reflows when webfont loads),
-   * metric-matched fallback, no transform scale animation.
+   * Hero title — premium, static, no load animation, no webfont swap.
+   * Local Georgia only so Open UI never bounces wide/short or big/small.
    */
   .hero h1 {
     font-family: var(--serif);
     font-weight: 400;
     font-size: var(--hero-title-size);
-    line-height: 1.08;
-    letter-spacing: -0.028em;
-    /* rem max-width = stable across font swap (ch changes with glyph metrics) */
-    max-width: min(22rem, 100%);
+    line-height: 1.22;
+    letter-spacing: -0.008em;
+    max-width: 17em;
     width: 100%;
     margin: 0 auto 1rem;
     color: var(--ink);
-    font-feature-settings: "liga" 1, "kern" 1;
-    text-wrap: balance;
-    /* Reserve ~2 lines so layout doesn't collapse when wrapping changes */
-    min-height: calc(var(--hero-title-size) * 1.08 * 2);
     font-synthesis: none;
+    text-rendering: geometricPrecision;
+    /* Hard lock layout — no min-height that collapses then grows */
+    height: auto;
+    min-height: 0;
+    transform: none;
+    animation: none;
+    transition: none;
   }
   .hero h1 em {
     font-style: italic;
     font-weight: 400;
     color: #D4D4D8;
-    letter-spacing: -0.022em;
+    letter-spacing: -0.008em;
     font-family: var(--serif);
   }
   .hero-lede {
     font-size: clamp(1rem, 1.4vw + 0.75rem, 1.125rem);
     color: var(--muted);
-    max-width: 32rem;
-    margin: 0 auto 1.35rem;
+    max-width: 30rem;
+    margin: 0 auto 1.75rem;
     line-height: 1.7;
     letter-spacing: 0.005em;
     font-weight: 400;
   }
-  .hero-cta { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin-bottom: 16px; }
-  .hero-note { font-size: 0.8rem; color: var(--muted); }
+  .hero-product-line {
+    font-size: 0.78rem;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: rgba(161,161,170,0.85);
+    margin: 0 auto 1.5rem;
+  }
+  /*
+   * Hero CTA carousel — same motion model as ClaudeCraft chip marquee:
+   * continuous left scroll, left edge dissolves, center scale/arc pop.
+   */
+  .hero-cta-chips-wrap {
+    width: 100%;
+    max-width: min(720px, 100%);
+    margin: 0 auto 1.5rem;
+    overflow: hidden;
+    position: relative;
+    padding: 10px 0;
+    /* Match ClaudeCraft: soft dissolve both edges, strongest on left exit */
+    -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 14%, #000 86%, transparent 100%);
+    mask-image: linear-gradient(90deg, transparent 0%, #000 14%, #000 86%, transparent 100%);
+  }
+  .hero-cta-chips {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 14px;
+    width: max-content;
+    will-change: transform;
+  }
+  .hero-cta-chips .btn {
+    flex-shrink: 0;
+    border-radius: 999px;
+    white-space: nowrap;
+    will-change: transform, opacity;
+    padding: 13px 22px;
+    font-size: 0.9rem;
+    letter-spacing: -0.01em;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.28);
+    transition: background .2s, border-color .2s, box-shadow .2s;
+  }
+  .hero-cta-chips .btn-dark {
+    background: #F5F5F4;
+    color: #0A0A09;
+    border: 1px solid rgba(255,255,255,0.5);
+  }
+  .hero-cta-chips .btn-dark:hover { background: #fff; }
+  .hero-cta-chips .btn-light {
+    background: rgba(255,255,255,0.04);
+    color: var(--ink);
+    border: 1px solid rgba(255,255,255,0.12);
+  }
+  .hero-cta-chips .btn-light:hover {
+    background: rgba(255,255,255,0.07);
+    border-color: rgba(255,255,255,0.22);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .hero-cta-chips-wrap {
+      overflow: visible;
+      -webkit-mask-image: none;
+      mask-image: none;
+    }
+    .hero-cta-chips {
+      width: 100%;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      transform: none !important;
+    }
+    .hero-cta-chips .btn[data-cta-clone] { display: none !important; }
+  }
+
+  /* Premium-minimal composer — skinnier + longer */
+  .hero-composer {
+    width: 100%;
+    max-width: min(820px, 100%);
+    margin: 0.25rem auto 0;
+    text-align: left;
+    position: relative;
+    z-index: 3;
+  }
+  .hero-composer-shell {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(18,18,17,0.88);
+    border: 1px solid rgba(255,255,255,0.09);
+    border-radius: 999px;
+    padding: 6px 8px 6px 16px;
+    min-height: 44px;
+    box-shadow: 0 10px 32px rgba(0,0,0,0.32);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    transition: border-color .2s, box-shadow .2s;
+  }
+  .hero-composer-shell:focus-within {
+    border-color: rgba(255,255,255,0.18);
+    box-shadow: 0 12px 36px rgba(0,0,0,0.38), 0 0 0 3px rgba(255,255,255,0.03);
+  }
+  .hero-composer-textarea {
+    flex: 1;
+    width: 100%;
+    min-height: 28px;
+    max-height: 88px;
+    resize: none;
+    border: none;
+    outline: none;
+    background: transparent;
+    color: var(--ink);
+    font: inherit;
+    font-size: 0.92rem;
+    line-height: 1.35;
+    padding: 6px 4px;
+    letter-spacing: -0.01em;
+  }
+  .hero-composer-textarea::placeholder {
+    color: #71717A;
+  }
+  .hero-composer-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 6px;
+    padding: 0;
+    flex-shrink: 0;
+  }
+  .hero-composer-tools {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .hero-composer-tool {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 34px;
+    padding: 0 12px;
+    border-radius: 999px;
+    border: 1px solid rgba(255,255,255,0.10);
+    background: rgba(255,255,255,0.03);
+    color: var(--muted);
+    font: inherit;
+    font-size: 0.78rem;
+    font-weight: 500;
+    cursor: default;
+  }
+  .hero-composer-tool svg {
+    width: 14px; height: 14px; opacity: 0.75;
+  }
+  .hero-composer-send {
+    width: 32px;
+    height: 32px;
+    border-radius: 999px;
+    border: none;
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    background: #2A2A28;
+    color: #71717A;
+    transition: background .15s, color .15s, transform .15s, box-shadow .15s;
+    flex-shrink: 0;
+  }
+  .hero-composer-send svg { width: 14px; height: 14px; }
+  .hero-composer-send.is-ready {
+    background: #F5F5F4;
+    color: #0A0A09;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.35);
+  }
+  .hero-composer-send.is-ready:hover {
+    transform: scale(1.04);
+  }
+  .hero-composer-send:active { transform: scale(0.97); }
+  .hero-composer-send:disabled { opacity: 0.55; cursor: wait; }
+  .hero-composer-hints {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    margin-top: 12px;
+  }
+  .hero-composer-hint {
+    font: inherit;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--muted);
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 999px;
+    padding: 6px 12px;
+    cursor: pointer;
+    transition: color .15s, border-color .15s, background .15s;
+  }
+  .hero-composer-hint:hover {
+    color: var(--ink);
+    border-color: rgba(255,255,255,0.16);
+    background: rgba(255,255,255,0.04);
+  }
+  .hero-stage { padding-bottom: 20px; }
+  .hero-note {
+    font-size: 0.75rem;
+    color: rgba(113,113,122,0.95);
+    margin-top: 1.25rem;
+    letter-spacing: 0.02em;
+  }
   .live-strip { max-width: var(--max); margin: 0 auto 8px; padding: 0 24px; }
   .live-panel {
     background: var(--bg-elev);
@@ -367,60 +838,46 @@
     .nav { padding: 12px 16px; }
     .hero, .wrap, .live-strip { padding-left: 16px; padding-right: 16px; }
   }
-  /* xAI voice demo studio */
+  /* Quiet premium voice sample */
   .voice-demo {
     max-width: var(--max);
-    margin: 0 auto 8px;
-    padding: 0 24px 8px;
-    opacity: 0.92;
-    transform: translateY(8px);
-    transition: opacity .45s ease, transform .45s ease;
+    margin: 8px auto 24px;
+    padding: 0 24px;
   }
-  .voice-demo.vd-visible { opacity: 1; transform: none; }
   .voice-demo-panel {
     background: var(--bg-elev);
     border: 1px solid var(--line);
-    border-radius: calc(var(--radius) + 4px);
-    padding: 28px 24px;
-    box-shadow: 0 1px 0 rgba(255,255,255,0.04) inset, 0 24px 60px rgba(0,0,0,0.35);
+    border-radius: calc(var(--radius) + 2px);
+    padding: clamp(22px, 3vw, 32px);
+    box-shadow: 0 1px 0 rgba(255,255,255,0.03) inset, 0 20px 50px rgba(0,0,0,0.28);
   }
-  .voice-demo-panel .live-label { margin-bottom: 8px; }
   .voice-demo-panel h2 {
     font-family: var(--serif); font-weight: 400;
-    font-size: clamp(1.6rem, 3vw, 2.1rem);
-    letter-spacing: -0.02em; line-height: 1.15; margin-bottom: 8px;
+    font-size: clamp(1.35rem, 2.2vw, 1.75rem);
+    letter-spacing: -0.02em; line-height: 1.2; margin: 0 0 6px;
   }
   .voice-demo-panel .vd-lede {
-    color: var(--muted); font-size: 0.98rem; max-width: 48ch; margin-bottom: 18px;
+    color: var(--muted); font-size: 0.92rem; max-width: 40ch; margin: 0 0 16px; line-height: 1.55;
   }
-  .vd-voices {
-    display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px;
-  }
+  .vd-voices { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
   .vd-voice {
     font: inherit; text-align: left; cursor: pointer;
-    border: 1px solid var(--line); background: var(--bg);
-    border-radius: 14px; padding: 10px 14px; min-width: 120px;
+    border: 1px solid var(--line); background: transparent;
+    border-radius: 12px; padding: 8px 12px;
     transition: border-color .15s, background .15s;
   }
-  .vd-voice strong { display: block; font-size: 0.9rem; }
-  .vd-voice span { font-size: 0.72rem; color: var(--muted); }
+  .vd-voice strong { display: block; font-size: 0.84rem; font-weight: 600; }
+  .vd-voice span { font-size: 0.68rem; color: var(--muted); }
   .vd-voice.active, .vd-voice:hover {
-    border-color: rgba(255,255,255,0.35); background: var(--soft);
+    border-color: rgba(255,255,255,0.28); background: var(--soft);
   }
   .vd-text {
-    width: 100%; min-height: 72px; font: inherit; font-size: 0.92rem;
-    padding: 12px 14px; border-radius: 14px; border: 1px solid var(--line-strong);
-    background: #0A0A09; color: var(--ink); resize: vertical; margin-bottom: 12px;
+    width: 100%; min-height: 56px; font: inherit; font-size: 0.9rem;
+    padding: 12px 14px; border-radius: 14px; border: 1px solid var(--line);
+    background: rgba(0,0,0,0.35); color: var(--ink); resize: vertical; margin-bottom: 12px;
   }
   .vd-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
-  .vd-status { font-size: 0.8rem; color: var(--muted); margin-top: 12px; }
-  .vd-audio { width: 100%; margin-top: 10px; }
-  .vd-audio[hidden] { display: none; }
-  .vd-badge {
-    display: inline-flex; align-items: center; gap: 6px;
-    font-size: 0.7rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
-    color: var(--good); margin-bottom: 10px;
-  }
+  .vd-status { font-size: 0.78rem; color: var(--muted); margin-top: 10px; }
 </style>
 </head>
 <body>
@@ -435,51 +892,93 @@
     Meridian
   </a>
   <div class="nav-links">
-    <a class="ghost" href="#agents">Agents</a>
+    <details class="nav-drop">
+      <summary>Agents</summary>
+      <div class="nav-drop-panel">
+        <a href="/agents">All agents <span>Voice · Sales · Booking</span></a>
+        <a href="/agents/voice">Voice <span>24/7 receptionist</span></a>
+        <a href="/agents/sales">Sales <span>Sub-1 min follow-up</span></a>
+        <a href="/agents/booking">Booking <span>Calendar · no-shows</span></a>
+      </div>
+    </details>
     <a class="ghost" href="#voice-demo">Try voice</a>
     <a class="ghost" href="#method">Method</a>
     <a class="ghost" href="/why-agents">Why agents</a>
     <a class="ghost" href="/install">Install guide</a>
-    <a class="ghost" href="/setup">Setup wizard</a>
     <a class="ghost" href="#proposal">Proposal</a>
     <a class="btn btn-dark" href="#stack">Get Meridian</a>
   </div>
 </header>
 
-<section class="hero">
-  <div class="eyebrow"><i></i> AI agency · Live</div>
-  <h1>Agents that <em>answer, sell,</em> and book.</h1>
-  <p class="hero-lede">
-    Meridian installs Voice, Sales, and Booking agents for local businesses and the operators who serve them.
-    Three systems. Clear outcomes. Kits you sell and deliver — or full done-for-you installs.
-  </p>
-  <div class="hero-cta">
-    <a class="btn btn-dark btn-lg" href="#stack">Get the full stack — $997</a>
-    <a class="btn btn-light btn-lg" href="#voice-demo">Hear a voice sample</a>
-    <a class="btn btn-light btn-lg" href="#proposal">Get a proposal</a>
+<!-- Hero video: off by default. Toggle corner control or data-hero-video="on" / ?novideo=1 -->
+<section class="hero-stage" id="hero-stage" data-hero-video="off">
+  <div class="hero-video-layer" aria-hidden="true">
+    <video id="hero-bg-video" autoplay muted loop playsinline preload="metadata">
+      <source src="https://assets.mixkit.co/videos/preview/mixkit-abstract-digital-network-connection-11711-large.mp4" type="video/mp4">
+    </video>
+    <div class="hero-video-scrim"></div>
   </div>
-  <p class="hero-note">Meridian Agency · AI Guide on every page · Instant kits · CASL-aware</p>
+
+  <div class="hero">
+    <div class="eyebrow"><i></i> Meridian</div>
+    <h1>Agents that <em>answer, sell,</em> and book.</h1>
+    <p class="hero-lede">
+      Voice, Sales, and Booking for local business — clear outcomes, install kits, or done-for-you.
+    </p>
+    <p class="hero-product-line">Voice · Sales · Booking</p>
+    <div class="hero-cta-chips-wrap" data-hero-cta-wrap aria-label="Primary actions — rolling left like ClaudeCraft carousel">
+      <div class="hero-cta-chips" id="heroCtaChips" data-hero-cta-track>
+        <!-- Set A + set B (duplicate) = seamless half-width loop, same pattern as ClaudeCraft chips -->
+        <a class="btn btn-dark btn-lg" href="/agents">View agents</a>
+        <a class="btn btn-light btn-lg" href="#stack">Full stack — $997</a>
+        <a class="btn btn-light btn-lg" href="#proposal">Get a proposal</a>
+        <a class="btn btn-dark btn-lg" href="/agents" data-cta-clone tabindex="-1" aria-hidden="true">View agents</a>
+        <a class="btn btn-light btn-lg" href="#stack" data-cta-clone tabindex="-1" aria-hidden="true">Full stack — $997</a>
+        <a class="btn btn-light btn-lg" href="#proposal" data-cta-clone tabindex="-1" aria-hidden="true">Get a proposal</a>
+      </div>
+    </div>
+
+    <div class="hero-composer" data-hero-composer>
+      <form class="hero-composer-shell" id="hero-composer-form" autocomplete="off">
+        <label class="sr-only" for="hero-composer-input">Message Meridian AI</label>
+        <textarea
+          id="hero-composer-input"
+          class="hero-composer-textarea"
+          rows="1"
+          maxlength="2000"
+          placeholder="Ask about agents or pricing…"
+          data-hero-composer-input
+        ></textarea>
+        <div class="hero-composer-toolbar">
+          <button type="submit" class="hero-composer-send" data-hero-composer-send aria-label="Send message" disabled>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+          </button>
+        </div>
+      </form>
+      <div class="hero-composer-hints">
+        <button type="button" class="hero-composer-hint" data-hero-hint="What does the Voice agent do?">Voice</button>
+        <button type="button" class="hero-composer-hint" data-hero-hint="What does the Sales agent do?">Sales</button>
+        <button type="button" class="hero-composer-hint" data-hero-hint="What is the Full Stack for $997?">Stack</button>
+      </div>
+    </div>
+  </div>
+
+  <button type="button" class="hero-video-toggle" id="hero-video-toggle" aria-pressed="false" title="Optional hero video">
+    Video
+  </button>
 </section>
 
-<section class="voice-demo" id="voice-demo" aria-label="Voice agent live demo">
+<section class="voice-demo" id="voice-demo" aria-label="Voice sample">
   <div class="voice-demo-panel">
-    <div class="vd-badge"><span style="width:6px;height:6px;border-radius:50%;background:var(--good)"></span> Live demo · free voice sample</div>
-    <div class="live-label">Try it out</div>
-    <h2>Hear the receptionist quality before you buy.</h2>
-    <p class="vd-lede">
-      Free short samples so you can hear Meridian talk before you buy. Production phone agents run on Retell/Vapi for calls,
-      with premium xAI neural voice available as a paid, metered upgrade — pick a voice card below and play a sample.
-    </p>
+    <h2>Voice sample</h2>
+    <p class="vd-lede">One short line. Pick a voice and play.</p>
     <div class="vd-voices" data-vd-voices></div>
-    <label class="live-label" for="vd-text">Sample line</label>
-    <textarea class="vd-text" id="vd-text" data-vd-text maxlength="220" rows="3"></textarea>
+    <textarea class="vd-text" id="vd-text" data-vd-text maxlength="220" rows="2">Thanks for calling. I can help with hours, booking, or a quick question — how can I help you today?</textarea>
     <div class="vd-row">
-      <button type="button" class="btn btn-dark" data-vd-play>Play sample</button>
-      <a class="btn btn-light" href="#stack">Deploy Voice agent</a>
-      <button type="button" class="btn btn-light" data-vd-guide>Open AI Guide · Voice</button>
+      <button type="button" class="btn btn-dark" data-vd-play>Play</button>
+      <a class="btn btn-light" href="#stack">Full stack</a>
     </div>
-    <p class="vd-status" data-vd-status>Loading voices…</p>
-    <audio class="vd-audio" data-vd-audio controls hidden></audio>
+    <p class="vd-status" data-vd-status>Loading…</p>
   </div>
 </section>
 
@@ -524,59 +1023,58 @@
 
 <main class="wrap">
 
-  <section class="section" id="agents">
-    <div class="section-head">
-      <h2>Three agents. One operating system.</h2>
-      <p>Each kit is a complete delivery system: intake, prompts, stack, go-live checklist, and the sales language you use with clients.</p>
+  <section class="agents-entry" id="agents" aria-label="Meridian agents">
+    <div class="agents-entry-head">
+      <h2>Three agents. One system.</h2>
+      <p>Answer the phone, follow up fast, fill the calendar — open any card for install and checkout.</p>
     </div>
-
-    <div class="agent-grid">
-      <article class="agent" id="voice">
-        <div class="agent-num">01 · Voice</div>
-        <h3>Voice Agent</h3>
-        <p class="desc">A 24/7 receptionist that answers, qualifies, books, and transfers — without missing after-hours revenue.</p>
-        <ul>
-          <li><span>✓</span> System prompt &amp; call flow</li>
-          <li><span>✓</span> Client intake sheet</li>
-          <li><span>✓</span> Meridian brain + voice-turn API</li>
-          <li><span>✓</span> Platform TTS (Retell / Vapi / Bland)</li>
-        </ul>
-        <div class="agent-price"><b>$497</b><small>one-time kit</small></div>
-        <a class="btn btn-dark" href="/checkout/voice">Buy Voice Agent</a>
-        <p class="fine" style="margin-top:10px">Premium neural speech is pay-as-you-go below — only billed when it speaks.</p>
-      </article>
-
-      <article class="agent" id="sales">
-        <div class="agent-num">02 · Sales</div>
-        <h3>Sales Agent</h3>
-        <p class="desc">Instant lead follow-up by SMS, chat, or email — qualifies, sends next steps, and books before the lead cools.</p>
-        <ul>
-          <li><span>✓</span> Master sales prompt</li>
-          <li><span>✓</span> Consent-aware sequences</li>
-          <li><span>✓</span> Qualification scorecard</li>
-          <li><span>✓</span> CRM go-live list</li>
-        </ul>
-        <div class="agent-price"><b>$497</b><small>one-time kit</small></div>
-        <a class="btn btn-dark" href="/checkout/sales">Buy Sales Agent</a>
-        <a class="btn btn-light" href="/checkout/auto_sales" style="margin-top:8px">Full Auto Sales · $997</a>
-        <p class="fine" style="margin-top:10px">Pipeline: form → <code>/sales/lead</code> → draft SMS → you send (CASL)</p>
-      </article>
-
-      <article class="agent" id="booking">
-        <div class="agent-num">03 · Booking</div>
-        <h3>Booking Agent</h3>
-        <p class="desc">Schedules, reschedules, confirms, and recovers no-shows — so the calendar stays full without the admin drag.</p>
-        <ul>
-          <li><span>✓</span> Scheduler system prompt</li>
-          <li><span>✓</span> Reminder &amp; recovery copy</li>
-          <li><span>✓</span> No-show playbook</li>
-          <li><span>✓</span> Delivery sprint checklist</li>
-        </ul>
-        <div class="agent-price"><b>$497</b><small>one-time kit</small></div>
-        <a class="btn btn-dark" href="/checkout/booking">Buy Booking Agent</a>
-      </article>
+    <div class="agents-entry-grid">
+      <a class="agent-card featured" href="/agents/voice">
+        <div class="agent-card-top">
+          <span class="agent-card-num">01 · Voice</span>
+          <span class="agent-card-price">$497</span>
+        </div>
+        <h3>Voice</h3>
+        <p>24/7 receptionist. Answers, qualifies, books, escalates — so after-hours never means missed revenue.</p>
+        <div class="agent-card-meta">
+          <span>Phone</span>
+          <span>Neural TTS</span>
+          <span>Escalation</span>
+        </div>
+        <span class="agent-card-go">Open Voice <i aria-hidden="true">→</i></span>
+      </a>
+      <a class="agent-card" href="/agents/sales">
+        <div class="agent-card-top">
+          <span class="agent-card-num">02 · Sales</span>
+          <span class="agent-card-price">$497</span>
+        </div>
+        <h3>Sales</h3>
+        <p>Sub-1-minute lead follow-up. Qualify, next steps, and book while interest is still hot. CASL-aware.</p>
+        <div class="agent-card-meta">
+          <span>Follow-up</span>
+          <span>Qualify</span>
+          <span>CASL</span>
+        </div>
+        <span class="agent-card-go">Open Sales <i aria-hidden="true">→</i></span>
+      </a>
+      <a class="agent-card" href="/agents/booking">
+        <div class="agent-card-top">
+          <span class="agent-card-num">03 · Booking</span>
+          <span class="agent-card-price">$497</span>
+        </div>
+        <h3>Booking</h3>
+        <p>Schedule, confirm, and recover no-shows — a fuller calendar without the admin drag.</p>
+        <div class="agent-card-meta">
+          <span>Calendar</span>
+          <span>Confirm</span>
+          <span>No-shows</span>
+        </div>
+        <span class="agent-card-go">Open Booking <i aria-hidden="true">→</i></span>
+      </a>
     </div>
+  </section>
 
+  <section class="section" id="pricing">
     <div class="stack" id="voice-usage" style="margin-bottom:28px">
       <div>
         <div class="live-label" style="color:#A1A1AA">Usage billing · cash first</div>
@@ -757,7 +1255,7 @@
 <footer>
   <p><strong>Meridian Agency</strong> — Voice · Sales · Booking</p>
   <p style="margin-top:8px">
-    <a href="/#agents">Agents</a> ·
+    <a href="/agents">Agents</a> ·
     <a href="/why-agents">Why agents</a> ·
     <a href="/blog">Insights</a> ·
     <a href="/install">Install guide</a> ·
@@ -778,6 +1276,200 @@
 <script src="/js/voice-demo.js" defer></script>
 <script>
 (function () {
+  /* Hero video: easy trial + remove if you hate it */
+  (function initHeroVideoToggle() {
+    var stage = document.getElementById('hero-stage');
+    var btn = document.getElementById('hero-video-toggle');
+    var vid = document.getElementById('hero-bg-video');
+    if (!stage) return;
+
+    var KEY = 'mdn_hero_video';
+    var params = new URLSearchParams(location.search);
+    var forcedOff = params.get('novideo') === '1' || params.get('hero_video') === 'off';
+    var stored = null;
+    try { stored = localStorage.getItem(KEY); } catch (e) {}
+
+    function apply(on) {
+      stage.setAttribute('data-hero-video', on ? 'on' : 'off');
+      if (btn) {
+        btn.textContent = on ? 'Video on' : 'Video';
+        btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+      }
+      if (vid) {
+        if (on) {
+          var p = vid.play();
+          if (p && p.catch) p.catch(function () {});
+        } else {
+          try { vid.pause(); } catch (e2) {}
+        }
+      }
+    }
+
+    var startOn = true;
+    if (forcedOff) startOn = false;
+    else if (stored === 'off') startOn = false;
+    else if (stored === 'on') startOn = true;
+    else if (stage.getAttribute('data-hero-video') === 'off') startOn = false;
+
+    apply(startOn);
+
+    if (btn) {
+      btn.addEventListener('click', function () {
+        var on = stage.getAttribute('data-hero-video') !== 'on';
+        apply(on);
+        try { localStorage.setItem(KEY, on ? 'on' : 'off'); } catch (e3) {}
+      });
+    }
+
+    // If sources fail, hide layer so hero still looks clean
+    if (vid) {
+      vid.addEventListener('error', function () {
+        apply(false);
+      });
+    }
+  })();
+
+  /* CTA marquee — port of ClaudeCraft chip carousel (left dissolve + center arc) */
+  (function initHeroCtaCarousel() {
+    var wrap = document.querySelector('[data-hero-cta-wrap]');
+    var track = document.getElementById('heroCtaChips') || document.querySelector('[data-hero-cta-track]');
+    if (!wrap || !track || !track.children.length) return;
+
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      track.style.transform = '';
+      wrap.style.overflow = 'visible';
+      wrap.style.webkitMaskImage = 'none';
+      wrap.style.maskImage = 'none';
+      var clones = track.querySelectorAll('[data-cta-clone]');
+      for (var c = 0; c < clones.length; c++) clones[c].style.display = 'none';
+      return;
+    }
+
+    var x = 0;
+    var halfWidth = 0;
+    var wrapWidth = 0;
+    var paused = false;
+    var inView = true;
+    var scrolling = false;
+    var scrollTimer = 0;
+    var chipData = [];
+    var raf = 0;
+    var GAP = 14; /* must match CSS gap */
+    var SPEED = 0.35; /* same pace as ClaudeCraft chips */
+
+    function measure() {
+      halfWidth = track.scrollWidth / 2;
+      wrapWidth = wrap.getBoundingClientRect().width;
+      var offset = 0;
+      chipData = Array.prototype.map.call(track.children, function (el) {
+        var w = el.getBoundingClientRect().width;
+        var center = offset + w / 2;
+        offset += w + GAP;
+        return { el: el, center: center };
+      });
+    }
+
+    measure();
+    if (halfWidth === 0) {
+      requestAnimationFrame(function () { measure(); });
+    }
+    window.addEventListener('resize', measure, { passive: true });
+    wrap.addEventListener('mouseenter', function () { paused = true; });
+    wrap.addEventListener('mouseleave', function () { paused = false; });
+    wrap.addEventListener('focusin', function () { paused = true; });
+    wrap.addEventListener('focusout', function () { paused = false; });
+    window.addEventListener('scroll', function () {
+      scrolling = true;
+      clearTimeout(scrollTimer);
+      scrollTimer = setTimeout(function () { scrolling = false; }, 120);
+    }, { passive: true });
+    document.addEventListener('visibilitychange', function () {
+      if (document.hidden) cancelAnimationFrame(raf);
+      else raf = requestAnimationFrame(tick);
+    });
+    if ('IntersectionObserver' in window) {
+      new IntersectionObserver(function (entries) {
+        inView = entries[0] && entries[0].isIntersecting;
+      }, { rootMargin: '40px' }).observe(wrap);
+    }
+
+    function tick() {
+      if (!paused && inView && !scrolling && !document.hidden) {
+        if (halfWidth <= 0) measure();
+        if (halfWidth > 0) {
+          x -= SPEED;
+          if (Math.abs(x) >= halfWidth) x += halfWidth;
+          track.style.transform = 'translate3d(' + x + 'px,0,0)';
+          var halfSpan = wrapWidth / 2 || 1;
+          for (var i = 0; i < chipData.length; i++) {
+            var item = chipData[i];
+            var d = Math.max(-1, Math.min(1, (item.center + x - halfSpan) / halfSpan));
+            var arc = 1 - d * d;
+            /* Center: full size; edges: sink + shrink + fade — left disappears into mask */
+            item.el.style.transform = 'translate3d(0,' + ((1 - arc) * 10) + 'px,0) scale(' + (0.88 + arc * 0.12) + ')';
+            item.el.style.opacity = String(0.4 + arc * 0.6);
+          }
+        }
+      }
+      raf = requestAnimationFrame(tick);
+    }
+    raf = requestAnimationFrame(tick);
+  })();
+
+  /* ChatGPT-style hero composer → MeridianGuide drawer */
+  (function initHeroComposer() {
+    const form = document.getElementById('hero-composer-form');
+    const input = document.querySelector('[data-hero-composer-input]');
+    const sendBtn = document.querySelector('[data-hero-composer-send]');
+    if (!form || !input || !sendBtn) return;
+
+    function autosize() {
+      input.style.height = 'auto';
+      input.style.height = Math.min(input.scrollHeight, 160) + 'px';
+    }
+    function syncSend() {
+      const ready = input.value.trim().length > 0;
+      sendBtn.disabled = !ready;
+      sendBtn.classList.toggle('is-ready', ready);
+    }
+    function dispatch(text) {
+      const t = (text || '').trim();
+      if (!t) return;
+      input.value = '';
+      autosize();
+      syncSend();
+      if (window.MeridianGuide && typeof window.MeridianGuide.send === 'function') {
+        window.MeridianGuide.send(t);
+      } else {
+        // chat script may still be loading
+        window.setTimeout(function () {
+          if (window.MeridianGuide) window.MeridianGuide.send(t);
+        }, 120);
+      }
+    }
+
+    input.addEventListener('input', function () {
+      autosize();
+      syncSend();
+    });
+    input.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        dispatch(input.value);
+      }
+    });
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      dispatch(input.value);
+    });
+    document.querySelectorAll('[data-hero-hint]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        dispatch(btn.getAttribute('data-hero-hint') || btn.textContent);
+      });
+    });
+    syncSend();
+  })();
+
   const params = new URLSearchParams(location.search);
   const bought = params.get('purchased');
   if (bought) {
