@@ -32,8 +32,19 @@ async function runOpenClawInner(expertCtx) {
     // Progress pipeline only — no inbox read, no bank, no external account login
     actions.push({ email: lead.email, ...runAgentOnLead(lead.id) });
   }
-  if (listOutreachDrafts().length < 2) {
-    // DRAFT only — CASL: never auto-send
+  // CASL outreach: process data/outreach-queue.json → drafts only (never send)
+  let outreachReport = { skipped: true };
+  try {
+    const { processOutreachQueue, outreachCaslStatus } = await import('../lib/outreach-casl.mjs');
+    outreachReport = {
+      ...(await processOutreachQueue({ max: Number(process.env.MERIDIAN_OUTREACH_DRAFT_MAX) || 15 })),
+      status: outreachCaslStatus(),
+    };
+  } catch (e) {
+    outreachReport = { ok: false, error: e.message };
+  }
+  // Keep a single placeholder sample if queue empty and almost no drafts (dev hygiene only)
+  if (listOutreachDrafts().length < 1) {
     draftOutreach({
       businessName: 'Sample Local Biz',
       niche: 'home services',
@@ -62,6 +73,23 @@ async function runOpenClawInner(expertCtx) {
     }
   }
 
+  // Insights articles — expert content-articles gate (draft→vet→fix→ready)
+  // Enabled when MERIDIAN_ARTICLES=1 (same flag as server scheduler)
+  let articlesReport = { skipped: true, reason: 'MERIDIAN_ARTICLES not 1' };
+  if (process.env.MERIDIAN_ARTICLES === '1') {
+    try {
+      const { runOpenClawArticlesScheduled } = await import('../lib/openclaw-articles.mjs');
+      articlesReport = await runOpenClawArticlesScheduled();
+    } catch (e) {
+      articlesReport = {
+        ok: false,
+        error: e.message,
+        blocked: e.code === 'OPENCLAW_CONTAINMENT' || e.code === 'OPENCLAW_EXPERT_MISSING',
+        code: e.code || null,
+      };
+    }
+  }
+
   const stats = funnelStats();
   const cage = containmentStatus();
   const report = `# Meridian OpenClaw — ${date}
@@ -80,6 +108,12 @@ ${JSON.stringify(deployReport, null, 2)}
 
 ## Customer install queue (setup wizard / OpenClaw)
 ${JSON.stringify(installReport, null, 2)}
+
+## Content articles (expert: content-articles)
+${JSON.stringify(articlesReport, null, 2)}
+
+## CASL outreach (draft only — Ken approve before send)
+${JSON.stringify(outreachReport, null, 2)}
 
 ## Content hooks (draft ideas only — human posts)
 - After-hours phone is unpaid staff. Meridian Voice answers.
@@ -116,6 +150,7 @@ OpenClaw is CAGED: no bank (yours or customers), no email inboxes, no personal f
 - Awaiting money decision: ${awaitingMoney.length}
 - Delivered / verified: ${delivered.length}
 - Outreach drafts: ${stats.outreachDrafts || 0} (approved unsent: ${stats.approvedUnsent || 0})
+- CASL queue drafted this run: ${outreachReport.drafted ?? '—'} (pending queue: ${outreachReport.pending ?? '—'})
 - OpenClaw lead actions today: ${actions.length}
 - Auto-deploys processed: ${deployReport.processed || 0}
 
@@ -139,8 +174,16 @@ ${actions.map((a) => `- ${a.email}: ${a.action || a.error}`).join('\n') || '- No
 - Article: ${BASE}/why-agents
 - Stack checkout: ${BASE}/checkout/stack
 
+## Needs your outreach decision (CASL human only)
+- Review drafts: GET /api/outreach or npm run openclaw:outreach -- --list
+- Approve: POST /api/outreach/:id/approve or npm run openclaw:outreach -- --approve <id>
+- Send (only after review): set MERIDIAN_OUTREACH_SEND=1 then
+  POST /api/outreach/send-approved { "confirm": "APPROVED_SEND" }
+  or: npm run openclaw:outreach -- --send --confirm APPROVED_SEND
+- OpenClaw never auto-sends cold email
+
 ## Compliance
-- No cold blast without approved_send
+- No cold blast without approved_send + confirm APPROVED_SEND
 - Funnel requires consent
 - Auto-deploy marks agents sellable only after must-work verify
 - Customer still attaches phone number in Retell/Vapi after guide
@@ -188,6 +231,8 @@ See attached daily file on server: daily-${date}.md
     actions: actions.length,
     deploy: deployReport,
     install: installReport,
+    articles: articlesReport,
+    outreach: outreachReport,
     awaitingMoney: awaitingMoney.length,
     reportPath,
     briefPath,

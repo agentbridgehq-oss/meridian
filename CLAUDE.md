@@ -82,8 +82,10 @@ transcript → Meridian brain → TTS (platform default OR ElevenLabs if key set
 
 | Env | Effect |
 |-----|--------|
-| `XAI_API_KEY` set | Hosted xAI TTS + live voice catalog + free previews |
+| `XAI_API_KEY` set | Hosted xAI TTS + live voice catalog + free previews · retries + voice chain (default **ara**) |
+| `GROQ_API_KEY` set | Brain failover when Claude fails (PAYG) — never silent |
 | No `XAI_API_KEY` | Catalog still shown (fallback); hosted audio/previews off; phone uses platform TTS |
+| Premium voice skill | `~/.grok/skills/meridian-premium-voice` · n8n: `n8n/meridian-premium-voice-agent.json` · docs: `PREMIUM-VOICE.md` |
 | `VOICE_ENABLE_ELEVENLABS=1` + key | ElevenLabs plug-in instead of / alongside xAI |
 
 **Full voice picker:** setup wizard step · intake select · `GET /api/voice/voices` ·

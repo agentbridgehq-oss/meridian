@@ -98,9 +98,15 @@ X-Meridian-Token: $OPS_TOKEN
 
 ```bash
 STRIPE_SECRET_KEY=sk_live_…          # required for real charges
-XAI_API_KEY=xai-…                    # server-only TTS
+XAI_API_KEY=xai-…                    # server-only TTS (never in browser)
 VOICE_PROVIDER=xai                   # optional; auto if key present
-XAI_TTS_VOICE=eve
+XAI_TTS_VOICE=ara                    # premium human default (warm receptionist)
+XAI_TTS_RETRIES=3
+XAI_TTS_FALLBACK_VOICES=ara,eve,carina,luna,orion,rex,sal
+# Brain PAYG
+ANTHROPIC_API_KEY=sk-ant-…           # Claude primary
+GROQ_API_KEY=gsk_…                   # fast failover when Claude fails
+GROQ_MODEL=llama-3.3-70b-versatile
 # Optional margin knobs (cents)
 VOICE_CENTS_PER_TURN=55              # customer list per turn
 VOICE_COST_CENTS_PER_TURN=4          # your cost estimate for ROI

@@ -189,6 +189,9 @@ Events to fire: `lead_submit`, `checkout_start`, `purchase`, `agent_live`.
 
 OpenClaw: **draft only**; human `approved_send`.
 
+**Full vertical ICP + CASL email pack (10 niches, Templates A–D, day-3 FU, ranking):**  
+→ `OUTREACH-VERTICALS.md`
+
 ---
 
 ## 9. Ad message angles (no invented stats)

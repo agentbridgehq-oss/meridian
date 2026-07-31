@@ -117,10 +117,11 @@
     </div>
     <div class="panel" style="grid-column:1/-1">
       <h2>Articles (draft → Claude vet → fix → you publish)</h2>
-      <p class="muted" style="font-size:0.82rem;margin-bottom:10px">Long-form every ~2–3 days when MERIDIAN_ARTICLES=1. Nothing goes live until status is <strong>ready</strong> and you hit Publish (unless auto-publish env is on).</p>
+      <p class="muted" style="font-size:0.82rem;margin-bottom:10px">OpenClaw expert <strong>content-articles</strong> loads training MD every run. Long-form every ~2–3 days when MERIDIAN_ARTICLES=1. Nothing goes live until <strong>ready</strong> + Publish (unless auto-publish env is on).</p>
       <div id="articles"></div>
       <div class="actions">
         <button type="button" id="art-cycle">Run full cycle now</button>
+        <button type="button" class="ghost" id="art-openclaw">OpenClaw content-articles</button>
         <button type="button" class="ghost" id="art-refresh">Refresh list</button>
         <a class="ghost" href="/blog" style="padding:8px 12px;display:inline-block">View blog →</a>
       </div>
@@ -275,10 +276,21 @@
   $('refresh').onclick = () => { load(); loadArticles(); };
   $('art-refresh') && ($('art-refresh').onclick = loadArticles);
   $('art-cycle') && ($('art-cycle').onclick = async () => {
-    log('Article cycle starting (Claude draft+vet)…');
+    log('Article cycle starting (OpenClaw expert content-articles + Claude draft+vet)…');
     const r = await fetch('/api/ops/articles/cycle', { method: 'POST', headers: headers(), body: '{}' });
     const d = await r.json();
-    log(r.ok ? 'Cycle: ' + (d.stage || d.error || JSON.stringify(d).slice(0, 120)) : 'Cycle failed: ' + (d.error || ''));
+    log(r.ok ? 'Cycle: ' + (d.stage || d.error || JSON.stringify(d).slice(0, 120)) + (d.openclaw?.expertHash ? ' · expert ' + d.openclaw.expertHash : '') : 'Cycle failed: ' + (d.error || ''));
+    loadArticles();
+  });
+  $('art-openclaw') && ($('art-openclaw').onclick = async () => {
+    log('POST openclaw/run content-articles force…');
+    const r = await fetch('/api/ops/openclaw/run', {
+      method: 'POST',
+      headers: headers(),
+      body: JSON.stringify({ agentId: 'content-articles', force: true }),
+    });
+    const d = await r.json();
+    log(r.ok ? 'OpenClaw articles: ' + (d.stage || d.error || 'ok') + (d.openclaw?.runId ? ' · ' + d.openclaw.runId : '') : 'Failed: ' + (d.error || ''));
     loadArticles();
   });
   $('openclaw').onclick = async () => {

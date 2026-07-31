@@ -16,7 +16,7 @@ OpenClaw on Meridian is a **caged automation worker**, not a general computer ag
 | Agent provision + install packs | Wise, PayPal, wallets, tax apps |
 | Widget / API / n8n / phone **configs** | Email **inboxes** (Ken or customer) |
 | Transactional product email (Resend templates) | Personal files (Desktop, Documents, password managers) |
-| Draft outreach (human approve before send) | Customer account logins (Google, Meta, hosting, banks) |
+| Draft outreach from `outreach-queue.json` (CASL templates; human approve + `APPROVED_SEND` before send) | Customer account logins (Google, Meta, hosting, banks); auto cold-email blasts |
 | | Money movement, refunds, card charges |
 | | Public social posts / `--deliver` blasts |
 | | Production `.env` / SSH / Stripe secret exfiltration |
@@ -28,7 +28,8 @@ OpenClaw on Meridian is a **caged automation worker**, not a general computer ag
 - Money, refunds, payouts  
 - Reading inboxes  
 - Logging into banks or third-party accounts  
-- Approving cold outreach (`approved_send`)  
+- Approving cold outreach (`approved_send`) + send confirm `APPROVED_SEND` + `MERIDIAN_OUTREACH_SEND=1`  
+
 - Deleting production data  
 
 ---
@@ -51,7 +52,16 @@ OpenClaw on Meridian is a **caged automation worker**, not a general computer ag
 GET /api/openclaw/experts
 GET /api/openclaw/containment
 POST /api/ops/openclaw/run   # body: { "agentId": "daily-ops" }
+POST /api/ops/openclaw/run   # { "agentId": "content-articles", "force": true }
 ```
+
+### Content articles (OpenClaw-wired)
+
+- Expert: `openclaw/experts/meridian/content-articles.md`
+- Wrapper: `lib/openclaw-articles.mjs`
+- Daily OpenClaw includes scheduled article cycle when `MERIDIAN_ARTICLES=1`
+- Ops cycle / draft / vet / fix / publish all load expert first
+- Publish remains human-gated unless `MERIDIAN_ARTICLES_AUTO_PUBLISH=1`
 
 ---
 

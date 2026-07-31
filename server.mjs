@@ -3030,17 +3030,32 @@ app.get('/why-agents', (_req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'why-agents.html'));
 });
 /** Agents hub + per-agent detail pages (description · special instructions · checkout) */
+function sendPublicHtml(res, name) {
+  const full = path.join(__dirname, 'public', name);
+  if (!fs.existsSync(full)) {
+    console.error('[static] missing public file:', name);
+    return res.status(503).type('html').send(
+      `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Meridian</title>
+<style>body{font-family:system-ui;background:#0A0A09;color:#F5F5F4;padding:48px;max-width:40rem}
+a{color:#3DDC84}</style></head><body>
+<h1>Page unavailable</h1>
+<p>This agents page is missing from the deploy. Try <a href="/">home</a> or refresh after deploy.</p>
+</body></html>`,
+    );
+  }
+  return res.sendFile(full);
+}
 app.get('/agents', (_req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'agents.html'));
+  sendPublicHtml(res, 'agents.html');
 });
 app.get(['/agents/voice', '/agent/voice', '/voice-agent'], (_req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'agent-voice.html'));
+  sendPublicHtml(res, 'agent-voice.html');
 });
 app.get(['/agents/sales', '/agent/sales', '/sales-agent'], (_req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'agent-sales.html'));
+  sendPublicHtml(res, 'agent-sales.html');
 });
 app.get(['/agents/booking', '/agent/booking', '/booking-agent'], (_req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'agent-booking.html'));
+  sendPublicHtml(res, 'agent-booking.html');
 });
 app.get('/article', (_req, res) => {
   res.redirect(302, '/why-agents');

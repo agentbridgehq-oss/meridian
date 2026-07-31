@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agents · Meridian</title>
+<meta name="description" content="Meridian Voice, Sales, and Booking agents — open each for description, install, and checkout.">
+<meta name="theme-color" content="#0A0A09">
+<style>
+  :root {
+    --bg: #0A0A09;
+    --elev: #141413;
+    --ink: #F5F5F4;
+    --muted: #A1A1AA;
+    --line: rgba(255,255,255,0.08);
+    --soft: #1C1C1A;
+    --good: #3DDC84;
+    --serif: Georgia, 'Times New Roman', Times, serif;
+    --sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: inherit; }
+  .nav {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 24px; border-bottom: 1px solid var(--line);
+    background: rgba(10,10,9,0.92); backdrop-filter: blur(14px);
+    position: sticky; top: 0; z-index: 20;
+  }
+  .brand { font-weight: 600; text-decoration: none; letter-spacing: -0.02em; }
+  .nav a.g {
+    text-decoration: none; font-size: 0.875rem; color: var(--muted);
+    padding: 8px 12px; border-radius: 999px;
+  }
+  .nav a.g:hover { color: var(--ink); background: var(--soft); }
+  .wrap { max-width: 1040px; margin: 0 auto; padding: 48px 24px 88px; }
+  .eyebrow {
+    font-size: 0.7rem; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 12px;
+  }
+  h1 {
+    font-family: var(--serif); font-weight: 400;
+    font-size: clamp(2.1rem, 4vw, 2.65rem);
+    letter-spacing: -0.03em; line-height: 1.12; margin-bottom: 10px;
+  }
+  .lede {
+    color: var(--muted); max-width: 34rem; margin-bottom: 36px;
+    font-size: 1.05rem; line-height: 1.55;
+  }
+  .grid {
+    display: grid;
+    gap: 18px;
+    align-items: stretch;
+  }
+  @media (min-width: 800px) {
+    .grid { grid-template-columns: repeat(3, 1fr); }
+  }
+  .card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 300px;
+    text-decoration: none;
+    color: inherit;
+    padding: 28px 24px 24px;
+    border-radius: 22px;
+    background:
+      linear-gradient(165deg, rgba(255,255,255,0.045) 0%, transparent 42%),
+      var(--elev);
+    border: 1px solid rgba(255,255,255,0.09);
+    box-shadow:
+      0 1px 0 rgba(255,255,255,0.05) inset,
+      0 18px 40px rgba(0,0,0,0.28);
+    transition:
+      transform 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+      border-color 0.22s ease,
+      box-shadow 0.28s ease;
+    overflow: hidden;
+  }
+  .card::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.18), transparent);
+  }
+  .card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(255,255,255,0.18);
+    box-shadow:
+      0 1px 0 rgba(255,255,255,0.07) inset,
+      0 28px 56px rgba(0,0,0,0.42),
+      0 0 0 1px rgba(255,255,255,0.04);
+  }
+  .card.featured {
+    border-color: rgba(255,255,255,0.16);
+    background:
+      linear-gradient(165deg, rgba(255,255,255,0.07) 0%, transparent 48%),
+      #161614;
+  }
+  .card-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 18px;
+  }
+  .num {
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .price {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #D4D4D8;
+    padding: 5px 10px;
+    border-radius: 999px;
+    border: 1px solid rgba(255,255,255,0.1);
+    background: rgba(0,0,0,0.25);
+  }
+  .card.featured .price {
+    border-color: rgba(61,220,132,0.35);
+    color: #B6F0D0;
+  }
+  .card h2 {
+    font-family: var(--serif);
+    font-weight: 400;
+    font-size: 1.75rem;
+    letter-spacing: -0.025em;
+    line-height: 1.15;
+    margin: 0 0 10px;
+  }
+  .card p {
+    color: var(--muted);
+    font-size: 0.94rem;
+    line-height: 1.55;
+    flex: 1;
+    margin: 0 0 18px;
+  }
+  .meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 22px;
+  }
+  .meta span {
+    font-size: 0.7rem;
+    font-weight: 500;
+    color: #A1A1AA;
+    padding: 5px 9px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.07);
+  }
+  .go {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: auto;
+    font-size: 0.88rem;
+    font-weight: 600;
+  }
+  .go i {
+    display: inline-block;
+    width: 28px;
+    height: 28px;
+    border-radius: 999px;
+    border: 1px solid rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.04);
+    font-style: normal;
+    line-height: 26px;
+    text-align: center;
+    transition: background 0.2s, border-color 0.2s, transform 0.2s, color 0.2s;
+  }
+  .card:hover .go i {
+    background: #F5F5F4;
+    color: #0A0A09;
+    border-color: #F5F5F4;
+    transform: translateX(2px);
+  }
+  .foot {
+    margin-top: 48px;
+    padding-top: 24px;
+    border-top: 1px solid var(--line);
+    font-size: 0.85rem;
+    color: var(--muted);
+  }
+  .foot a { color: var(--ink); font-weight: 500; }
+</style>
+</head>
+<body>
+<header class="nav">
+  <a class="brand" href="/">Meridian</a>
+  <div>
+    <a class="g" href="/">Home</a>
+    <a class="g" href="/#stack">Pricing</a>
+    <a class="g" href="/#proposal">Proposal</a>
+  </div>
+</header>
+<main class="wrap">
+  <div class="eyebrow">Product · Agents</div>
+  <h1>Choose an agent</h1>
+  <p class="lede">Voice answers. Sales follows up. Booking fills the calendar. Open a card for install notes and checkout.</p>
+  <div class="grid">
+    <a class="card featured" href="/agents/voice">
+      <div class="card-top">
+        <span class="num">01 · Voice</span>
+        <span class="price">$497</span>
+      </div>
+      <h2>Voice</h2>
+      <p>24/7 receptionist. Answers, qualifies, books, escalates — so after-hours never means missed revenue.</p>
+      <div class="meta">
+        <span>Phone</span>
+        <span>Neural TTS</span>
+        <span>Escalation</span>
+      </div>
+      <span class="go">Open Voice <i aria-hidden="true">→</i></span>
+    </a>
+    <a class="card" href="/agents/sales">
+      <div class="card-top">
+        <span class="num">02 · Sales</span>
+        <span class="price">$497</span>
+      </div>
+      <h2>Sales</h2>
+      <p>Sub-1-minute lead follow-up. Qualify, next steps, and book while interest is still hot. CASL-aware.</p>
+      <div class="meta">
+        <span>Follow-up</span>
+        <span>Qualify</span>
+        <span>CASL</span>
+      </div>
+      <span class="go">Open Sales <i aria-hidden="true">→</i></span>
+    </a>
+    <a class="card" href="/agents/booking">
+      <div class="card-top">
+        <span class="num">03 · Booking</span>
+        <span class="price">$497</span>
+      </div>
+      <h2>Booking</h2>
+      <p>Schedule, confirm, and recover no-shows — a fuller calendar without the admin drag.</p>
+      <div class="meta">
+        <span>Calendar</span>
+        <span>Confirm</span>
+        <span>No-shows</span>
+      </div>
+      <span class="go">Open Booking <i aria-hidden="true">→</i></span>
+    </a>
+  </div>
+  <p class="foot">
+    Full stack $997 · <a href="/#stack">Checkout</a> ·
+    Install order: Booking → Sales → Voice ·
+    <a href="/why-agents">Why agents</a>
+  </p>
+</main>
+</body>
+</html>

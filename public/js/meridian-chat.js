@@ -54,7 +54,7 @@
   .mdn-chat-head {
     display: flex; align-items: center; justify-content: space-between; gap: 12px;
     padding: 16px 16px 12px; border-bottom: 1px solid rgba(255,255,255,0.08);
-    background: rgba(247,246,243,0.95); backdrop-filter: blur(12px);
+    background: rgba(14,14,13,0.96); backdrop-filter: blur(12px);
   }
   .mdn-chat-brand { display: flex; align-items: center; gap: 9px; }
   .mdn-chat-brand-mark {
@@ -63,8 +63,8 @@
   }
   .mdn-chat-brand-mark svg { width: 13px; height: 13px; }
   .mdn-chat-head h2 {
-    font-family: 'Instrument Serif', Georgia, serif; font-weight: 400;
-    font-size: 1.2rem; letter-spacing: -0.02em; margin: 0;
+    font-family: Georgia, 'Times New Roman', serif; font-weight: 400;
+    font-size: 1.2rem; letter-spacing: -0.02em; margin: 0; color: #F5F5F4;
   }
   .mdn-chat-status {
     display: inline-flex; align-items: center; gap: 6px;
@@ -159,31 +159,43 @@
   }
   .mdn-suggest button:hover { background: #1C1C1A; }
   .mdn-chat-input {
-    display: flex; gap: 8px; padding: 12px 14px;
+    display: flex; flex-direction: column; gap: 8px; padding: 12px 12px 10px;
     padding-bottom: max(12px, env(safe-area-inset-bottom));
-    border-top: 1px solid rgba(255,255,255,0.08); background: #141413;
-    align-items: center;
+    border-top: 1px solid rgba(255,255,255,0.08); background: #0F0F0E;
+  }
+  .mdn-chat-input-row {
+    display: flex; gap: 8px; align-items: flex-end;
+    background: #141413; border: 1px solid rgba(255,255,255,0.10);
+    border-radius: 22px; padding: 8px 8px 8px 12px;
+    transition: border-color .18s, box-shadow .18s;
+  }
+  .mdn-chat-input-row:focus-within {
+    border-color: rgba(255,255,255,0.18);
+    box-shadow: 0 0 0 3px rgba(255,255,255,0.04);
   }
   .mdn-chat-input .mdn-tools {
-    display: flex; gap: 4px;
+    display: flex; gap: 4px; flex-shrink: 0; padding-bottom: 2px;
   }
   .mdn-chat-input .mdn-tools button {
-    width: 34px; height: 34px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.12);
-    background: #0A0A09; cursor: pointer; font-size: 0.85rem;
+    width: 34px; height: 34px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.10);
+    background: transparent; cursor: pointer; font-size: 0.85rem; color: #A1A1AA;
   }
-  .mdn-chat-input .mdn-tools button.on { background: #0A0A09; color: #fff; border-color: #F5F5F4; }
-  .mdn-chat-input input {
-    flex: 1; font: inherit; font-size: 0.95rem;
-    padding: 12px 14px; border-radius: 999px;
-    border: 1px solid rgba(255,255,255,0.14); background: #0A0A09; outline: none; min-width: 0;
+  .mdn-chat-input .mdn-tools button.on { background: #F5F5F4; color: #0A0A09; border-color: #F5F5F4; }
+  .mdn-chat-input textarea, .mdn-chat-input input {
+    flex: 1; font: inherit; font-size: 0.95rem; color: #F5F5F4;
+    padding: 8px 6px; border: none; background: transparent; outline: none; min-width: 0;
+    resize: none; max-height: 120px; line-height: 1.4;
   }
-  .mdn-chat-input input:focus { outline: 2px solid #F5F5F4; outline-offset: 1px; }
+  .mdn-chat-input textarea::placeholder, .mdn-chat-input input::placeholder { color: #71717A; }
   .mdn-chat-input button.send {
-    font: inherit; font-weight: 600; font-size: 0.88rem; cursor: pointer;
-    padding: 0 16px; height: 42px; border-radius: 999px; border: none;
-    background: #0A0A09; color: #fff;
+    width: 36px; height: 36px; border-radius: 999px; border: none; cursor: pointer;
+    display: grid; place-items: center; flex-shrink: 0;
+    background: #2A2A28; color: #71717A; padding: 0;
+    transition: background .15s, color .15s, transform .15s;
   }
+  .mdn-chat-input button.send.has-text { background: #F5F5F4; color: #0A0A09; }
   .mdn-chat-input button.send:disabled { opacity: 0.5; cursor: wait; }
+  .mdn-chat-input button.send svg { width: 15px; height: 15px; }
   .mdn-chat-foot {
     padding: 8px 16px calc(10px + env(safe-area-inset-bottom));
     border-top: 1px solid rgba(255,255,255,0.06);
@@ -201,42 +213,51 @@
     .mdn-fab { display: inline-flex; }
   }
   .mdn-openbar-backdrop {
-    position: fixed; left: 0; right: 0; bottom: 0; height: 180px;
+    position: fixed; left: 0; right: 0; bottom: 0; height: 200px;
     z-index: 78; pointer-events: none;
-    background: linear-gradient(to top, #0A0A09 0px, #0A0A09 140px, rgba(10,10,9,0) 180px);
+    background: linear-gradient(to top, #0A0A09 0px, #0A0A09 120px, rgba(10,10,9,0) 200px);
     transition: opacity .2s;
   }
   .mdn-openbar-backdrop.hidden { opacity: 0; }
+  /* ChatGPT-style floating composer — skinnier + longer */
   .mdn-openbar {
-    position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%);
-    z-index: 79; width: min(660px, calc(100vw - 32px));
-    display: flex; gap: 10px; align-items: center;
-    background: #141413; border: 1px solid rgba(255,255,255,0.09);
-    border-radius: 28px; padding: 15px 15px 15px 22px;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.3), 0 2px 6px rgba(0,0,0,0.35), 0 18px 48px rgba(0,0,0,0.45);
+    position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%);
+    z-index: 79; width: min(860px, calc(100vw - 28px));
+    display: flex; flex-direction: column; gap: 0;
+    background: rgba(20,20,19,0.94); border: 1px solid rgba(255,255,255,0.10);
+    border-radius: 999px; padding: 6px 8px 6px 14px;
+    backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+    box-shadow: 0 1px 0 rgba(255,255,255,0.05) inset, 0 14px 36px rgba(0,0,0,0.48);
     transition: opacity .2s, transform .2s, border-color .18s, box-shadow .18s;
   }
   .mdn-openbar:focus-within {
-    border-color: rgba(255,255,255,0.16);
-    box-shadow: 0 1px 2px rgba(0,0,0,0.3), 0 2px 6px rgba(0,0,0,0.35), 0 18px 48px rgba(0,0,0,0.5), 0 0 0 4px rgba(255,255,255,0.04);
+    border-color: rgba(255,255,255,0.20);
+    box-shadow: 0 1px 0 rgba(255,255,255,0.06) inset, 0 16px 40px rgba(0,0,0,0.52), 0 0 0 3px rgba(255,255,255,0.03);
   }
-  .mdn-openbar.hidden { opacity: 0; pointer-events: none; transform: translateX(-50%) translateY(8px); }
+  .mdn-openbar.hidden { opacity: 0; pointer-events: none; transform: translateX(-50%) translateY(10px); }
+  .mdn-openbar-main { display: flex; gap: 8px; align-items: center; min-height: 36px; }
   .mdn-openbar .mdn-spark {
-    flex-shrink: 0; width: 8px; height: 8px; border-radius: 50%;
-    background: #1F7A4C; box-shadow: 0 0 0 3px rgba(31,122,76,0.15);
+    flex-shrink: 0; width: 7px; height: 7px; border-radius: 50%; margin: 0 2px 0 4px;
+    background: #3DDC84; box-shadow: 0 0 0 3px rgba(61,220,132,0.15);
   }
-  .mdn-openbar input {
+  .mdn-openbar textarea, .mdn-openbar input {
     flex: 1; border: none; outline: none; background: transparent;
-    font: inherit; font-size: 1.05rem; color: #F5F5F4; min-width: 0;
+    font: inherit; font-size: 0.92rem; color: #F5F5F4; min-width: 0;
+    resize: none; max-height: 72px; line-height: 1.35; padding: 6px 0;
   }
-  .mdn-openbar input::placeholder { color: #71717A; }
+  .mdn-openbar textarea::placeholder, .mdn-openbar input::placeholder { color: #71717A; }
   .mdn-openbar button {
     display: grid; place-items: center; flex-shrink: 0;
-    width: 36px; height: 36px; border-radius: 50%; border: none;
-    background: #1C1C1A; color: #71717A; cursor: pointer;
+    width: 32px; height: 32px; border-radius: 50%; border: none;
+    background: #2A2A28; color: #71717A; cursor: pointer;
+    transition: background .15s, color .15s, transform .15s;
   }
-  .mdn-openbar.has-text button { background: #0A0A09; color: #fff; }
-  .mdn-openbar button svg { width: 15px; height: 15px; }
+  .mdn-openbar.has-text button { background: #F5F5F4; color: #0A0A09; }
+  .mdn-openbar.has-text button:hover { transform: scale(1.04); }
+  .mdn-openbar button svg { width: 14px; height: 14px; }
+  .mdn-openbar-hint {
+    display: none;
+  }
   @media (max-width: 720px) { .mdn-openbar { display: none; } }
   .mdn-actions { display: flex; flex-wrap: wrap; gap: 6px; align-self: flex-start; max-width: 92%; }
   .mdn-actions button, .mdn-actions a {
@@ -272,7 +293,15 @@
     position: absolute; top: 10px; right: 12px; border: none; background: none;
     cursor: pointer; font-size: 1.1rem; color: #71717A;
   }
-  body.mdn-guide-pad { padding-bottom: 100px; }
+  body.mdn-guide-pad { padding-bottom: 120px; }
+  /* When hero composer is on screen, hide bottom bar so they never stack */
+  body.mdn-hero-composer-visible .mdn-openbar,
+  body.mdn-hero-composer-visible .mdn-openbar-backdrop {
+    opacity: 0 !important;
+    pointer-events: none !important;
+    transform: translateX(-50%) translateY(16px) !important;
+  }
+  body.mdn-hero-composer-visible .mdn-openbar-backdrop { transform: none !important; }
   `;
 
   const style = document.createElement('style');
@@ -328,18 +357,32 @@
 
   const openBar = el('form', 'mdn-openbar');
   openBar.innerHTML = `
-    <span class="mdn-spark" aria-hidden="true"></span>
-    <input type="text" placeholder="Ask Meridian AI â€” research, deploy, or say startâ€¦" maxlength="2000" autocomplete="off" />
-    <button type="submit" aria-label="Send">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
-    </button>
+    <div class="mdn-openbar-main">
+      <span class="mdn-spark" aria-hidden="true"></span>
+      <textarea rows="1" placeholder="Message Meridian AI…" maxlength="2000" autocomplete="off"></textarea>
+      <button type="submit" aria-label="Send">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+      </button>
+    </div>
+    <div class="mdn-openbar-hint">Enter to send · Shift+Enter for new line</div>
   `;
   const openBarFade = el('div', 'mdn-openbar-backdrop');
   document.body.appendChild(openBarFade);
   document.body.appendChild(openBar);
-  const openInput = openBar.querySelector('input');
-  openInput.addEventListener('input', () => {
+  const openInput = openBar.querySelector('textarea') || openBar.querySelector('input');
+  function syncOpenBar() {
     openBar.classList.toggle('has-text', openInput.value.trim().length > 0);
+    if (openInput.tagName === 'TEXTAREA') {
+      openInput.style.height = 'auto';
+      openInput.style.height = Math.min(openInput.scrollHeight, 120) + 'px';
+    }
+  }
+  openInput.addEventListener('input', syncOpenBar);
+  openInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      openBar.requestSubmit();
+    }
   });
 
   const backdrop = el('div', 'mdn-chat-backdrop');
@@ -370,11 +413,15 @@
       <div class="mdn-chat-msgs" id="mdn-chat-msgs"></div>
       <div class="mdn-suggest" id="mdn-suggest"></div>
       <form class="mdn-chat-input" id="mdn-chat-form">
-        <div class="mdn-tools">
-          <button type="button" id="mdn-research-toggle" title="Force web research" aria-label="Web research">ðŸ”Ž</button>
+        <div class="mdn-chat-input-row">
+          <div class="mdn-tools">
+            <button type="button" id="mdn-research-toggle" title="Force web research" aria-label="Web research">R</button>
+          </div>
+          <textarea id="mdn-chat-input" rows="1" placeholder="Message Meridian AI…" autocomplete="off" maxlength="2000"></textarea>
+          <button type="submit" class="send" aria-label="Send">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+          </button>
         </div>
-        <input type="text" id="mdn-chat-input" placeholder="Ask anything â€” pricing, install, industry tipsâ€¦" autocomplete="off" maxlength="2000" />
-        <button type="submit" class="send">Send</button>
       </form>
     </div>
     <div class="mdn-panel" data-panel="deploy">
@@ -548,6 +595,20 @@
   }
 
   window.MeridianGuide = { open, close, send: (t) => { open('chat'); send(t); } };
+
+  /* Keep floating openbar SEPARATE from hero composer — hide while hero input is in view */
+  (function separateHeroAndOpenbar() {
+    const heroComposer = document.querySelector('[data-hero-composer]');
+    if (!heroComposer || !('IntersectionObserver' in window)) return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        const visible = entries.some((en) => en.isIntersecting && en.intersectionRatio > 0.12);
+        document.body.classList.toggle('mdn-hero-composer-visible', visible);
+      },
+      { threshold: [0, 0.12, 0.35], rootMargin: '0px 0px -40px 0px' },
+    );
+    io.observe(heroComposer);
+  })();
 
   openBar.addEventListener('submit', (e) => {
     e.preventDefault();
@@ -737,12 +798,29 @@
     msgs.scrollTop = msgs.scrollHeight;
   }
 
+  function syncDrawerSend() {
+    const ready = input.value.trim().length > 0;
+    sendBtn.classList.toggle('has-text', ready);
+    if (input.tagName === 'TEXTAREA') {
+      input.style.height = 'auto';
+      input.style.height = Math.min(input.scrollHeight, 120) + 'px';
+    }
+  }
+  input.addEventListener('input', syncDrawerSend);
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      send(input.value);
+    }
+  });
+
   async function send(text) {
     const t = String(text || '').trim();
     if (!t) return;
     addBubble('user', t);
     history.push({ role: 'user', content: t });
     input.value = '';
+    syncDrawerSend();
     sendBtn.disabled = true;
     try {
       const res = await fetch('/api/guide-chat', {
@@ -757,7 +835,7 @@
         }),
       });
       const data = await res.json();
-      const reply = data.reply || data.error || 'Something went wrong â€” try again.';
+      const reply = data.reply || data.error || 'Something went wrong — try again.';
       if (data.state && typeof data.state === 'object') guideState = data.state;
       addBubble('ai', reply, { brain: data.brain, webSearch: data.webSearch });
       history.push({ role: 'assistant', content: reply });
@@ -767,6 +845,7 @@
     } finally {
       sendBtn.disabled = false;
       input.focus();
+      syncDrawerSend();
     }
   }
 
@@ -774,6 +853,7 @@
     e.preventDefault();
     send(input.value);
   });
+  syncDrawerSend();
 
   // Deep links
   if (location.hash === '#ai-guide' || location.search.includes('guide=1')) {
