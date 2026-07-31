@@ -66,9 +66,9 @@
 
 <main>
   <h1>Privacy Policy</h1>
-  <p class="updated">Last updated: July 19, 2026 · Meridian Agency, Ontario, Canada</p>
+  <p class="updated">Last updated: July 31, 2026 · Meridian Agency, Ontario, Canada</p>
 
-  <p>Meridian Agency ("Meridian," "we," "us") installs Voice, Sales, and Booking AI agents for local businesses. This page explains what we collect, why, and your rights under Canadian privacy law (PIPEDA) and Canada's Anti-Spam Legislation (CASL).</p>
+  <p>Meridian Agency ("Meridian," "we," "us") installs Voice, Sales, and Booking AI agents for local businesses. This page explains what we collect, why, and your rights under Canadian privacy law (<strong>PIPEDA</strong>), Canada's Anti-Spam Legislation (<strong>CASL</strong>), and — where it applies — the EU/UK <strong>GDPR</strong>.</p>
 
   <h2>What we collect</h2>
   <ul>
@@ -76,27 +76,112 @@
     <li>Business operating details you provide for your agent: hours, services, FAQs, booking rules</li>
     <li>Payment details — processed directly by Stripe; Meridian never stores card numbers</li>
     <li>Basic usage data: chat messages sent to your agent or our site guide, for support and quality</li>
+    <li>Technical data needed for security: IP-based rate limits, bot checks (we do not sell this)</li>
+  </ul>
+
+  <h2>Legal bases (GDPR, where applicable)</h2>
+  <ul>
+    <li><strong>Contract</strong> — deliver proposals, agents, billing, and support you requested</li>
+    <li><strong>Consent</strong> — marketing/proposal email (checkbox); you may withdraw anytime</li>
+    <li><strong>Legitimate interests</strong> — security, abuse prevention, service improvement (balanced against your rights)</li>
   </ul>
 
   <h2>Why we collect it</h2>
   <ul>
     <li>To generate your proposal and configure your AI agent</li>
     <li>To deliver your connect guide, API key, and setup instructions</li>
-    <li>To process payment via Stripe</li>
-    <li>To respond to support requests</li>
+    <li>To process payment via Stripe and meter prepaid voice usage (cash-first)</li>
+    <li>To respond to support and privacy requests</li>
+    <li>To protect the service from bots and abuse</li>
   </ul>
 
   <h2>Consent &amp; email (CASL)</h2>
   <p>We only email you if you gave express consent (a checked box on our forms). Every email includes an unsubscribe option — reply STOP or use the link provided. We do not purchase, rent, or scrape contact lists. Any outreach beyond a direct reply requires internal human approval before it is sent.</p>
 
   <h2>How we protect it</h2>
-  <p>API keys are stored hashed, never in plaintext. Secrets shown once are not re-displayed. Payment data never touches our servers — Stripe handles it under PCI-DSS. Website widget access uses a separate, limited public token; it cannot access your account settings or billing.</p>
+  <p>API keys are stored hashed, never in plaintext. Secrets shown once are not re-displayed. Payment data never touches our servers — Stripe handles it under PCI-DSS. Website widget access uses a separate, limited public token; it cannot access your account settings or billing. Public forms use rate limits and bot protection.</p>
 
-  <h2>Who we share it with</h2>
-  <p>Only the services required to run Meridian: Stripe (payment), Resend (transactional email), and your own downstream tools if you configure a webhook (your choice, your URL). We do not sell personal information.</p>
+  <h2>Who we share it with (processors)</h2>
+  <p>Only services required to run Meridian:</p>
+  <ul>
+    <li><strong>Stripe</strong> — payment</li>
+    <li><strong>Resend</strong> — transactional email</li>
+    <li><strong>Anthropic / Groq / xAI</strong> — AI brain and (when enabled) premium voice, under our server keys</li>
+    <li><strong>Railway</strong> — hosting</li>
+    <li>Your own webhook URL if you configure one</li>
+  </ul>
+  <p>We do not sell personal information. We do not use ad trackers or third-party advertising cookies.</p>
 
-  <h2>Your rights</h2>
-  <p>You can request a copy of your data, ask us to correct it, or ask us to delete it, at any time. Contact us using the email your proposal was sent from, or reply STOP to any Meridian email to unsubscribe immediately.</p>
+  <h2>Retention</h2>
+  <p>Lead and customer records are kept while your account is active and for a reasonable period afterward for billing, fraud prevention, and legal requirements (typically up to 7 years for financial records where required). Chat/voice interaction logs used for support may be retained for a shorter operational period. You may request deletion sooner where the law allows.</p>
+
+  <h2 id="your-rights">Your rights (PIPEDA / GDPR)</h2>
+  <p>Depending on your location, you may request: <strong>access</strong>, <strong>correction</strong>, <strong>deletion</strong>, restriction, or a portable copy of your personal data, and you may object to certain processing. You may also withdraw email consent (reply STOP). We aim to respond within <strong>30 days</strong>.</p>
+
+  <h2>Request access or deletion</h2>
+  <p>Use the form below, or email the address on your Meridian proposal/receipt.</p>
+  <form id="privacy-dsr" style="margin:20px 0;padding:20px;border:1px solid var(--line);border-radius:16px;background:var(--bg-elev)">
+    <div aria-hidden="true" style="position:absolute;left:-9999px;height:1px;overflow:hidden">
+      <label>Website <input name="website" type="text" tabindex="-1" autocomplete="off"></label>
+    </div>
+    <input type="hidden" name="_formStartedAt" id="dsrStarted" value="">
+    <p style="margin-bottom:10px">
+      <label for="dsrEmail">Email *</label><br>
+      <input id="dsrEmail" name="email" type="email" required style="width:100%;padding:10px;border:1px solid var(--line-strong);border-radius:10px;margin-top:4px">
+    </p>
+    <p style="margin-bottom:10px">
+      <label for="dsrType">Request type</label><br>
+      <select id="dsrType" name="type" style="width:100%;padding:10px;border-radius:10px;margin-top:4px">
+        <option value="access">Access (copy of my data)</option>
+        <option value="delete">Delete my data</option>
+        <option value="correct">Correct my data</option>
+      </select>
+    </p>
+    <p style="margin-bottom:12px">
+      <label for="dsrNote">Details (optional)</label><br>
+      <textarea id="dsrNote" name="note" rows="3" style="width:100%;padding:10px;border-radius:10px;margin-top:4px;font:inherit"></textarea>
+    </p>
+    <button type="submit" class="btn" id="dsrBtn" style="padding:10px 18px;border:0;border-radius:999px;background:var(--ink);color:#fff;font-weight:600;cursor:pointer">Submit request</button>
+    <p id="dsrOut" style="margin-top:12px;color:var(--muted);font-size:0.9rem" role="status"></p>
+  </form>
+  <script>
+    document.getElementById('dsrStarted').value = String(Date.now());
+    document.getElementById('privacy-dsr').addEventListener('submit', async function (e) {
+      e.preventDefault();
+      var btn = document.getElementById('dsrBtn');
+      var out = document.getElementById('dsrOut');
+      btn.disabled = true;
+      out.textContent = 'Sending…';
+      try {
+        var f = e.target;
+        var res = await fetch('/api/privacy/request', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: f.email.value.trim(),
+            type: f.type.value,
+            note: f.note.value.trim(),
+            website: f.website.value,
+            _formStartedAt: Number(f._formStartedAt.value) || Date.now()
+          })
+        });
+        var data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Request failed');
+        out.textContent = data.message || 'Request recorded.';
+        f.reset();
+        document.getElementById('dsrStarted').value = String(Date.now());
+      } catch (err) {
+        out.textContent = err.message || 'Try again later.';
+      }
+      btn.disabled = false;
+    });
+  </script>
+
+  <h2>International transfers</h2>
+  <p>Infrastructure and AI processors may process data in the US or other countries. We use reputable providers and only process what is needed to deliver Meridian.</p>
+
+  <h2>Children</h2>
+  <p>Meridian is a B2B product. We do not knowingly collect data from children under 16.</p>
 
   <h2>Changes</h2>
   <p>If this policy changes materially, the "Last updated" date above will change and, where required, we'll notify active customers by email.</p>
@@ -115,5 +200,6 @@
 </footer>
 
 <script src="/js/meridian-chat.js" defer></script>
+<script src="/js/privacy-banner.js" defer></script>
 </body>
 </html>

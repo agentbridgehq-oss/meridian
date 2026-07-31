@@ -88,6 +88,8 @@ import {
   saveAgentVoicePreference,
   saveSetupKnowledge,
 } from './lib/customer-setup.mjs';
+import { checkFormBot, rejectObviousBots, silentBotOk } from './lib/bot-protection.mjs';
+import { createPrivacyRequest, listPrivacyRequests } from './lib/privacy-dsr.mjs';
 import {
   TOPUP_PACKS,
   SUBSCRIPTION_PLANS,
@@ -1206,7 +1208,37 @@ app.get('/api/handoff', (_req, res) => {
 /** Public AI guide chat (site assistant — no API key). Stateful concierge:
  *  client echoes back `state` each turn; can create real leads with consent.
  *  Freeform: web search + xAI (preferred) or Claude; funnel steps stay deterministic. */
-app.post('/api/guide-chat', chatLimiter, async (req, res) => {
+/** GDPR / PIPEDA data subject request (access, delete, correct) */
+app.post('/api/privacy/request', publicLimiter, rejectObviousBots, async (req, res) => {
+  const bot = checkFormBot(req.body || {});
+  if (!bot.ok) return silentBotOk(res);
+  const result = createPrivacyRequest({
+    email: req.body?.email,
+    type: req.body?.type,
+    note: req.body?.note,
+    source: 'website',
+  });
+  if (!result.ok) return res.status(400).json(result);
+  if (process.env.RESEND_API_KEY && process.env.PRIVACY_NOTIFY_EMAIL) {
+    try {
+      await sendEmail(
+        process.env.PRIVACY_NOTIFY_EMAIL,
+        `[Meridian] Privacy ${result.id} (${req.body?.type || 'access'})`,
+        `Privacy request ${result.id}\nEmail: ${String(req.body?.email || '').trim()}\nType: ${req.body?.type}\nNote: ${req.body?.note || ''}`,
+      );
+    } catch {
+      /* non-fatal */
+    }
+  }
+  res.json(result);
+});
+
+app.get('/api/ops/privacy/requests', (req, res) => {
+  if (!admin(req)) return res.status(401).json({ error: 'Unauthorized' });
+  res.json({ ok: true, requests: listPrivacyRequests(200) });
+});
+
+app.post('/api/guide-chat', chatLimiter, rejectObviousBots, async (req, res) => {
   const message = String(req.body?.message || '').slice(0, 2000);
   const history = Array.isArray(req.body?.history) ? req.body.history.slice(-16) : [];
   const state = req.body?.state && typeof req.body.state === 'object' ? req.body.state : {};
@@ -1354,7 +1386,7 @@ app.get('/api/voice/voices', async (_req, res) => {
  * Prefers xAI when XAI_API_KEY set; otherwise demo TTS so Play never hard-fails.
  * Rate-limited.
  */
-app.post('/api/voice/preview', async (req, res) => {
+app.post('/api/voice/preview', publicLimiter, rejectObviousBots, async (req, res) => {
   const ip = req.ip || req.socket?.remoteAddress || 'unknown';
   if (!previewRateOk(ip)) {
     return res.status(429).json({ ok: false, error: 'Too many previews — wait a minute and try again.' });
@@ -1376,7 +1408,7 @@ app.post('/api/voice/preview', async (req, res) => {
  *  - line: TTS one script line (premium xAI when configured)
  *  - turn: live customer line → brain + neural voice
  */
-app.post('/api/voice/preview-agent', async (req, res) => {
+app.post('/api/voice/preview-agent', publicLimiter, rejectObviousBots, async (req, res) => {
   const ip = req.ip || req.socket?.remoteAddress || 'unknown';
   if (!previewRateOk(ip)) {
     return res.status(429).json({ ok: false, error: 'Too many demos — wait a minute and try again.' });
@@ -1731,7 +1763,12 @@ app.get('/api/v1/agents/:id/billing', (req, res) => {
 });
 
 // Public funnel
-app.post('/api/funnel', publicLimiter, async (req, res) => {
+app.post('/api/funnel', publicLimiter, rejectObviousBots, async (req, res) => {
+  const bot = checkFormBot(req.body || {});
+  if (!bot.ok) {
+    // Look successful to bots; do not create a lead
+    return silentBotOk(res);
+  }
   const email = (req.body?.email || '').trim().toLowerCase();
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return res.status(400).json({ error: 'Valid email required' });

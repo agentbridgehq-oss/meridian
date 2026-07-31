@@ -1365,6 +1365,12 @@
       <h2>Get a 1-page proposal</h2>
       <p>Tell us the business. We’ll generate a proposal and an intake link that connects your agent API. Consent required — no spam.</p>
       <form id="funnel-form">
+        <!-- honeypot — leave empty (bots fill it) -->
+        <div aria-hidden="true" style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden">
+          <label for="website">Website</label>
+          <input id="website" name="website" type="text" tabindex="-1" autocomplete="off">
+        </div>
+        <input type="hidden" name="_formStartedAt" id="_formStartedAt" value="">
         <div class="form-grid">
           <div>
             <label for="email">Work email *</label>
@@ -1442,6 +1448,7 @@
 <div class="toast" id="toast"></div>
 
 <script src="/js/meridian-chat.js" defer></script>
+<script src="/js/privacy-banner.js" defer></script>
 <script src="/js/voice-demo.js" defer></script>
 <script>
 (function () {
@@ -1652,6 +1659,8 @@
   const form = document.getElementById('funnel-form');
   const result = document.getElementById('funnel-result');
   const btn = document.getElementById('funnel-btn');
+  const startedEl = document.getElementById('_formStartedAt');
+  if (startedEl) startedEl.value = String(Date.now());
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     btn.disabled = true;
@@ -1665,6 +1674,8 @@
         primaryNeed: form.primaryNeed.value,
         phone: form.phone.value.trim(),
         consent: form.consent.checked,
+        website: form.website ? form.website.value : '',
+        _formStartedAt: startedEl ? Number(startedEl.value) || Date.now() : Date.now(),
       };
       const res = await fetch('/api/funnel', {
         method: 'POST',

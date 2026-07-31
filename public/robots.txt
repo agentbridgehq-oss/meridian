@@ -1,0 +1,12 @@
+# Meridian Agency — public site
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /ops
+Disallow: /intake/
+Disallow: /guide/
+Disallow: /setup/
+Disallow: /dashboard
+Disallow: /checkout/
+
+Sitemap: /sitemap.xml
