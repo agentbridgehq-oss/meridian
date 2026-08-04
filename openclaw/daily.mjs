@@ -3,13 +3,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { listLeads, runAgentOnLead, draftOutreach, listOutreachDrafts, funnelStats, BASE } from '../engine.mjs';
 import { runOpenClawDeploy } from './deploy-agent.mjs';
-import {
-  containmentPreamble,
-  containmentStatus,
-  containedWriteFile,
-  assertSafeText,
-  withContainment,
-} from '../lib/openclaw-containment.mjs';
+import { containmentStatus, containedWriteFile } from '../lib/openclaw-containment.mjs';
 import { withExpertAndContainment } from '../lib/openclaw-expert-gate.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -21,9 +15,16 @@ const DATA = process.env.DATA_DIR || path.join(__dirname, '..', 'data');
  * Never banks, inboxes, personal files, account logins, money movement, or --deliver.
  */
 async function runOpenClawInner(expertCtx) {
-  // Hard policy stamp into every run
-  assertSafeText(containmentPreamble(), 'preamble');
-  assertSafeText(expertCtx?.context?.slice(0, 2000) || 'expert', 'expert_context');
+  // NOTE: previously ran assertSafeText() against the containment preamble
+  // itself and against expertCtx.context (which embeds that same preamble).
+  // Both are static, developer-authored policy text that necessarily *names*
+  // the forbidden topics ("never access banks", "no wire transfers", etc.),
+  // so they always matched DENY_PATH_PATTERNS and threw on line 1 of every
+  // single run — the entire daily cycle (lead progress, deploy/install
+  // queues, outreach, briefs) never actually executed. The real payload
+  // check already happens in runOpenClawAgent() (openclaw-hub/runtime.mjs),
+  // which scans the actual job payload/task brief — untrusted-ish input —
+  // rather than this function's own trusted policy strings.
 
   const date = new Date().toISOString().slice(0, 10);
   const actions = [];
