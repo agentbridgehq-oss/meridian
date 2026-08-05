@@ -360,8 +360,10 @@ export function agentChat(agent, message) {
   if (/hello|hi\b|hey|good (morning|afternoon|evening)/.test(msg)) {
     return `Thanks for contacting ${name}. I'm your Meridian agent. Booking, hours, or a question?`;
   }
-  if (/emergency|urgent|asap|now/.test(msg) && cfg.humanTransfer) {
-    return `For urgent needs, please call ${cfg.humanTransfer}. I can also take your name and number.`;
+  if (/emergency|urgent|asap|now/.test(msg)) {
+    return cfg.humanTransfer
+      ? `For urgent needs, please call ${cfg.humanTransfer}. I can also take your name and number.`
+      : `This sounds urgent. If you're in danger, please contact emergency services — otherwise leave your name and number and we'll call you back right away.`;
   }
   if (/faq|question|where|service area|area do you/.test(msg) && cfg.faqs) {
     return `${cfg.faqs} Want me to book a time?`;

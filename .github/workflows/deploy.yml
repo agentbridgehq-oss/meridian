@@ -1,0 +1,42 @@
+name: Deploy to Railway
+
+# Auto-deploys Meridian to Railway whenever main is updated (merge or direct
+# push), plus a manual trigger for redeploying without a code change.
+#
+# One-time setup (see .github/workflows/README.md for the full walkthrough):
+#   1. Railway dashboard -> meridian project -> Settings -> Tokens ->
+#      create a PROJECT token (not an account token — a project token is
+#      scoped to just this project/environment, so it can't touch anything
+#      else on the account, and CI never needs an interactive `railway link`).
+#   2. GitHub repo -> Settings -> Secrets and variables -> Actions ->
+#      New repository secret -> name it RAILWAY_TOKEN -> paste the project
+#      token. It is never visible again after saving, including to us.
+#   3. Push/merge to main. Watch progress under the Actions tab.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+concurrency:
+  group: railway-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
+
+      - name: Deploy to Railway
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: |
+          if [ -z "$RAILWAY_TOKEN" ]; then
+            echo "::error::RAILWAY_TOKEN secret is not set — see .github/workflows/README.md"
+            exit 1
+          fi
+          railway up --detach --ci

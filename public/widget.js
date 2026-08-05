@@ -19,9 +19,15 @@
     return;
   }
   var base = new URL(script.src).origin;
-  var brand = script.getAttribute('data-name') || 'Assistant';
+  function escapeHtml(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  var brandRaw = script.getAttribute('data-name') || 'Assistant';
+  var brand = escapeHtml(brandRaw); // used in innerHTML below — never interpolate the raw value
   var color = script.getAttribute('data-color') || '#0C0C0B';
-  var greeting = script.getAttribute('data-greeting') || ('Hi! I’m the ' + brand + ' assistant. Hours, booking, or a question?');
+  var greeting = script.getAttribute('data-greeting') || ('Hi! I’m the ' + brandRaw + ' assistant. Hours, booking, or a question?');
 
   var css = [
     '.mdn-w *{box-sizing:border-box;margin:0;padding:0;font-family:system-ui,-apple-system,Segoe UI,sans-serif}',

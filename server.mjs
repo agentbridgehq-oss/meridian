@@ -1547,7 +1547,9 @@ app.post('/api/v1/agents/:id/speak', async (req, res) => {
 
   // Text-only platform path — free at Meridian layer
   if (!wantHosted) {
-    await dispatchWebhook('agent.voice_speak', {
+    // Fire-and-forget: don't make the caller's phone platform wait on an
+    // external webhook before it gets the words to speak.
+    dispatchWebhook('agent.voice_speak', {
       agentId: agent.id,
       mode: 'platform',
       textLength: text.length,
@@ -1580,7 +1582,9 @@ app.post('/api/v1/agents/:id/speak', async (req, res) => {
 
   const { result, settled } = metered;
 
-  await dispatchWebhook('agent.voice_speak', {
+  // Fire-and-forget: audio is already generated and paid for — don't hold up
+  // returning it to the caller for an external webhook round-trip.
+  dispatchWebhook('agent.voice_speak', {
     agentId: agent.id,
     mode: result.mode,
     textLength: text.length,
@@ -1693,7 +1697,9 @@ app.post('/api/v1/agents/:id/voice-turn', async (req, res) => {
     }).catch(() => {});
   }
 
-  await dispatchWebhook('agent.voice_turn', {
+  // Fire-and-forget: this is the live call turn — don't add an external
+  // webhook round-trip (up to 12s+) to the caller's response latency.
+  dispatchWebhook('agent.voice_turn', {
     agentId: agent.id,
     businessName: agent.businessName,
     message: message.slice(0, 200),
