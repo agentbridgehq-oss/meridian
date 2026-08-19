@@ -5,13 +5,16 @@
 | Layer | Status | Depends on your laptop? |
 |-------|--------|-------------------------|
 | **Railway production** | Live, `sleepApplication: false` | **No** |
-| Public URL | https://meridian-production-2eb0.up.railway.app/ | **No** |
+| Public URL | https://meridian-production-915d.up.railway.app/ | **No** |
 | Volume `/data` | Attached for leads/agents | **No** |
 | Local `:8891` | Optional; Startup + watch task | Yes |
 
 **If you never open PowerShell or Grok again, the public site still runs on Railway.**
 
 Closing PowerShell, this chat, or the laptop **does not** take Meridian offline. Only deleting the Railway project, exhausting billing, or a failed redeploy can.
+
+Canonical domain: `meridian-production-915d.up.railway.app`.  
+Do **not** use `meridian-production-2eb0` — that hostname is unbound and returns Railway 404.
 
 ## What you must do (once / occasional)
 
@@ -22,10 +25,11 @@ Closing PowerShell, this chat, or the laptop **does not** take Meridian offline.
    Dashboard: https://railway.com/project/3325e670-00e8-46e2-8d38-e1e4f77b8e66
 
 3. **Optional but recommended — connect GitHub** (so deploys work without local CLI)  
-   Put this repo on GitHub, then in Railway: Service → Settings → Source → connect repo + branch. After that, push = redeploy.
+   In Railway: Service → Settings → Source → connect repo + **master** branch. After that, push = redeploy.
 
 4. **Save secrets outside this chat**  
    - Railway Variables (already has `OPS_TOKEN`, `PUBLIC_BASE_URL`, `DATA_DIR`)  
+   - Confirm `PUBLIC_BASE_URL=https://meridian-production-915d.up.railway.app`  
    - Add when you need them: `RESEND_API_KEY`, `STRIPE_SECRET_KEY`, `MERIDIAN_WEBHOOK_URL`  
    - Local copy of `OPS_TOKEN`: `meridian\.env.railway` (gitignored)
 

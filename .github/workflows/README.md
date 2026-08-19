@@ -1,11 +1,13 @@
 # Auto-deploy to Railway
 
-`deploy.yml` deploys Meridian to Railway automatically whenever `main` is
-updated, and can also be triggered manually from the Actions tab. This
+`deploy.yml` deploys Meridian to Railway automatically whenever `master` or
+`main` is updated, and can also be triggered manually from the Actions tab. This
 exists because no automated tool (including Claude sessions working in this
 repo) has Railway CLI access or credentials — this is the safe way to let
-a merge to `main` result in a real deploy without ever handing a Railway
+a merge result in a real deploy without ever handing a Railway
 credential to an agent or pasting one into a chat.
+
+Default branch of this repo is **master**.
 
 ## One-time setup
 
@@ -22,7 +24,7 @@ credential to an agent or pasting one into a chat.
    shows it again after saving, including to repo admins — only the
    workflow run can read it, and only as a masked value in logs.
 
-3. **Merge a PR to `main`, or push directly** → the workflow runs
+3. **Merge a PR to `master`, or push directly** → the workflow runs
    automatically. Watch it under the **Actions** tab. You can also trigger
    it manually anytime with no code change via **Actions → Deploy to
    Railway → Run workflow**.

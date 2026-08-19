@@ -42,11 +42,13 @@ npm start
 
 | | |
 |--|--|
-| **URL** | https://meridian-production-2eb0.up.railway.app |
+| **URL** | https://meridian-production-915d.up.railway.app |
 | **Project** | Railway `meridian` (own project — not ClaudeCraft) |
-| **Health** | https://meridian-production-2eb0.up.railway.app/health |
+| **Health** | https://meridian-production-915d.up.railway.app/health |
 | **Volume** | `/data` (`DATA_DIR=/data`) |
 | **Secrets** | Local `.env.railway` (gitignored) has `OPS_TOKEN` |
+
+Canonical public domain is `915d`. `meridian-production-2eb0` is unbound (Railway 404) — do not use it.
 
 Redeploy from this directory:
 

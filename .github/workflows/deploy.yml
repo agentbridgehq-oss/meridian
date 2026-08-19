@@ -1,7 +1,7 @@
 name: Deploy to Railway
 
-# Auto-deploys Meridian to Railway whenever main is updated (merge or direct
-# push), plus a manual trigger for redeploying without a code change.
+# Auto-deploys Meridian to Railway whenever master/main is updated (merge or
+# direct push), plus a manual trigger for redeploying without a code change.
 #
 # One-time setup (see .github/workflows/README.md for the full walkthrough):
 #   1. Railway dashboard -> meridian project -> Settings -> Tokens ->
@@ -11,11 +11,11 @@ name: Deploy to Railway
 #   2. GitHub repo -> Settings -> Secrets and variables -> Actions ->
 #      New repository secret -> name it RAILWAY_TOKEN -> paste the project
 #      token. It is never visible again after saving, including to us.
-#   3. Push/merge to main. Watch progress under the Actions tab.
+#   3. Push/merge to master. Watch progress under the Actions tab.
 
 on:
   push:
-    branches: [main]
+    branches: [master, main]
   workflow_dispatch: {}
 
 concurrency:
