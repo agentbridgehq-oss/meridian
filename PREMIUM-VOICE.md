@@ -1,53 +1,44 @@
 # Meridian Premium Voice — always-on human neural speech
 
+See **VOICE-STACK.md** for the locked vendor + cost matrix.
+
 ## Promise
 
-1. **Sounds human** — xAI neural voices (default **Ara**).
-2. **Works every time** — TTS retries + multi-voice fallback; brain Claude → Groq → regex; phone still gets `speak` text if audio fails.
+1. **Sounds human** — paid installs: xAI neural (default **Ara**). Site Play: on-device voice instantly, studio sample if the server answers.
+2. **Works every time** — Play never dead-ends. Brain: Claude → Groq → regex. Phone still gets `speak` text if hosted audio fails.
 3. **Cash first (customer)** — prepaid packs/subs; empty balance = 402, no unpaid xAI.
-4. **All PAYG (vendors)** — Claude, Groq, and xAI are **usage-only** (no seat licenses in-app):
-   - **xAI** — pay per TTS call when audio is generated
-   - **Claude** — pay per token when brain runs
-   - **Groq** — pay per token only on failover
-5. Ops: `GET /api/ops/billing/vendor-payg` + ROI includes `vendorPayg`
+4. **All PAYG (vendors)** — Claude, Groq, xAI usage-only.
 
 ## Reliability pipeline
 
 ```
-Caller transcript
-    → Claude brain (ANTHROPIC_API_KEY)
-        → fail? Groq (GROQ_API_KEY)
-            → fail? regex must-work
-    → if audio:true
-        → reserveTurn (balance required)
-        → xAI TTS (retries × voice chain ara→eve→…)
-            → fail? ElevenLabs if armed
-                → fail? release hold, still return speak text
-        → commitTurn on success
+Site Play
+    → speechSynthesis immediately (mapped Ara/Eve female, Leo/Rex male)
+    → POST /api/voice/preview (demo sample, never xAI)
+        → audio arrives? swap onto <audio>
+        → fail / bot / timeout? keep on-device voice, status stays honest
+
+Paid call / { audio: true }
+    → reserveTurn
+    → Claude brain → Groq → regex
+    → xAI TTS (retries × voice chain ara→eve→…, 12s budget)
+        → fail? ElevenLabs if armed
+            → fail? release hold, return speak text (Retell/Vapi still talks)
+    → commitTurn on success
 ```
 
 ## Website demo
 
 - Voice picker: `GET /api/voice/voices`
 - Play sample: `POST /api/voice/preview` `{ "voiceId": "ara", "text": "…" }`
-- Agent studio: `POST /api/voice/preview-agent` actions `script|line|turn`
-- Homepage: `public/js/voice-demo.js` · never dead-ends (browser speech last)
-
-## n8n
-
-| Workflow | Use |
-|----------|-----|
-| `n8n/meridian-premium-voice-agent.json` | Webhook voice turns (PAYG on Meridian) |
-| `n8n/meridian-ops-daily.json` | Daily OpenClaw + health (ops token) |
-
-Import both only when Meridian is healthy. Skill: `~/.grok/skills/meridian-premium-voice`  
-Portfolio matrix: `CENTRAL-COMMAND/n8n/AUTONOMOUS-N8N-MATRIX.md`
+- Pages: homepage `#voice-demo` and `/agents/voice` `#voice-studio`
+- Script: `public/js/voice-demo.js`
 
 ## Env checklist
 
 | Key | Required for |
 |-----|----------------|
-| `XAI_API_KEY` | Premium neural TTS |
+| `XAI_API_KEY` | Premium neural TTS on paid turns |
 | `ANTHROPIC_API_KEY` | Claude conversation |
 | `GROQ_API_KEY` | Fast brain failover |
 | `STRIPE_SECRET_KEY` | Packs / subs |
@@ -56,4 +47,5 @@ Portfolio matrix: `CENTRAL-COMMAND/n8n/AUTONOMOUS-N8N-MATRIX.md`
 
 ## Cost model
 
-See `USAGE-BILLING.md`. Target ~13× margin on TTS turns. Never reverse cash flow.
+Phone default = Retell all-in ~$0.10–$0.20/min (no Meridian TTS fee).
+Hosted xAI TTS = $15 / 1M chars, prepaid packs only. Target ~13× margin. Never reverse cash flow.
