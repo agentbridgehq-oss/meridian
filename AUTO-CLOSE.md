@@ -1,47 +1,43 @@
-# Meridian close-loop (proposal → accept → facts lock → cash → execute)
+# Meridian close-loop — default STOP
 
-## Reframe
-
-Fully autonomous with no humans is how you ship a receptionist that invents Saturday hours.
-
-The loop that scales:
+Ken finalize phrase (exact):
 
 ```
-consent + lead
-  → proposal generated
-  → accept link emailed / opened
-  → customer locks FACTS (hours, services, transfer)
-  → customer pays Stripe (or ops approve-money)
-  → MERIDIAN_AUTO_EXECUTE=1 drains the job
-  → deployAgent + smoke verify
+yes lets go ahead with this
+```
+
+Anything else, including silence and “looks good,” is STOP.
+
+```
+consent → proposal → customer locks facts → Stripe/money
+  → AWAITING KEN
+  → Ken phrase recorded
+  → then deploy + smoke verify
   → fail closed if verify fails
-  → customer gets setup wizard
-  → HUMAN remains: attach the phone number
 ```
 
 ## Gates that never auto-bypass
 
-| Gate | Why |
-|------|-----|
-| Money | Agent must not charge cards |
-| Facts score | Incomplete / placeholder hours block execute |
-| Smoke verify | Unverified agent is not delivered |
-| CASL | This module never cold-texts |
-| OpenClaw cage | No banks, inboxes, logins |
-| Phone attach | Carrier accounts stay with the customer |
+| Gate | Default |
+|------|---------|
+| Money | STOP until Stripe or ops approve |
+| Facts | STOP if hours/services thin or invented |
+| Ken go-ahead | STOP until exact phrase |
+| Smoke verify | STOP / not live if fail |
+| Unknown | STOP |
 
-## Arm it
+`MERIDIAN_AUTO_EXECUTE=1` only drains jobs that already have Ken go-ahead. It does not skip Ken.
+
+## Record go-ahead
 
 ```
-MERIDIAN_AUTO_EXECUTE=1
+POST /api/ops/close/go-ahead/:jobId
+Authorization: Bearer OPS_TOKEN
+{ "phrase": "yes lets go ahead with this", "execute": true }
 ```
 
-server.mjs:
+Hold:
 
-```js
-import { registerAutoCloseRoutes } from './lib/auto-close-routes.mjs';
-registerAutoCloseRoutes(app, { admin });
 ```
-
-Customer: `GET /accept/:token`
-Ops: `POST /api/ops/close/tick` · `GET /api/ops/close/status`
+POST /api/ops/close/hold/:jobId
+```
