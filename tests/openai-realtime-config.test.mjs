@@ -20,6 +20,9 @@ function voiceDeployment(extra = {}) {
     },
     integrations: {
       brain: { kind:'brain', status:'pending', credentialConfigured:false },
+      destination: { kind:'destination', status:'pending', credentialConfigured:false },
+      calendar: { kind:'calendar', status:'pending', credentialConfigured:false },
+      crm: { kind:'crm', status:'pending', credentialConfigured:false },
     },
     ...extra,
   };
@@ -53,25 +56,37 @@ test('voice instructions are grounded in approved business facts and fail closed
   assert.match(result.acceptBody.instructions, /Heating and cooling service/);
   assert.match(result.acceptBody.instructions, /No human transfer destination is approved yet/);
   assert.match(result.acceptBody.instructions, /Never invent prices/);
-  assert.match(result.acceptBody.instructions, /Do not claim an appointment, transfer, lead update, or follow-up happened unless/);
+  assert.match(result.acceptBody.instructions, /Only use tools that are present in this session/);
+  assert.match(result.acceptBody.instructions, /Never claim an operational action succeeded until/);
 });
 
-test('Realtime tools cover voice outcome, handoff, booking and consent-aware sales actions', () => {
+test('Realtime advertises only executable tools and hides unimplemented booking/CRM actions', () => {
   const result = buildOpenAIRealtimeConfig(voiceDeployment());
   const names = result.acceptBody.tools.map(x => x.name);
-  assert.deepEqual(names, [
-    'meridian_record_call_outcome',
-    'meridian_request_human_handoff',
-    'meridian_request_booking',
-    'meridian_capture_sales_lead',
-  ]);
-  const sales = result.acceptBody.tools.find(x => x.name === 'meridian_capture_sales_lead');
-  assert.ok(sales.parameters.required.includes('consent'));
+  assert.deepEqual(names, ['meridian_record_call_outcome']);
+  assert.equal(names.includes('meridian_request_booking'), false);
+  assert.equal(names.includes('meridian_capture_sales_lead'), false);
+  assert.equal(names.includes('meridian_request_human_handoff'), false);
   for (const tool of result.acceptBody.tools) {
     assert.equal(tool.type, 'function');
     assert.equal(tool.parameters.type, 'object');
     assert.equal(tool.parameters.additionalProperties, false);
   }
+  assert.equal(result.safety.failClosedTools, true);
+});
+
+test('verified destination plus approved transfer target enables handoff tool only', () => {
+  const result = buildOpenAIRealtimeConfig(voiceDeployment({
+    config: {
+      profile: { businessName:'Realtime Test HVAC', hours:'Mon-Fri 8-6', services:'HVAC', rules:'Escalate urgent calls.', approvalOwner:'Owner' },
+      agent: { tone:'professional', humanTransfer:'+17055550123' },
+    },
+    integrations: {
+      brain:{kind:'brain',status:'pending',credentialConfigured:false},
+      destination:{kind:'destination',status:'verified',credentialConfigured:true},
+    },
+  }));
+  assert.deepEqual(result.acceptBody.tools.map(x => x.name), ['meridian_record_call_outcome','meridian_request_human_handoff']);
 });
 
 test('generated config contains secret names only, never secret values', () => {
