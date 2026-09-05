@@ -11,8 +11,11 @@ test('operations page loads private Core workspaces before the legacy project sc
   assert.match(html, /id="deployment-status"/);
   assert.match(html, /id="ops-inbound-routes"/);
   assert.match(html, /id="inbound-routing-status"/);
+  assert.match(html, /id="ops-realtime-calls"/);
+  assert.match(html, /id="realtime-call-status"/);
   assert.ok(html.indexOf('/js/deployment-ops.js') < html.indexOf('/js/agency-ops.js'));
   assert.ok(html.indexOf('/js/inbound-routing-ops.js') < html.indexOf('/js/agency-ops.js'));
+  assert.ok(html.indexOf('/js/realtime-call-ops.js') < html.indexOf('/js/agency-ops.js'));
 });
 
 test('deployment ops UI exposes hard-gate controls without embedding provider secrets', () => {
@@ -27,4 +30,12 @@ test('inbound routing UI creates disabled routes and uses explicit enable/disabl
   for (const marker of ['/api/ops/inbound-routes','/inbound-routes','Create disabled route','Enable verified route','twilio-sip','staging']) assert.ok(js.includes(marker), marker);
   assert.equal(js.includes('OPENAI_API_KEY='), false);
   assert.equal(js.includes('TWILIO_API_SECRET='), false);
+});
+
+test('Realtime call audit UI loads lifecycle summaries and private event timelines', () => {
+  const js = readFileSync(join(root.pathname, 'public', 'js', 'realtime-call-ops.js'), 'utf8');
+  for (const marker of ['/api/ops/realtime-calls?limit=100','Lifecycle timeline','toolCounts','blockerCodes','transfer']) assert.ok(js.includes(marker), marker);
+  assert.equal(js.includes('OPENAI_API_KEY='), false);
+  assert.equal(js.includes('TWILIO_API_SECRET='), false);
+  assert.equal(js.includes('audio_data'), false);
 });
