@@ -20,10 +20,12 @@ async function withServer(configure, run) {
   }
 }
 
-test('OpenAI webhook verifier receives exact raw JSON before global JSON parsing', async () => {
+test('OpenAI webhook verifier receives exact raw JSON before global parsing and wires required sideband controls', async () => {
   const payload = '{"type":"realtime.call.incoming","data":{"call_id":"rtc_raw_test","sip_headers":[]}}';
   let verifiedBody = null;
   let accepted = null;
+  const attachSideband = async () => ({ ok: true });
+  const hangupCall = async () => ({ ok: true });
 
   await withServer(app => {
     registerOpenAIRealtimeWebhookRoute(app, {
@@ -35,10 +37,15 @@ test('OpenAI webhook verifier receives exact raw JSON before global JSON parsing
       },
       processWebhook: async (event, options) => {
         assert.equal(event.type, 'realtime.call.incoming');
+        assert.equal(options.requireSideband, true);
+        assert.equal(options.attachSideband, attachSideband);
+        assert.equal(options.hangupCall, hangupCall);
         accepted = await options.acceptCall({ callId: event.data.call_id, body: { type: 'realtime' } });
-        return { ok: true, handled: true, accepted: true, callId: event.data.call_id, deploymentId: 'dep_test' };
+        return { ok: true, handled: true, accepted: true, sidebandAttached: true, callId: event.data.call_id, deploymentId: 'dep_test' };
       },
       acceptCall: async request => ({ ok: true, request }),
+      attachSideband,
+      hangupCall,
     });
     // This intentionally comes after the OpenAI route. If the route is moved
     // below this parser later, the Buffer/raw-body assertion will fail.
@@ -55,6 +62,7 @@ test('OpenAI webhook verifier receives exact raw JSON before global JSON parsing
       ok: true,
       handled: true,
       accepted: true,
+      sidebandAttached: true,
       callId: 'rtc_raw_test',
       deploymentId: 'dep_test',
     });
