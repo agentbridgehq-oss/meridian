@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <title>Try Meridian Voice — Meridian</title>
+  <link rel="stylesheet" href="/css/agency.css">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header class="nav">
+    <div class="w navin">
+      <a class="brand" href="/meridian-2.html">MERIDIAN</a>
+      <nav class="navlinks" aria-label="Main navigation">
+        <a href="/meridian-offer.html">The offer</a>
+        <a href="/meridian-onboarding.html">Onboarding</a>
+        <a href="/meridian-proposal.html">Build my proposal →</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="hero">
+      <div class="w">
+        <div class="ey">Meridian / Voice demo</div>
+        <h1>Try the conversation.</h1>
+        <p class="lead">Talk with a live Meridian AI receptionist demonstration in your browser. The demo is intentionally isolated from real client calendars, CRMs, phone transfers, payments and business systems.</p>
+        <div class="box form" id="voice-demo-panel">
+          <div class="note full">
+            <strong>Demo privacy boundary</strong>
+            <p>This demo sends microphone audio to OpenAI Realtime to generate the conversation. Do not share passwords, authentication codes, payment details, government ID numbers, detailed medical information or other highly sensitive information.</p>
+          </div>
+          <label class="full">
+            <input id="voice-demo-consent" type="checkbox">
+            I understand this is an AI demonstration and consent to my microphone audio being processed for this session.
+          </label>
+          <div class="actions full">
+            <button class="btn primary" id="voice-demo-start" type="button" disabled>Start voice demo</button>
+            <button class="btn" id="voice-demo-stop" type="button" disabled>End demo</button>
+          </div>
+          <p id="voice-demo-status" class="status full" role="status" aria-live="polite">Checking demo availability…</p>
+          <audio id="voice-demo-audio" autoplay></audio>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="w grid3">
+        <article class="box"><div class="ey">01</div><h3>Talk naturally</h3><p>Ask how Meridian would handle a new customer call, qualification, escalation or follow-up.</p></article>
+        <article class="box"><div class="ey">02</div><h3>No fake actions</h3><p>The demo cannot claim it booked, transferred, messaged or changed a real customer system.</p></article>
+        <article class="box"><div class="ey">03</div><h3>Production is gated</h3><p>Real client actions are enabled only after the corresponding integrations are connected, verified and accepted.</p></article>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot"><div class="w"><span>Meridian · Built. Managed. Measured.</span><span><a href="/privacy.html">Privacy</a> · <a href="/terms.html">Terms</a></span></div></footer>
+  <script src="/js/voice-demo.js" defer></script>
+</body>
+</html>
