@@ -62,7 +62,8 @@ test('readiness becomes infrastructure-ready with required secret presence and n
     assert.equal(report.stagingInfrastructureReady, true);
     assert.deepEqual(report.missingRequired, []);
     assert.equal(report.environment.runtime.node22Plus, true);
-    assert.match(report.environment.runtime.nodeVersion, /^22\./);
+    const nodeMajor = Number.parseInt(report.environment.runtime.nodeVersion, 10);
+    assert.ok(nodeMajor >= 22, `expected Node.js 22+, received ${report.environment.runtime.nodeVersion}`);
     assert.equal(report.environment.openai.sdkInstalled, true);
     assert.equal(report.environment.openai.apiKeyConfigured, true);
     assert.equal(report.environment.twilio.usableCredentialConfigured, true);

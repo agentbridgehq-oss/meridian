@@ -29,3 +29,9 @@ Railway service gone. Both old public domains return Application not found.
 ## Standing consent
 
 Fetch-on-open, commit-on-close. No merge to master unless Kenny says merge.
+
+## 2026-09-05 — Node compatibility test
+
+- Synced this workspace to `meridian-agency-2-0` at `a45dea3`.
+- Updated the readiness test to enforce the declared Node.js 22+ runtime contract instead of rejecting newer supported Node releases.
+- Full agency test suite passes on Node.js 24.

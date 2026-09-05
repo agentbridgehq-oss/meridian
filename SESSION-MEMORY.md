@@ -26,6 +26,12 @@ As of 2026-09-05, PR #2 on `meridian-agency-2-0` is the live build track.
 - Ledger file: `MERIDIAN-SESSION-SYNC.md`.
 - CI stays manual-only. No merge to `master` without explicit order.
 
+## 2026-09-05 session — Node compatibility test
+
+- Readiness tests now accept Node.js 22 or newer, matching `package.json` and the runtime readiness check.
+- The previous exact Node 22 assertion caused a false failure on Node.js 24.
+- Full `npm run test:agency` suite passes after the correction.
+
 ## Product decisions locked
 
 - Meridian = **own agency** on Railway (service currently missing — see GO-LIVE.md)
