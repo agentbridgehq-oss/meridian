@@ -14,7 +14,7 @@ As of 2026-09-05, PR #2 on `meridian-agency-2-0` is the live build track.
 
 - Kenny authorized a standing rule: every Meridian session starts by checking current GitHub state and ends by committing all completed, verified work plus the durable handoff before the final response.
 - Clearing a conversation or opening a new chat is expected. The next agent reconstructs state from `AGENTS.md`, `MERIDIAN-SESSION-SYNC.md`, `SESSION-MEMORY.md`, `GO-LIVE.md`, PR #2, and the latest branch commits—not from chat memory.
-- Every material session must record the UTC date, work completed, tests, deployment state, blockers, exact next action, and resulting commit SHA.
+- Every material session must record the UTC date, starting head, work completed, tests, deployment state, blockers, and exact next action. After committing, re-fetch PR #2 and report the resulting head SHA in the final response; a commit cannot contain its own SHA.
 - If no material Meridian change or decision occurred, do not make an empty commit.
 - This standing authorization does not permit a merge to `master`, a Railway change, a CI-trigger change, or committing secrets/customer data.
 

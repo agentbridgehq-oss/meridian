@@ -32,8 +32,8 @@ Kenny authorized this workflow for every Meridian session, including after he cl
 
 - **Fetch on open:** inspect PR #2, confirm the head of `meridian-agency-2-0`, then read `AGENTS.md`, this ledger, `SESSION-MEMORY.md`, and `GO-LIVE.md`.
 - **Commit before final:** save every completed and verified file change plus every material decision to `meridian-agency-2-0` before sending the session's final response.
-- **Write the handoff:** record the UTC date, work completed, tests, deployment state, blockers, exact next action, and resulting commit SHA in this ledger and `SESSION-MEMORY.md`.
-- **Confirm the save:** re-fetch PR #2 and report the new head SHA to Kenny.
+- **Write the handoff:** record the UTC date, starting head, work completed, tests, deployment state, blockers, and exact next action in this ledger and `SESSION-MEMORY.md`.
+- **Confirm the save:** after the commit, re-fetch PR #2 and report the resulting head SHA to Kenny. The commit cannot contain its own SHA because changing its contents would create a different SHA; the next session verifies the reported head directly from GitHub.
 - **No empty commits:** when a session produces no material Meridian change or decision, no GitHub commit is required.
 - **No secrets:** credentials and customer data never belong in GitHub or the handoff files.
 
@@ -61,3 +61,8 @@ No merge to `master` unless Kenny explicitly says merge. No Railway change witho
 - Added the mandatory fetch-on-open, commit-before-final, handoff-update, PR-head verification, and final-SHA reporting sequence.
 - The rule applies to ChatGPT, Work, Codex, Claude, Grok, Copilot, and any future coding agent.
 - Kept `master`, Railway, manual-only CI, credentials, and customer data outside this authorization.
+
+## 2026-09-05 — self-referential SHA correction
+
+- Corrected the handoff wording so repository records capture the starting head and session facts, while post-commit verification and the final response carry the resulting head SHA.
+- This avoids an impossible requirement for a commit to contain its own hash.
