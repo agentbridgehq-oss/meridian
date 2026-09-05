@@ -6,6 +6,7 @@
 import express from 'express';
 import { registerAgencyRoutes } from './lib/agency-routes.mjs';
 import { renderServicePage } from './lib/agency-pages.mjs';
+import { registerOpenAIRealtimeWebhookRoute } from './lib/openai-webhook-route.mjs';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import path from 'path';
@@ -865,6 +866,13 @@ async function handlePaidCheckout(session) {
   }
   return { lead: fresh, guideUrl: null, autoProvisioned: false };
 }
+
+// OpenAI Realtime webhook MUST stay before express.json().
+// Signature verification requires the untouched raw JSON request body.
+registerOpenAIRealtimeWebhookRoute(app, {
+  environment: process.env.MERIDIAN_VOICE_ENVIRONMENT || 'staging',
+  requireSideband: true,
+});
 
 app.use(express.json({ limit: '2mb' }));
 app.use(express.urlencoded({ extended: true }));
