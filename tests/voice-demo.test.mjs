@@ -33,6 +33,22 @@ async function post(base, path, body, headers = {}) {
   return { status: response.status, body: await response.json() };
 }
 
+test('voice demo page narrowly enables same-origin microphone access', async () => {
+  await withServer({}, async base => {
+    const response = await fetch(`${base}/meridian-voice-demo.html`, { cache: 'no-store' });
+    assert.equal(response.status, 200);
+    assert.equal(
+      response.headers.get('permissions-policy'),
+      'microphone=(self), camera=(), geolocation=(), usb=(), interest-cohort=()',
+    );
+    assert.equal(response.headers.get('cache-control'), 'no-store');
+    const html = await response.text();
+    assert.match(html, /id="voice-demo-consent"/);
+    assert.match(html, /id="voice-demo-start"/);
+    assert.match(html, /realtime-voice-demo\.js/);
+  });
+});
+
 test('demo session configuration has no tools and cannot claim real-world actions', () => {
   const config = buildVoiceDemoSessionConfig();
   assert.equal(config.type, 'realtime');
