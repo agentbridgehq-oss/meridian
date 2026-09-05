@@ -2,31 +2,32 @@
 
 GitHub is source of truth. Grok skill `meridian-session-sync` pulls this on session start and writes it on session end.
 
-## Current pointer (2026-09-05 go-live session)
+ChatGPT Work / Codex / Claude must also pull this file first. Boot rules live in `AGENTS.md`, `.claude/CLAUDE.md`, and `.github/copilot-instructions.md`.
+
+## Current pointer (2026-09-05 close)
 
 - Working branch: `meridian-agency-2-0`
-- Head will move as this commit lands; previous pointer `49b1eb18`
+- Head after this commit (check SHA on save)
 - Protected: `master` @ `05a6bbcd96ae5a951dadb122369100f4ba0673ea`
-- Vehicle: PR #2 open, mergeable=clean
-- CI: `Meridian Tests` manual-only. New `Go Live Probe` is also manual-only.
+- Vehicle: PR #2 open
+- CI: Meridian Tests manual-only. Go Live Probe manual-only.
 
 ## Blocker
 
-Railway production is gone. Both `meridian-production-2eb0` and `meridian-production-915d` return Application not found. No public process to attach Twilio to.
+Railway production is gone. Both historic public domains return Application not found.
 
-## Shipped this session
+## Shipped
 
-- `scripts/go-live.mjs` + `npm run go-live`
-- `nixpacks.toml` Node 22 pin
-- `GO-LIVE.md` operator 20% checklist
-- `ALWAYS-ON.md` corrected (no longer claims live)
-- `.github/workflows/go-live.yml` manual probe
-- `deploy.yml` post-up health probe when `STAGING_URL` secret exists
+- Go-live probe + Node 22 pin + corrected ALWAYS-ON + GO-LIVE.md
+- Agent boot: `AGENTS.md` now orders every agent to pull GitHub before answering
+- `.github/copilot-instructions.md` and `.claude/CLAUDE.md` say the same thing
 
 ## Next action
 
-Kenny recreates the Railway service from project https://railway.com/project/3325e670-00e8-46e2-8d38-e1e4f77b8e66 then runs `node scripts/go-live.mjs --url <new-domain>`.
+Kenny recreates Railway service, then any agent can `npm run go-live -- --url <domain>`.
+
+In ChatGPT Work, open repo `agentbridgehq-oss/meridian` on branch `meridian-agency-2-0` and say: pull GitHub first.
 
 ## Standing consent
 
-Kenny, 2026-09-05 — fetch-on-open and commit-on-close for Meridian sessions. No merge to master unless explicitly ordered.
+Kenny, 2026-09-05 — fetch-on-open and commit-on-close. No merge to master unless explicitly ordered.
