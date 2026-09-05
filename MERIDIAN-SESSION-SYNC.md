@@ -8,23 +8,23 @@ GitHub is source of truth.
 - Protected: `master` @ `05a6bbcd`
 - PR #2 open. Do not merge.
 
-## Decision this close
+## Locked decision
 
-Kenny: wait on Railway deploy. Tried Vercel only as a UI look. Vercel preview create returned 403 on team `saber4` / project name `meridian-ui-preview`. Do not treat Vercel as the production host — Express + Realtime SIP will not run there.
+**Host is Railway. Always.** Not Vercel. Not a laptop. Not another PaaS.
+
+Kenny is straightening the Railway account on **Friday 2026-09-11**. Do not attempt production deploy before that. Do not switch hosts while waiting.
+
+Project: https://railway.com/project/3325e670-00e8-46e2-8d38-e1e4f77b8e66
+
+## Until Friday
+
+- Keep shipping on `meridian-agency-2-0` if needed
+- UI locally: `npm start` → http://127.0.0.1:8891/meridian-2.html
+- Friday: recreate service per `GO-LIVE.md`, then probe `/healthz`
 
 ## Blocker
 
-Railway service gone. See `GO-LIVE.md`.
-
-## How to see the UI without Railway
-
-Local, from the repo folder on branch `meridian-agency-2-0`:
-
-```
-npm start
-```
-
-Open http://127.0.0.1:8891/meridian-2.html
+Railway service gone. Both old public domains return Application not found.
 
 ## Standing consent
 
