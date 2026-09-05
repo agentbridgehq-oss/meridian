@@ -78,3 +78,37 @@ test('deployment ops endpoints are private, idempotent and cannot bypass readine
   const activate = await req(`/api/ops/deployments/${deploymentId}/activate`, { method:'POST', token:opsToken, payload:{ evidence:'Attempted before integrations and QA were complete.' } });
   assert.equal(activate.status, 409); assert.ok(activate.data.blockers.some(x => x.startsWith('integration.'))); assert.ok(activate.data.blockers.some(x => x.startsWith('qa.')));
 });
+
+test('inbound phone routes are private, disabled by default and require evidence before enablement', async () => {
+  assert.equal((await req('/api/ops/inbound-routes')).status, 401);
+  assert.equal((await req(`/api/ops/deployments/${deploymentId}/inbound-routes`, { method:'POST', payload:{ dialedNumber:'+17055550188' } })).status, 401);
+
+  const invalid = await req(`/api/ops/deployments/${deploymentId}/inbound-routes`, {
+    method:'POST', token:opsToken, payload:{ dialedNumber:'7055550188', environment:'staging' },
+  });
+  assert.equal(invalid.status, 400);
+
+  const created = await req(`/api/ops/deployments/${deploymentId}/inbound-routes`, {
+    method:'POST', token:opsToken, payload:{ dialedNumber:'+17055550188', provider:'twilio-sip', environment:'staging' },
+  });
+  assert.equal(created.status, 201); assert.equal(created.data.created, true); assert.equal(created.data.route.enabled, false);
+  const routeId = created.data.route.id;
+
+  const listed = await req('/api/ops/inbound-routes', { token:opsToken });
+  assert.equal(listed.status, 200); assert.equal(listed.data.routes.length, 1); assert.equal(listed.data.routes[0].deploymentId, deploymentId);
+
+  const blocked = await req(`/api/ops/inbound-routes/${routeId}/enable`, {
+    method:'POST', token:opsToken, payload:{ evidence:'short' },
+  });
+  assert.equal(blocked.status, 400);
+
+  const enabled = await req(`/api/ops/inbound-routes/${routeId}/enable`, {
+    method:'POST', token:opsToken, payload:{ evidence:'Twilio staging DID verified against the configured SIP trunk.' },
+  });
+  assert.equal(enabled.status, 200); assert.equal(enabled.data.route.enabled, true);
+
+  const disabled = await req(`/api/ops/inbound-routes/${routeId}/disable`, {
+    method:'POST', token:opsToken, payload:{ evidence:'Staging route disabled after verification test.' },
+  });
+  assert.equal(disabled.status, 200); assert.equal(disabled.data.route.enabled, false);
+});
