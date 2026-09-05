@@ -112,3 +112,13 @@ test('inbound phone routes are private, disabled by default and require evidence
   });
   assert.equal(disabled.status, 200); assert.equal(disabled.data.route.enabled, false);
 });
+
+test('Realtime call audit endpoints are private and expose no nonexistent records', async () => {
+  assert.equal((await req('/api/ops/realtime-calls')).status, 401);
+  assert.equal((await req('/api/ops/realtime-calls/rtc_missing')).status, 401);
+  const list = await req('/api/ops/realtime-calls?limit=10', { token:opsToken });
+  assert.equal(list.status, 200);
+  assert.deepEqual(list.data.calls, []);
+  assert.deepEqual(list.data.counts, {});
+  assert.equal((await req('/api/ops/realtime-calls/rtc_missing', { token:opsToken })).status, 404);
+});
