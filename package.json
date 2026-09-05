@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "Meridian Agency \u2014 independent AI agency (Voice, Sales, Booking). Not ClaudeCraft.",
+  "description": "Meridian Agency — independent AI agency (Voice, Sales, Booking). Not ClaudeCraft.",
   "scripts": {
     "start": "node server.mjs",
     "dev": "node --watch server.mjs",
@@ -13,7 +13,7 @@
     "deploy:agent": "node scripts/deploy-agent.mjs",
     "deploy:example": "node scripts/deploy-agent.mjs --config deploy/examples/hvac-full.json",
     "onboard": "node scripts/onboard.mjs",
-    "test:agency": "node --test tests/agency.test.mjs"
+    "test:agency": "node --test tests/agency.test.mjs tests/deployment-core.test.mjs"
   },
   "engines": {
     "node": ">=20"
