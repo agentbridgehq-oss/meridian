@@ -1,8 +1,8 @@
 # Meridian Agency — agent boot file
 
-Read this before you answer. GitHub is source of truth. Chat history is not.
+Read this before you answer. GitHub is source of truth. Chat history, cleared conversations, and temporary workspaces are not.
 
-## Mandatory start (every question, every agent)
+## Mandatory start (every session, every agent)
 
 You are ChatGPT, Claude, Grok, Codex, or any other agent in this repo. On the first message of a session, and again whenever Kenny asks about status, live, Railway, voice, PR, or next step:
 
@@ -18,7 +18,15 @@ PR: https://github.com/agentbridgehq-oss/meridian/pull/2
 
 ## Mandatory end
 
-If you changed files or made a decision, commit to `meridian-agency-2-0` and update `MERIDIAN-SESSION-SYNC.md` plus `SESSION-MEMORY.md`. Do not leave work only in chat.
+Before sending the final response for any Meridian task that changed files or made or confirmed a decision:
+
+1. Save all completed, verified code, docs, configuration, and decisions to `meridian-agency-2-0`.
+2. Run the relevant tests and record the exact result. Never describe untested work as verified.
+3. Update `MERIDIAN-SESSION-SYNC.md` and `SESSION-MEMORY.md` with the UTC date, completed work, commit or branch, tests, deployment state, blockers, and exact next action.
+4. Commit the handoff, re-fetch PR #2, and confirm its new head SHA.
+5. Put that commit SHA in the final response to Kenny.
+
+Do not leave work only in chat or wait for the browser window to close. Closing or clearing a chat cannot trigger a later commit, so finish the GitHub handoff before the final response. A new chat must be able to reconstruct the full project state from GitHub alone. If nothing material changed, do not create an empty commit.
 
 ## Current production truth
 

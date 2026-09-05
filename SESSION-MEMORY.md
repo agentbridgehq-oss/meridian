@@ -10,6 +10,14 @@ As of 2026-09-05, PR #2 on `meridian-agency-2-0` is the live build track.
 - Railway production is **DOWN**. Both historic domains return Application not found. Do not paste those URLs as live.
 - Older locked bullets below (Retell/Vapi, “24/7 Railway”) are historical. When they conflict with PR #2 + GO-LIVE.md, the new files win until Kenny re-locks.
 
+## 2026-09-05 session — permanent GitHub continuity
+
+- Kenny authorized a standing rule: every Meridian session starts by checking current GitHub state and ends by committing all completed, verified work plus the durable handoff before the final response.
+- Clearing a conversation or opening a new chat is expected. The next agent reconstructs state from `AGENTS.md`, `MERIDIAN-SESSION-SYNC.md`, `SESSION-MEMORY.md`, `GO-LIVE.md`, PR #2, and the latest branch commits—not from chat memory.
+- Every material session must record the UTC date, work completed, tests, deployment state, blockers, exact next action, and resulting commit SHA.
+- If no material Meridian change or decision occurred, do not make an empty commit.
+- This standing authorization does not permit a merge to `master`, a Railway change, a CI-trigger change, or committing secrets/customer data.
+
 ## 2026-09-05 session — go-live automation
 
 - Probed `meridian-production-2eb0` and `meridian-production-915d` — both Railway 404 Application not found.
