@@ -100,3 +100,39 @@ test('sideband fails closed on missing tool name and malformed arguments', async
   assert.equal(malformed.toolResult.code, 'invalid_arguments');
   assert.equal(executions, 0);
 });
+
+test('sideband reports connection, tool, transfer and end lifecycle through audit hooks', async () => {
+  const callUpdates = [];
+  const toolResults = [];
+  const transfers = [];
+  const controller = createRealtimeSidebandController({
+    deploymentId: 'dep_audit',
+    sessionCallId: 'rtc_audit_1',
+    executeTool: async () => ({ ok: true, action: 'provider_refer_required', destination: '+17055550197', interactionId: 'ix_audit' }),
+    referCall: async () => ({ ok: true }),
+    updateCall: (callId, input) => { callUpdates.push({ callId, input }); return { ok: true }; },
+    recordToolResult: (callId, input) => { toolResults.push({ callId, input }); return { ok: true }; },
+    recordTransfer: (callId, input) => { transfers.push({ callId, input }); return { ok: true }; },
+  });
+
+  controller.markConnected();
+  controller.markActive();
+  const done = await controller.handleServerEvent({
+    type: 'response.function_call_arguments.done',
+    call_id: 'call_audit_handoff',
+    name: 'meridian_request_human_handoff',
+    arguments: '{"reason":"Needs owner","urgency":"normal"}',
+  });
+  controller.markEnded({ detail: 'Provider session closed normally.' });
+
+  assert.equal(done.ok, true);
+  assert.deepEqual(callUpdates.map(entry => entry.input.status), ['sideband_connected', 'active', 'completed']);
+  assert.deepEqual(transfers, [
+    { callId: 'rtc_audit_1', input: { target: 'tel:+17055550197', confirmed: false } },
+    { callId: 'rtc_audit_1', input: { target: 'tel:+17055550197', confirmed: true } },
+  ]);
+  assert.equal(toolResults.length, 1);
+  assert.equal(toolResults[0].input.toolName, 'meridian_request_human_handoff');
+  assert.equal(toolResults[0].input.ok, true);
+  assert.equal(toolResults[0].input.action, 'transferred');
+});
