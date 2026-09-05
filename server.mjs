@@ -4,6 +4,8 @@
  */
 
 import express from 'express';
+import { registerAgencyRoutes } from './lib/agency-routes.mjs';
+import { renderServicePage } from './lib/agency-pages.mjs';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import path from 'path';
@@ -181,7 +183,9 @@ import {
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
-const PORT = Number(process.env.PORT) || 8891;
+// Accept the standard dev-preview --port flag; Railway's PORT remains authoritative.
+const portFlag = process.argv.indexOf('--port');
+const PORT = Number(process.env.PORT) || (portFlag >= 0 ? Number(process.argv[portFlag + 1]) : 0) || 8891;
 const stripe = process.env.STRIPE_SECRET_KEY ? new Stripe(process.env.STRIPE_SECRET_KEY) : null;
 
 // Security headers on every response. CSP allows the fonts + inline
@@ -1768,6 +1772,9 @@ app.get('/api/v1/agents/:id/billing', (req, res) => {
   });
 });
 
+// Managed agency workflow shares the funnel without changing legacy kit behavior.
+registerAgencyRoutes(app, { admin, publicLimiter, checkFormBot, rejectObviousBots });
+
 // Public funnel
 app.post('/api/funnel', publicLimiter, rejectObviousBots, async (req, res) => {
   const bot = checkFormBot(req.body || {});
@@ -1781,6 +1788,9 @@ app.post('/api/funnel', publicLimiter, rejectObviousBots, async (req, res) => {
   }
   if (!req.body?.consent) {
     return res.status(400).json({ error: 'Consent required' });
+  }
+  if (listLeads().some(l => l.email === email && l.agency)) {
+    return res.status(409).json({ error: 'Use your existing private onboarding link to update this managed project.' });
   }
   const lead = upsertLead({
     email,
@@ -3455,6 +3465,12 @@ app.post('/api/ops/setup/process-queue', async (req, res) => {
 app.get('/api/ops/setup/jobs', (req, res) => {
   if (!admin(req)) return res.status(401).json({ error: 'Unauthorized' });
   res.json({ ok: true, jobs: listInstallJobs(100) });
+});
+
+app.get('/go/:service', (req, res) => {
+  const page = renderServicePage(req.params.service);
+  if (!page) return res.status(404).send('Service not found');
+  res.type('html').send(page);
 });
 
 app.use(express.static(path.join(__dirname, 'public'), { extensions: ['html'] }));
