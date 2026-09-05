@@ -35,3 +35,11 @@ Fetch-on-open, commit-on-close. No merge to master unless Kenny says merge.
 - Synced this workspace to `meridian-agency-2-0` at `a45dea3`.
 - Updated the readiness test to enforce the declared Node.js 22+ runtime contract instead of rejecting newer supported Node releases.
 - Full agency test suite passes on Node.js 24.
+
+## 2026-09-05 — repository hardening audit
+
+- Removed the active `qs` denial-of-service advisories with a compatible dependency override; `npm audit --omit=dev` now reports zero vulnerabilities.
+- Repaired corrupted UTF-8 characters in the public Meridian guide.
+- Updated active guide and handoff copy to the PR #2 OpenAI Realtime + Twilio SIP architecture.
+- Removed false production-live instructions from the runtime coding-agent handoff while Railway remains down.
+- Added regression tests for runtime truth and public guide encoding.

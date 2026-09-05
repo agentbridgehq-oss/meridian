@@ -32,6 +32,13 @@ As of 2026-09-05, PR #2 on `meridian-agency-2-0` is the live build track.
 - The previous exact Node 22 assertion caused a false failure on Node.js 24.
 - Full `npm run test:agency` suite passes after the correction.
 
+## 2026-09-05 session — repository hardening audit
+
+- Production dependency audit is clean after pinning transitive `qs` to the patched 6.16.0 release.
+- Public guide mojibake was repaired and its production voice description now matches OpenAI Realtime + Twilio SIP.
+- Runtime agent handoff now names GitHub branch `meridian-agency-2-0` as source of truth and explicitly records Railway production as down.
+- Regression coverage prevents dead-host live claims and corrupted public guide text from returning.
+
 ## Product decisions locked
 
 - Meridian = **own agency** on Railway (service currently missing — see GO-LIVE.md)
