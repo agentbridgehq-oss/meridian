@@ -15,6 +15,8 @@ const { provisionManagedRuntime } = await import('../lib/managed-runtime.mjs');
 const routing = await import('../lib/inbound-routing.mjs');
 const ingress = await import('../lib/openai-realtime-ingress.mjs');
 
+let deploymentSequence = 0;
+
 function incoming(number) {
   return {
     id: 'evt_test_realtime_incoming',
@@ -31,9 +33,10 @@ function incoming(number) {
 }
 
 function createVoiceDeployment() {
+  deploymentSequence += 1;
   const lead = upsertLead({
-    email: 'realtime-ingress@example.invalid',
-    businessName: 'Realtime Test HVAC',
+    email: `realtime-ingress-${deploymentSequence}@example.invalid`,
+    businessName: `Realtime Test HVAC ${deploymentSequence}`,
     primaryNeed: 'voice',
     consent: true,
     agency: {
