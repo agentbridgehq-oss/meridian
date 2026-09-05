@@ -11,7 +11,7 @@ test('managed runtime is idempotent and stored agent records contain hashes only
   process.env.DATA_DIR = dir;
   process.env.MERIDIAN_DEPLOYMENT_CORE_FILE = join(dir, 'deployment-core.json');
   try {
-    const { upsertLead } = await import(`../engine.mjs?managed-runtime-test=${Date.now()}`);
+    const { upsertLead, getLead } = await import(`../engine.mjs?managed-runtime-test=${Date.now()}`);
     const core = await import(`../lib/deployment-core.mjs?managed-runtime-test=${Date.now()}`);
     const runtime = await import(`../lib/managed-runtime.mjs?managed-runtime-test=${Date.now()}`);
 
@@ -37,9 +37,13 @@ test('managed runtime is idempotent and stored agent records contain hashes only
     assert.equal(second.ok, true); assert.equal(second.created, false); assert.equal(second.runtime.agentId, first.runtime.agentId);
     assert.equal(second.runtime.secretAvailable, false); assert.equal(second.oneTimeSecret, undefined);
 
+    const freshLead = getLead(lead.id);
+    assert.equal(freshLead.managedRuntime.agentId, first.runtime.agentId);
+    assert.equal(freshLead.managedRuntime.role, 'control-plane');
+
     const deployment = core.getDeployment(created.deployment.id);
-    assert.equal(deployment.integrations.brain.status, 'configured');
-    assert.equal(deployment.integrations.brain.credentialConfigured, true);
+    assert.equal(deployment.integrations.brain.status, 'pending');
+    assert.equal(deployment.integrations.brain.credentialConfigured, false);
   } finally {
     if (previousData === undefined) delete process.env.DATA_DIR; else process.env.DATA_DIR = previousData;
     if (previousLedger === undefined) delete process.env.MERIDIAN_DEPLOYMENT_CORE_FILE; else process.env.MERIDIAN_DEPLOYMENT_CORE_FILE = previousLedger;
