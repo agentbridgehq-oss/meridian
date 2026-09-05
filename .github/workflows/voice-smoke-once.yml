@@ -1,0 +1,47 @@
+name: Meridian Voice Smoke Once
+
+on:
+  push:
+    branches: [meridian-voice-smoke-once]
+
+permissions:
+  contents: read
+
+jobs:
+  voice-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Full Meridian regression suite
+        run: npm run test:agency
+      - name: Production dependency audit
+        run: npm audit --omit=dev --audit-level=high
+      - name: Start Meridian and smoke HTTP voice boundary
+        env:
+          NODE_ENV: test
+          PORT: 8899
+          PUBLIC_BASE_URL: http://127.0.0.1:8899
+          DATA_DIR: ${{ runner.temp }}/meridian-data
+          OPS_TOKEN: smoke-only-ops-token-not-a-secret
+          MERIDIAN_VOICE_DEMO_ENABLED: '0'
+        run: |
+          node server.mjs --port 8899 > "${RUNNER_TEMP}/meridian-server.log" 2>&1 &
+          PID=$!
+          trap 'kill $PID 2>/dev/null || true' EXIT
+          for i in $(seq 1 40); do
+            if curl -fsS http://127.0.0.1:8899/api/voice-demo/status > "${RUNNER_TEMP}/voice-status.json"; then
+              break
+            fi
+            sleep 0.5
+          done
+          curl -fsS http://127.0.0.1:8899/api/voice-demo/status | grep -F '"enabled":false'
+          curl -fsSI http://127.0.0.1:8899/meridian-voice-demo.html | tr -d '\r' | grep -Fi 'permissions-policy: microphone=(self)'
+          curl -fsS http://127.0.0.1:8899/meridian-voice-demo.html | grep -F 'Start voice demo'
+          kill $PID
+          wait $PID || true
