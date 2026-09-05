@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { renderServicePage } from '../lib/agency-pages.mjs';
 
 const root = new URL('..', import.meta.url).pathname;
 
@@ -27,4 +28,11 @@ test('Realtime demo client keeps OpenAI credentials and session policy off the b
   assert.equal(js.includes('deploymentId:'), false);
   assert.equal(js.includes("type: 'session.update'"), false);
   assert.equal(js.includes('tools:'), false);
+});
+
+test('managed Voice service points prospects to the new Realtime demo instead of the legacy voice page', () => {
+  const html = renderServicePage('voice');
+  assert.ok(html.includes('/meridian-voice-demo.html'));
+  assert.ok(html.includes('Try the Voice demo'));
+  assert.equal(html.includes('/agent-voice.html'), false);
 });
