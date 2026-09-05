@@ -1,33 +1,31 @@
 # Meridian session sync ledger
 
-GitHub is source of truth. Grok skill `meridian-session-sync` pulls this on session start and writes it on session end.
+GitHub is source of truth.
 
-ChatGPT Work / Codex / Claude must also pull this file first. Boot rules live in `AGENTS.md`, `.claude/CLAUDE.md`, and `.github/copilot-instructions.md`.
-
-## Current pointer (2026-09-05 close)
+## Current pointer (2026-09-05)
 
 - Working branch: `meridian-agency-2-0`
-- Head after this commit (check SHA on save)
-- Protected: `master` @ `05a6bbcd96ae5a951dadb122369100f4ba0673ea`
-- Vehicle: PR #2 open
-- CI: Meridian Tests manual-only. Go Live Probe manual-only.
+- Protected: `master` @ `05a6bbcd`
+- PR #2 open. Do not merge.
+
+## Decision this close
+
+Kenny: wait on Railway deploy. Tried Vercel only as a UI look. Vercel preview create returned 403 on team `saber4` / project name `meridian-ui-preview`. Do not treat Vercel as the production host — Express + Realtime SIP will not run there.
 
 ## Blocker
 
-Railway production is gone. Both historic public domains return Application not found.
+Railway service gone. See `GO-LIVE.md`.
 
-## Shipped
+## How to see the UI without Railway
 
-- Go-live probe + Node 22 pin + corrected ALWAYS-ON + GO-LIVE.md
-- Agent boot: `AGENTS.md` now orders every agent to pull GitHub before answering
-- `.github/copilot-instructions.md` and `.claude/CLAUDE.md` say the same thing
+Local, from the repo folder on branch `meridian-agency-2-0`:
 
-## Next action
+```
+npm start
+```
 
-Kenny recreates Railway service, then any agent can `npm run go-live -- --url <domain>`.
-
-In ChatGPT Work, open repo `agentbridgehq-oss/meridian` on branch `meridian-agency-2-0` and say: pull GitHub first.
+Open http://127.0.0.1:8891/meridian-2.html
 
 ## Standing consent
 
-Kenny, 2026-09-05 — fetch-on-open and commit-on-close. No merge to master unless explicitly ordered.
+Fetch-on-open, commit-on-close. No merge to master unless Kenny says merge.
