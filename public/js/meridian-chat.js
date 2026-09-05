@@ -1,5 +1,5 @@
 ﻿/**
- * Meridian AI Guide â€” ChatGPT-style side panel + open bar + assist popup.
+ * Meridian AI Guide — ChatGPT-style side panel + open bar + assist popup.
  * Features: chat, web research, agent deploy shortcuts, xAI voice speak, deep-link to voice demo.
  * Loaded on public pages. Talks to POST /api/guide-chat.
  */
@@ -398,10 +398,10 @@
         </span>
         <div>
           <h2>Meridian AI</h2>
-          <span class="mdn-chat-status"><i aria-hidden="true"></i>Guide Â· Web Â· Deploy Â· xAI voice</span>
+          <span class="mdn-chat-status"><i aria-hidden="true"></i>Guide · Web · Deploy · xAI voice</span>
         </div>
       </div>
-      <button type="button" class="mdn-chat-close" aria-label="Close">Ã—</button>
+      <button type="button" class="mdn-chat-close" aria-label="Close">×</button>
     </div>
     <div class="mdn-feat-tabs" role="tablist">
       <button type="button" data-tab="chat" class="active">Chat</button>
@@ -427,20 +427,20 @@
     <div class="mdn-panel" data-panel="deploy">
       <div class="mdn-feat-body">
         <h3>Deploy an agent</h3>
-        <p>Same path as a guided install call â€” pick a kit, pay, get a connect guide. Or start setup in chat.</p>
+        <p>Same path as a guided install call — pick a kit, pay, get a connect guide. Or start setup in chat.</p>
         <div class="mdn-feat-card">
           <strong>Voice Agent</strong>
-          24/7 phone answering for local business. Brain on Meridian Â· speak via Retell/Vapi Â· optional xAI premium TTS.
+          24/7 phone answering for local business. OpenAI Realtime voice · Twilio SIP phone routing · Meridian controls and tools.
           <div>
-            <button type="button" data-deploy-chat="I want the Voice Agent â€” start my setup">Start in chat</button>
+            <button type="button" data-deploy-chat="I want the Voice Agent — start my setup">Start in chat</button>
             <a class="btnish light" href="/checkout/voice">Checkout $497</a>
           </div>
         </div>
         <div class="mdn-feat-card">
           <strong>Sales Agent</strong>
-          Instant lead follow-up so hot leads donâ€™t go cold.
+          Instant lead follow-up so hot leads don’t go cold.
           <div>
-            <button type="button" data-deploy-chat="I want the Sales Agent â€” start setup">Start in chat</button>
+            <button type="button" data-deploy-chat="I want the Sales Agent — start setup">Start in chat</button>
             <a class="btnish light" href="/checkout/sales">Checkout $497</a>
           </div>
         </div>
@@ -448,7 +448,7 @@
           <strong>Booking Agent</strong>
           Calendar filling + no-show recovery.
           <div>
-            <button type="button" data-deploy-chat="I want the Booking Agent â€” start setup">Start in chat</button>
+            <button type="button" data-deploy-chat="I want the Booking Agent — start setup">Start in chat</button>
             <a class="btnish light" href="/checkout/booking">Checkout $497</a>
           </div>
         </div>
@@ -456,7 +456,7 @@
           <strong>Full stack</strong>
           Voice + Sales + Booking together.
           <div>
-            <button type="button" data-deploy-chat="I want the full stack â€” start setup">Start in chat</button>
+            <button type="button" data-deploy-chat="I want the full stack — start setup">Start in chat</button>
             <a class="btnish light" href="/checkout/stack">Checkout $997</a>
           </div>
         </div>
@@ -470,11 +470,11 @@
     <div class="mdn-panel" data-panel="voice">
       <div class="mdn-feat-body">
         <h3>xAI voice quality</h3>
-        <p>Hear Meridianâ€™s premium neural voices (hosted xAI TTS). Free short samples â€” not billed as usage packs.</p>
+        <p>Hear Meridian’s premium neural voices (hosted xAI TTS). Free short samples — not billed as usage packs.</p>
         <div class="mdn-feat-card">
           <strong>Live demo on homepage</strong>
-          Scroll to the voice studio â€” pick a voice and play a receptionist sample.
-          <div><a class="btnish" href="/#voice-demo">Open voice demo â†“</a></div>
+          Scroll to the voice studio — pick a voice and play a receptionist sample.
+          <div><a class="btnish" href="/#voice-demo">Open voice demo ↓</a></div>
         </div>
         <div class="mdn-feat-card">
           <strong>Speak chat replies</strong>
@@ -482,37 +482,37 @@
           <div>
             <label style="font-size:0.8rem;color:#6B6A66">Preferred voice
               <select id="mdn-voice-select" style="display:block;margin-top:6px;width:100%;padding:8px;border-radius:10px;border:1px solid rgba(255,255,255,0.14)">
-                <option value="eve">Eve â€” energetic</option>
-                <option value="ara">Ara â€” warm</option>
-                <option value="leo">Leo â€” authoritative</option>
-                <option value="rex">Rex â€” professional</option>
-                <option value="luna">Luna â€” gentle</option>
-                <option value="carina">Carina â€” soft</option>
-                <option value="orion">Orion â€” cinematic</option>
+                <option value="eve">Eve — energetic</option>
+                <option value="ara">Ara — warm</option>
+                <option value="leo">Leo — authoritative</option>
+                <option value="rex">Rex — professional</option>
+                <option value="luna">Luna — gentle</option>
+                <option value="carina">Carina — soft</option>
+                <option value="orion">Orion — cinematic</option>
               </select>
             </label>
           </div>
         </div>
         <div class="mdn-feat-card">
           <strong>Phone agents</strong>
-          Production phone still uses Retell/Vapi for calls. xAI is for premium hosted speech & demos.
+          Production phone uses OpenAI Realtime with Twilio SIP. xAI remains an optional hosted-speech path for legacy endpoints and demos.
         </div>
       </div>
     </div>
     <div class="mdn-panel" data-panel="research">
       <div class="mdn-feat-body">
         <h3>Web research</h3>
-        <p>Ask industry, competitor, or â€œhow do Iâ€¦â€ questions. The guide can search the public web and answer with notes (no fake stats).</p>
+        <p>Ask industry, competitor, or “how do I…” questions. The guide can search the public web and answer with notes (no fake stats).</p>
         <div class="mdn-feat-card">
           <strong>Try a research question</strong>
           <button type="button" data-research="What should an HVAC company say on a missed after-hours call?">HVAC after-hours script</button>
           <button type="button" class="light" data-research="Best practices for dental office appointment reminder SMS CASL Canada">Dental SMS CASL tips</button>
         </div>
-        <p style="font-size:0.8rem;color:#9B9A96">Toggle ðŸ”Ž in chat to force research mode on every message.</p>
+        <p style="font-size:0.8rem;color:#9B9A96">Toggle 🔎 in chat to force research mode on every message.</p>
       </div>
     </div>
     <div class="mdn-chat-foot">
-      Meridian Agency Â· <a href="/privacy">Privacy</a> Â· <a href="/terms">Terms</a> Â· No fake social proof
+      Meridian Agency · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · No fake social proof
     </div>`;
 
   document.body.appendChild(backdrop);
@@ -521,9 +521,9 @@
   // Assist popup
   const assist = el('div', 'mdn-assist');
   assist.innerHTML = `
-    <button type="button" class="x" aria-label="Dismiss">Ã—</button>
+    <button type="button" class="x" aria-label="Dismiss">×</button>
     <h4>Need a hand?</h4>
-    <p>Iâ€™m Meridian AI â€” I can explain agents, research your niche, demo xAI voice, or start a deploy.</p>
+    <p>I’m Meridian AI — I can explain agents, research your niche, demo xAI voice, or start a deploy.</p>
     <div class="mdn-assist-row">
       <button type="button" class="yes">Yes, help me</button>
       <button type="button" class="no">Not now</button>
@@ -683,7 +683,7 @@
       }
       if (meta?.webSearch?.ok) {
         const tag = document.createElement('span');
-        tag.textContent = `Web Â· ${meta.webSearch.provider || 'search'}`;
+        tag.textContent = `Web · ${meta.webSearch.provider || 'search'}`;
         metaRow.appendChild(tag);
       }
       const hear = document.createElement('button');
@@ -753,12 +753,12 @@
 
   addBubble(
     'ai',
-    'Hi â€” Iâ€™m Meridian AI. I can guide Voice, Sales & Booking, search the web for niche answers, start an agent deploy, or play xAI voice samples. What do you need?',
+    'Hi — I’m Meridian AI. I can guide Voice, Sales & Booking, search the web for niche answers, start an agent deploy, or play xAI voice samples. What do you need?',
   );
   history.push({
     role: 'assistant',
     content:
-      'Hi â€” Iâ€™m Meridian AI. I can guide agents, research, deploy, and xAI voice.',
+      'Hi — I’m Meridian AI. I can guide agents, research, deploy, and xAI voice.',
   });
 
   ['Start my setup', 'What does Voice do?', 'Pricing', 'Research HVAC scripts'].forEach((label) => {
@@ -782,7 +782,7 @@
       if (a.href) {
         const link = document.createElement('a');
         link.href = a.href;
-        link.textContent = (a.label || 'Open') + ' â†—';
+        link.textContent = (a.label || 'Open') + ' ↗';
         link.target = a.href.startsWith('/') ? '_self' : '_blank';
         link.rel = 'noopener';
         wrap.appendChild(link);

@@ -1,17 +1,8 @@
 name: Deploy to Railway
 
-# Auto-deploys Meridian to Railway whenever master/main is updated (merge or
-# direct push), plus a manual trigger for redeploying without a code change.
-#
-# One-time setup (see .github/workflows/README.md for the full walkthrough):
-#   1. Railway dashboard -> meridian project -> Settings -> Tokens ->
-#      create a PROJECT token (not an account token — a project token is
-#      scoped to just this project/environment, so it can't touch anything
-#      else on the account, and CI never needs an interactive `railway link`).
-#   2. GitHub repo -> Settings -> Secrets and variables -> Actions ->
-#      New repository secret -> name it RAILWAY_TOKEN -> paste the project
-#      token. It is never visible again after saving, including to us.
-#   3. Push/merge to master. Watch progress under the Actions tab.
+# Deploys Meridian to Railway on master/main push, plus manual dispatch.
+# After railway up is accepted, probe PUBLIC_BASE_URL / STAGING_URL /healthz
+# so a dead domain fails the job instead of looking successful.
 
 on:
   push:
@@ -28,6 +19,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
       - name: Install Railway CLI
         run: npm install -g @railway/cli
 
@@ -40,3 +35,14 @@ jobs:
             exit 1
           fi
           railway up --detach --ci
+
+      - name: Probe public health
+        env:
+          PUBLIC_BASE_URL: ${{ secrets.STAGING_URL }}
+        run: |
+          if [ -z "$PUBLIC_BASE_URL" ]; then
+            echo "STAGING_URL secret not set — skipping live probe. Add it after the Railway domain exists."
+            exit 0
+          fi
+          npm ci
+          node scripts/go-live.mjs --url "$PUBLIC_BASE_URL"

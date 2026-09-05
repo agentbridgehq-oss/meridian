@@ -4,6 +4,9 @@
  */
 
 import express from 'express';
+import { registerAgencyRoutes } from './lib/agency-routes.mjs';
+import { renderServicePage } from './lib/agency-pages.mjs';
+import { registerOpenAIRealtimeWebhookRoute } from './lib/openai-webhook-route.mjs';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import path from 'path';
@@ -181,7 +184,9 @@ import {
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
-const PORT = Number(process.env.PORT) || 8891;
+// Accept the standard dev-preview --port flag; Railway's PORT remains authoritative.
+const portFlag = process.argv.indexOf('--port');
+const PORT = Number(process.env.PORT) || (portFlag >= 0 ? Number(process.argv[portFlag + 1]) : 0) || 8891;
 const stripe = process.env.STRIPE_SECRET_KEY ? new Stripe(process.env.STRIPE_SECRET_KEY) : null;
 
 // Security headers on every response. CSP allows the fonts + inline
@@ -862,6 +867,13 @@ async function handlePaidCheckout(session) {
   return { lead: fresh, guideUrl: null, autoProvisioned: false };
 }
 
+// OpenAI Realtime webhook MUST stay before express.json().
+// Signature verification requires the untouched raw JSON request body.
+registerOpenAIRealtimeWebhookRoute(app, {
+  environment: process.env.MERIDIAN_VOICE_ENVIRONMENT || 'staging',
+  requireSideband: true,
+});
+
 app.use(express.json({ limit: '2mb' }));
 app.use(express.urlencoded({ extended: true }));
 
@@ -1044,22 +1056,21 @@ app.get('/api/ops/claude/usage', (req, res) => {
 });
 
 /**
- * One URL for Claude Code / any agent: full Meridian context, always live.
+ * One URL for Claude Code / any agent: runtime context from this checkout.
  * Markdown:  GET /for-claude  (also /for-claude.md)
  * JSON:      GET /api/handoff
  */
 app.get(['/for-claude', '/for-claude.md', '/claude-handoff'], (_req, res) => {
   const px = pricingSnapshot();
   const vs = voiceStatus();
-  const md = `# Meridian Agency — Claude Code handoff (live)
+  const md = `# Meridian Agency — coding-agent handoff
 
-**Use this URL as source of truth.** Paste into Claude Code:
-> Load https://meridian-production-2eb0.up.railway.app/for-claude and work on Meridian in C:\\\\Users\\\\hunte\\\\github-clones\\\\meridian
+**GitHub is the source of truth.** Work from branch \`meridian-agency-2-0\` and read \`AGENTS.md\`, \`MERIDIAN-SESSION-SYNC.md\`, \`SESSION-MEMORY.md\`, and \`GO-LIVE.md\` before making status claims.
 
 Generated: ${new Date().toISOString()}  
 Public base: ${BASE}
 
-## Live product
+## Current runtime routes
 
 | | URL |
 |--|-----|
@@ -1078,7 +1089,8 @@ Public base: ${BASE}
 - **Repo (Windows):** \`C:\\\\Users\\\\hunte\\\\github-clones\\\\meridian\`
 - **Same Claude Code project:** open Claude from that folder · memory \`C:\\\\Users\\\\hunte\\\\.claude\\\\projects\\\\C--Users-hunte-github-clones-meridian\\\\memory\\\\\`
 - **Pull in Claude Code:** \`pull meridian\` or \`/pull-last-session meridian\`
-- **Deploy:** Railway project \`meridian\` · volume \`/data\` · keep online 24/7
+- **Deploy target:** Railway project \`meridian\` · volume \`/data\`
+- **Production status:** down until the Railway service is recreated and \`/healthz\` passes
 - **GitHub org:** agentbridgehq-oss
 
 ## Deploy command
@@ -1131,7 +1143,7 @@ OpenClaw autonomous install from wizard step 7 · n8n workflow download included
 
 ## Policies for the coding agent
 
-1. Do not invent URLs or claim the site is offline without checking ${BASE}/health  
+1. Do not invent URLs or claim production is live without checking the deployed \`/healthz\` endpoint
 2. No fake social proof; no patent claims  
 3. CASL / no spam  
 4. Confirm before destructive Railway/git/billing  
@@ -1177,7 +1189,7 @@ app.get('/api/handoff', (_req, res) => {
       desktop: 'OPEN-MERIDIAN-CLAUDE.bat',
     },
     deploy: 'cd C:\\Users\\hunte\\github-clones\\meridian; railway up --detach',
-    railway: { project: 'meridian', dataDir: '/data', alwaysOn: true },
+    railway: { project: 'meridian', dataDir: '/data', productionStatus: 'down', alwaysOn: false },
     voice: vs,
     claudeAgent: claudeAgentStatus(),
     brain: brainStatus(),
@@ -1200,7 +1212,7 @@ app.get('/api/handoff', (_req, res) => {
       `${BASE}/for-claude`,
     ],
     promptForClaude:
-      'Load https://meridian-production-2eb0.up.railway.app/for-claude as source of truth. Work in C:\\Users\\hunte\\github-clones\\meridian. Keep Railway live.',
+      'Pull agentbridgehq-oss/meridian branch meridian-agency-2-0. Read AGENTS.md, MERIDIAN-SESSION-SYNC.md, SESSION-MEMORY.md, and GO-LIVE.md before working. Do not claim Railway is live until /healthz passes.',
     generatedAt: new Date().toISOString(),
   });
 });
@@ -1768,6 +1780,9 @@ app.get('/api/v1/agents/:id/billing', (req, res) => {
   });
 });
 
+// Managed agency workflow shares the funnel without changing legacy kit behavior.
+registerAgencyRoutes(app, { admin, publicLimiter, checkFormBot, rejectObviousBots });
+
 // Public funnel
 app.post('/api/funnel', publicLimiter, rejectObviousBots, async (req, res) => {
   const bot = checkFormBot(req.body || {});
@@ -1781,6 +1796,9 @@ app.post('/api/funnel', publicLimiter, rejectObviousBots, async (req, res) => {
   }
   if (!req.body?.consent) {
     return res.status(400).json({ error: 'Consent required' });
+  }
+  if (listLeads().some(l => l.email === email && l.agency)) {
+    return res.status(409).json({ error: 'Use your existing private onboarding link to update this managed project.' });
   }
   const lead = upsertLead({
     email,
@@ -3455,6 +3473,12 @@ app.post('/api/ops/setup/process-queue', async (req, res) => {
 app.get('/api/ops/setup/jobs', (req, res) => {
   if (!admin(req)) return res.status(401).json({ error: 'Unauthorized' });
   res.json({ ok: true, jobs: listInstallJobs(100) });
+});
+
+app.get('/go/:service', (req, res) => {
+  const page = renderServicePage(req.params.service);
+  if (!page) return res.status(404).send('Service not found');
+  res.type('html').send(page);
 });
 
 app.use(express.static(path.join(__dirname, 'public'), { extensions: ['html'] }));
