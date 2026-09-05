@@ -33,6 +33,10 @@ test('readiness reports missing live voice infrastructure without exposing value
     for (const expected of ['runtime.ops_token','runtime.public_base_url','runtime.data_volume','openai.api_key','openai.webhook_secret','twilio.account','twilio.credential']) {
       assert.ok(report.missingRequired.includes(expected), expected);
     }
+    assert.equal(report.environment.runtime.node22Plus, true);
+    assert.equal(report.environment.openai.sdkInstalled, true);
+    assert.equal(report.missingRequired.includes('runtime.node22'), false);
+    assert.equal(report.missingRequired.includes('openai.sdk'), false);
     assert.equal(report.environment.openai.apiKeyConfigured, false);
     assert.equal(report.environment.openai.realtimeModel, 'gpt-realtime-2.1');
   } finally {
@@ -57,6 +61,9 @@ test('readiness becomes infrastructure-ready with required secret presence and n
     const report = buildCoreReadinessReport();
     assert.equal(report.stagingInfrastructureReady, true);
     assert.deepEqual(report.missingRequired, []);
+    assert.equal(report.environment.runtime.node22Plus, true);
+    assert.match(report.environment.runtime.nodeVersion, /^22\./);
+    assert.equal(report.environment.openai.sdkInstalled, true);
     assert.equal(report.environment.openai.apiKeyConfigured, true);
     assert.equal(report.environment.twilio.usableCredentialConfigured, true);
     const serialized = JSON.stringify(report);
