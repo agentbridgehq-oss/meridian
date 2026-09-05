@@ -14,6 +14,7 @@
     "deploy:example": "node scripts/deploy-agent.mjs --config deploy/examples/hvac-full.json",
     "onboard": "node scripts/onboard.mjs",
     "core:readiness": "node scripts/core-readiness.mjs",
+    "go-live": "node scripts/go-live.mjs",
     "test:agency": "node --test tests/*.test.mjs"
   },
   "engines": {
