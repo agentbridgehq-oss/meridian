@@ -13,7 +13,7 @@
     "deploy:agent": "node scripts/deploy-agent.mjs",
     "deploy:example": "node scripts/deploy-agent.mjs --config deploy/examples/hvac-full.json",
     "onboard": "node scripts/onboard.mjs",
-    "test:agency": "node --test tests/agency.test.mjs tests/deployment-core.test.mjs"
+    "test:agency": "node --test tests/*.test.mjs"
   },
   "engines": {
     "node": ">=20"
