@@ -2,45 +2,54 @@
 
 **Keep this chat/context permanent.** Resume with: “pull up Meridian”, “Meridian ads”, “live urls”, “know me”.
 
+## Current vs stale (read this first)
+
+As of 2026-09-14, PR #2 on `meridian-agency-2-0` is the live build track.
+
+- Voice stack in PR #2 = PSTN → Twilio Elastic SIP → OpenAI Realtime (`gpt-realtime-2.1`) → Meridian tools. Browser demo = mic → WebRTC → Realtime.
+- Railway production is **DOWN**. Do not paste `*.up.railway.app` as live.
+- Public fronts that answered 200: Meridian Netlify, ClaudeCraft Netlify, GiantBite Netlify, SaberClaw Netlify, Operator Suite Netlify. See `LIVE-URLS.md`.
+- Older locked bullets below (Retell/Vapi, “24/7 Railway”) are historical. When they conflict with PR #2 + GO-LIVE.md + LIVE-URLS.md, the new files win until Kenny re-locks.
+
+## 2026-09-14 session — calendar receptionist connector
+
+- Did not clone the TikTok n8n voice graph into Meridian. Voice stays PSTN → Twilio SIP → OpenAI Realtime.
+- Shipped the customer-system half: signed n8n calendar connector docs/workflow + Realtime cancel/reschedule tools.
+- Voice deployments get optional `calendar`. Tools stay hidden until the adapter is verified and the runtime secret exists.
+- Optional calendar does not block voice activation.
+- Still not live: Railway, Twilio staging DID, and a real book-on-call proof.
+
+## 2026-09-14 session — Grok project snapshot + live fronts
+
+- Starting head was `44c43f9`. Live-URL file rewrite committed first.
+- CashFlow receptionist graph: use as n8n calendar connector spec, not a Vapi import.
+- Project folder now holds a snapshot of `public/` plus handoff docs under the Grok artifacts project.
+- `claudecraft.ca` 404. Use https://claudecraft-hq.netlify.app/
+- Operator Suite official: https://the-operator-suite.netlify.app/
+- **Kenny lock:** Meridian is fine for now. Do not publish `/agency` or rebuild the front until he asks.
+
+## 2026-09-05 session — permanent GitHub continuity
+
+- Kenny authorized a standing rule: every Meridian session starts by checking current GitHub state and ends by committing all completed, verified work plus the durable handoff before the final response.
+- Clearing a conversation or opening a new chat is expected. The next agent reconstructs state from `AGENTS.md`, `MERIDIAN-SESSION-SYNC.md`, `SESSION-MEMORY.md`, `GO-LIVE.md`, PR #2, and the latest branch commits—not from chat memory.
+- This standing authorization does not permit a merge to `master`, a Railway change, a CI-trigger change, or committing secrets/customer data.
+
 ## Product decisions locked
 
-- Meridian = **own agency** on Railway: https://meridian-production-2eb0.up.railway.app/
-- Not under ClaudeCraft in **product architecture** (UI no longer says “not ClaudeCraft”)
-- Voice pipeline = **platform-only** (Retell/Vapi); ElevenLabs optional, off
-- Stripe + Resend copied from ClaudeCraft Railway → Meridian
-- Autonomous onboard: money human-gated; must-work verify before sellable; customer API/webhook guide
-- Auto-deploy: CLI / OpenClaw queue / `POST /api/ops/deploy-agent`
-- AI guide chat: hamburger slide-out → `/api/guide-chat`
-- 24/7: **Railway** (laptop off). Local: Startup + MeridianAgency-Watch on login
-- Code pack: `Downloads\Meridian-Complete-Code` + zip
-- From Built to Bought: premium Meridian-style UI live on claudecraft.ca
+- Meridian = **own agency** on Railway (service currently missing — see GO-LIVE.md). Netlify `meridian-open` is the public black UI until Railway returns.
+- Front is good enough for now (Kenny, 2026-09-14).
+- Not under ClaudeCraft in **product architecture**
+- Current voice path = OpenAI Realtime + Twilio SIP (PR #2). Retell/Vapi is historical.
+- 24/7 target: Railway. Not live until the service exists again.
 
 ## Repo / deploy
 
-- Code: `C:\Users\hunte\github-clones\meridian`
-- Railway project: `meridian` (do not delete)
-- Docs: `AUTONOMOUS-OPS.md`, `CLAUDE.md`, `ALWAYS-ON.md`, `DECISION.md`
-
-## Video ads (this chat)
-
-- Multi-shot Meridian promo with VO → TikTok 9:16 export in Downloads as **Meridian ad video.mp4**
-- Permanent VO/video pipeline: `video_ads_voiceover_pipeline.md`
-- Premium plugins installed: hyperframes, frontend-design, feature-dev, code-review, railway, github, playwright, etc.
+- GitHub: `https://github.com/agentbridgehq-oss/meridian`
+- Working branch: `meridian-agency-2-0`
+- PR: https://github.com/agentbridgehq-oss/meridian/pull/2
+- Public UI now: https://meridian-open.netlify.app/
+- Go-live: `GO-LIVE.md`
 
 ## Skills created/used
 
-- `live-links` — open sites / Ken-Live-Links.html (Grok TUI links not clickable)
-- `deploy-meridian-agent` — auto deploy/onboard agents
-- `imagine` — image + multi-shot video assembly
-
-## Footer rule
-
-End completions with live URLs (markdown). Meridian first. Chat links may not open in TUI — use Desktop OPEN-MERIDIAN.bat or live-links skill.
-
-## Live URLs
-
-- Meridian: https://meridian-production-2eb0.up.railway.app/
-- Why agents: https://meridian-production-2eb0.up.railway.app/why-agents
-- FBTB: https://claudecraft.ca/from-built-to-bought.html
-- ClaudeCraft: https://claudecraft.ca/
-- Central Command: https://ultra-command-center-production.up.railway.app/
+- `meridian-session-sync` — Grok fetch-on-open / commit-on-close
