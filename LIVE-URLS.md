@@ -1,47 +1,30 @@
-# Ken — live product URLs (always-on) + chat footer rule
+# Ken — live product URLs
 
-**Saved:** 2026-07-19  
-**Session topic:** Meridian Agency own site, Railway always-on, platform voice (no ElevenLabs), end-of-chat URL footer.
+**Updated:** 2026-09-14
+**Rule:** GitHub + this file beat chat memory. Probe before calling a host live.
 
-## Access this info anytime
+Railway production for Meridian, SaberClaw, GiantBite, and AgentBridge is **down** (Application not found). Do not paste `*.up.railway.app` as live.
 
-| File | Purpose |
-|------|---------|
-| This file | Live URLs + footer rule |
-| `C:\Users\hunte\AGENT_HANDOFF_GROK_CLAUDE.md` | Full multi-product handoff |
-| `C:\Users\hunte\github-clones\meridian\CLAUDE.md` | Meridian ops for Claude Code / Grok |
-| `C:\Users\hunte\github-clones\meridian\ALWAYS-ON.md` | Keep Railway up checklist |
-| `C:\Users\hunte\github-clones\meridian\DECISION.md` | Own agency placement |
-
-**Resume phrases:** “pull up Meridian”, “live urls”, “know me”, open folder `github-clones\meridian`.
-
-## HARD RULE — every completed reply
-
-1. **End** the response with the **Live URLs** section.
-2. Every URL must be a **clickable markdown link**: `[Label](https://full-url)`  
-   Never paste bare `https://...` alone in the footer (markdown link form is required so it stays clickable in the TUI).
-3. **Always include Meridian** first in the list.
-4. Keep Meridian **running on Railway** — do not delete project `meridian`.
-
-## Footer template (copy exactly — clickable)
+## Clickable fronts (HTTP 200 on 2026-09-14)
 
 ### Live URLs
-- [Meridian Agency](https://meridian-production-915d.up.railway.app/)
-- [Central Command](https://ultra-command-center-production.up.railway.app/)
-- [ClaudeCraft](https://claudecraft.ca/)
-- [AgentBridge](https://agentbridge-final-production.up.railway.app/)
-- [SaberClaw](https://saberclaw-production.up.railway.app/)
-- [GiantBiteAI](https://giantbiteai-production.up.railway.app/)
+- [Meridian black storefront](https://meridian-open.netlify.app/)
+- [Meridian agents](https://meridian-open.netlify.app/agents.html)
+- [Meridian letter / why-agents](https://meridian-open.netlify.app/why-agents.html)
+- [ClaudeCraft](https://claudecraft-hq.netlify.app/)
+- [GiantBiteAI](https://giantbite-ai.netlify.app/)
+- [SaberClaw](https://saberclaw-app.netlify.app/)
+- [The Operator Suite](https://the-operator-suite.netlify.app/)
 
-### Meridian extras (when relevant)
-- [Meridian Health](https://meridian-production-915d.up.railway.app/health)
-- [Meridian Ops](https://meridian-production-915d.up.railway.app/ops)
-- [Meridian Agents](https://meridian-production-915d.up.railway.app/#agents)
+### Source of truth
+- Meridian code: [agentbridgehq-oss/meridian](https://github.com/agentbridgehq-oss/meridian) branch `meridian-agency-2-0`
+- Agency black UI file: [public/meridian-2.html](https://github.com/agentbridgehq-oss/meridian/blob/meridian-agency-2-0/public/meridian-2.html) — not yet on the Netlify deploy (Netlify still serves the kit storefront as `/`)
+- Operator Suite official store only: https://the-operator-suite.netlify.app/ — do not send buyers to Manus / $47
 
-## Meridian facts (this chat)
-
-- Path: `C:\Users\hunte\github-clones\meridian`
-- Railway: project `meridian`, sleep off, volume `/data`, domain port 8080
-- Own agency — not ClaudeCraft / SaberClaw / AgentBridge
-- Voice: **platform-only** (Retell/Vapi); ElevenLabs off until `VOICE_ENABLE_ELEVENLABS=1`
-- Local optional: `http://localhost:8891` + Startup + MeridianAgency-Watch
+### Dead — do not use
+- https://meridian-production-915d.up.railway.app/
+- https://meridian-production-2eb0.up.railway.app/
+- https://claudecraft.ca/ (404 as of 2026-09-14)
+- https://saberclaw-production.up.railway.app/
+- https://giantbiteai-production.up.railway.app/
+- https://agentbridge-final-production.up.railway.app/
