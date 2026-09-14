@@ -90,3 +90,20 @@ If no slots: offer waitlist and 2 alternate days.
 > “No-shows and empty slots cost you more than ads. We install an AI scheduler that fills, confirms, and recovers missed appointments automatically.”
 
 — Meridian · Booking Agent Kit
+
+---
+
+## 8. Meridian Realtime + n8n connector
+
+Do not put the phone call inside n8n. Voice stays on Meridian Realtime.
+
+Use `n8n/meridian-calendar-receptionist.json` as the verified `calendar` integration endpoint.
+
+Realtime tools that call it:
+
+- `meridian_check_availability`
+- `meridian_book_appointment`
+- `meridian_cancel_appointment`
+- `meridian_reschedule_appointment`
+
+A booking is only spoken to the caller after the connector returns `{ ok: true, confirmed: true }`.
