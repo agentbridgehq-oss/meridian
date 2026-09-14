@@ -50,6 +50,57 @@ test('Realtime sideband gateway records outcomes and exposes handoff only after 
     const handoff = gateway.executeRealtimeTool({ deploymentId:deployment.id, name:'meridian_request_human_handoff', arguments:{ reason:'Caller asked for a technician.', urgency:'normal', callback_number:'+17055550199' } });
     assert.equal(handoff.ok, true); assert.equal(handoff.action, 'provider_refer_required'); assert.equal(handoff.destination, '+17055550123');
     assert.match(handoff.instruction, /provider refer operation/);
+
+    assert.equal(deployment.integrations.calendar.required, false);
+
+    const adapter = await import(`../lib/business-system-adapter.mjs?rt-gateway=${Date.now()}`);
+    result = core.updateIntegration(deployment.id, 'calendar', {
+      provider:'n8n', status:'verified', credentialConfigured:true,
+      endpoint:'https://n8n.example.test/webhook/meridian-calendar',
+      evidence:'Live book and cancel test wrote and removed a Google Calendar event.',
+    }, deployment.revision);
+    assert.equal(result.ok, true); deployment = result.deployment;
+    const secretEnv = adapter.connectorSecretEnvName(deployment.id, 'calendar');
+    process.env[secretEnv] = 'test-secret-value-12345';
+    const names = gateway.realtimeToolDefinitions(deployment).map(x => x.name);
+    assert.ok(names.includes('meridian_check_availability'));
+    assert.ok(names.includes('meridian_book_appointment'));
+    assert.ok(names.includes('meridian_cancel_appointment'));
+    assert.ok(names.includes('meridian_reschedule_appointment'));
+
+    const unconfirmed = await gateway.executeRealtimeTool({
+      deploymentId: deployment.id,
+      name: 'meridian_book_appointment',
+      arguments: {
+        caller_name:'Test Caller', service:'Tune-up', start_time:'2026-09-15T14:00:00-04:00',
+        timezone:'America/Toronto', caller_confirmed_slot:false, consent_to_confirmation:true,
+      },
+    });
+    assert.equal(unconfirmed.ok, false);
+    assert.equal(unconfirmed.code, 'slot_not_confirmed');
+
+    const previousFetch = global.fetch;
+    global.fetch = async () => ({
+      ok: true, status: 200,
+      text: async () => JSON.stringify({ ok:true, confirmed:true, bookingId:'evt_123', start:'2026-09-15T14:00:00-04:00' }),
+    });
+    try {
+      const booked = await gateway.executeRealtimeTool({
+        deploymentId: deployment.id,
+        name: 'meridian_book_appointment',
+        arguments: {
+          caller_name:'Test Caller', service:'Tune-up', start_time:'2026-09-15T14:00:00-04:00',
+          timezone:'America/Toronto', caller_confirmed_slot:true, consent_to_confirmation:true,
+        },
+      });
+      assert.equal(booked.ok, true);
+      assert.equal(booked.confirmed, true);
+      assert.equal(booked.action, 'booking_confirmed');
+      assert.equal(booked.bookingId, 'evt_123');
+    } finally {
+      global.fetch = previousFetch;
+      delete process.env[secretEnv];
+    }
   } finally {
     if (previousData === undefined) delete process.env.DATA_DIR; else process.env.DATA_DIR = previousData;
     if (previousLedger === undefined) delete process.env.MERIDIAN_DEPLOYMENT_CORE_FILE; else process.env.MERIDIAN_DEPLOYMENT_CORE_FILE = previousLedger;
