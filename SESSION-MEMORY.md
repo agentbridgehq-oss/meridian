@@ -18,7 +18,7 @@ As of 2026-09-14, PR #2 on `meridian-agency-2-0` is the live build track.
 - Project folder now holds a snapshot of `public/` plus handoff docs under the Grok artifacts project.
 - `claudecraft.ca` 404. Use https://claudecraft-hq.netlify.app/
 - Operator Suite official: https://the-operator-suite.netlify.app/
-- Next: either publish `meridian-2.html` onto meridian-open Netlify, or recreate Railway per GO-LIVE.md.
+- **Kenny lock:** Meridian is fine for now. Do not publish `/agency` or rebuild the front until he asks.
 
 ## 2026-09-05 session — permanent GitHub continuity
 
@@ -29,6 +29,7 @@ As of 2026-09-14, PR #2 on `meridian-agency-2-0` is the live build track.
 ## Product decisions locked
 
 - Meridian = **own agency** on Railway (service currently missing — see GO-LIVE.md). Netlify `meridian-open` is the public black UI until Railway returns.
+- Front is good enough for now (Kenny, 2026-09-14).
 - Not under ClaudeCraft in **product architecture**
 - Current voice path = OpenAI Realtime + Twilio SIP (PR #2). Retell/Vapi is historical.
 - 24/7 target: Railway. Not live until the service exists again.

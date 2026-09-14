@@ -13,6 +13,8 @@ GitHub is source of truth.
 
 **Runtime host is Railway. Always.** Netlify is the static front while Railway is gone. Do not treat Netlify as the voice/runtime host.
 
+Kenny: **Meridian front is fine for now.** Do not publish `/agency`, do not rebuild the site, do not switch hosts in this session.
+
 Project: https://railway.com/project/3325e670-00e8-46e2-8d38-e1e4f77b8e66
 
 ## Blocker
@@ -29,4 +31,8 @@ Fetch on open. Commit before final. No merge to master. No secrets.
 - Probed Netlify fronts: Meridian, ClaudeCraft, GiantBite, SaberClaw, Operator Suite all 200.
 - Rewrote LIVE-URLS.md and Ken-Live-Links.html to the working URLs.
 - Grok project now mirrors `public/` + handoff docs for session continuity.
-- Next action: publish `public/meridian-2.html` to meridian-open as `/agency` or recreate Railway.
+
+## 2026-09-14 — pause Meridian front work
+
+- Kenny locked: Meridian is fine for now.
+- Next Meridian action is only on explicit ask: Railway recreate, or `/agency` publish of meridian-2.html.
