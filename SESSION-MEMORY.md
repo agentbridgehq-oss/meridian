@@ -11,6 +11,14 @@ As of 2026-09-14, PR #2 on `meridian-agency-2-0` is the live build track.
 - Public fronts that answered 200: Meridian Netlify, ClaudeCraft Netlify, GiantBite Netlify, SaberClaw Netlify, Operator Suite Netlify. See `LIVE-URLS.md`.
 - Older locked bullets below (Retell/Vapi, “24/7 Railway”) are historical. When they conflict with PR #2 + GO-LIVE.md + LIVE-URLS.md, the new files win until Kenny re-locks.
 
+## 2026-09-14 session — calendar receptionist connector
+
+- Did not clone the TikTok n8n voice graph into Meridian. Voice stays PSTN → Twilio SIP → OpenAI Realtime.
+- Shipped the customer-system half: signed n8n calendar connector docs/workflow + Realtime cancel/reschedule tools.
+- Voice deployments get optional `calendar`. Tools stay hidden until the adapter is verified and the runtime secret exists.
+- Optional calendar does not block voice activation.
+- Still not live: Railway, Twilio staging DID, and a real book-on-call proof.
+
 ## 2026-09-14 session — Grok project snapshot + live fronts
 
 - Starting head was `44c43f9`. Live-URL file rewrite committed first.

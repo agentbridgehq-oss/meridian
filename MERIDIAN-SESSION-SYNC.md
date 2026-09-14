@@ -25,6 +25,14 @@ Railway service gone. Voice is not live. Friday 2026-09-11 Railway plan has slip
 
 Fetch on open. Commit before final. No merge to master. No secrets.
 
+## 2026-09-14 — calendar receptionist connector
+
+- Starting head: `44c43f9`
+- Added signed n8n calendar connector contract, docs, Realtime cancel/reschedule tools, optional voice calendar integration.
+- Targeted tests pass locally for contract, deployment-core, realtime-tool-gateway, business-system-adapter.
+- Deployment state unchanged: Railway down. No staging phone call.
+- Next: recreate Railway per GO-LIVE.md, attach Google Calendar OAuth in n8n, verify one live book+cancel, then a Realtime staging call.
+
 ## 2026-09-14 — live URL correction
 
 - Probed historic Railway URLs: 404.
