@@ -4,12 +4,20 @@
 
 ## Current vs stale (read this first)
 
-As of 2026-09-14, PR #2 on `meridian-agency-2-0` is the live build track.
+As of 2026-09-21, PR #2 on `meridian-agency-2-0` is still the live build track. Head remains `317690be` (2026-09-14). No code shipped in the 2026-09-21 handoff chat.
 
 - Voice stack in PR #2 = PSTN → Twilio Elastic SIP → OpenAI Realtime (`gpt-realtime-2.1`) → Meridian tools. Browser demo = mic → WebRTC → Realtime.
 - Railway production is **DOWN**. Do not paste `*.up.railway.app` as live.
 - Public fronts that answered 200: Meridian Netlify, ClaudeCraft Netlify, GiantBite Netlify, SaberClaw Netlify, Operator Suite Netlify. See `LIVE-URLS.md`.
 - Older locked bullets below (Retell/Vapi, “24/7 Railway”) are historical. When they conflict with PR #2 + GO-LIVE.md + LIVE-URLS.md, the new files win until Kenny re-locks.
+
+## 2026-09-21 session — switch to new build chat
+
+- Kenny closed this Grok thread and opened a new chat in build.
+- No product files, no deploy, no merge. Repo already current @ `317690be`.
+- Standing continuity still applies: next build chat reconstructs from GitHub (`AGENTS.md`, this file, `MERIDIAN-SESSION-SYNC.md`, `GO-LIVE.md`, PR #2), not from chat memory.
+- Operator Suite remains a separate track: $97 CAD official store LOCKED; do not mix sales deploy work into Meridian build unless Kenny names both.
+- Next Meridian action stays explicit-ask only: recreate Railway per GO-LIVE.md, or publish `/agency` of meridian-2.html.
 
 ## 2026-09-14 session — calendar receptionist connector
 
