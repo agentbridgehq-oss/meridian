@@ -1,0 +1,32 @@
+name: Go Live Probe
+
+on:
+  workflow_dispatch:
+    inputs:
+      url:
+        description: Public Meridian origin with no trailing slash
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: meridian-go-live
+  cancel-in-progress: true
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Probe public origin
+        env:
+          PUBLIC_BASE_URL: ${{ inputs.url || secrets.STAGING_URL }}
+        run: node scripts/go-live.mjs

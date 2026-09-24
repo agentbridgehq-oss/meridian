@@ -1,0 +1,43 @@
+# Static front + serverless ElevenLabs preview.
+# Production phone runtime stays Railway. Do not treat Netlify as the SIP host.
+
+[build]
+  publish = "public"
+  command = "echo meridian-static-front"
+
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+[[redirects]]
+  from = "/api/voice/preview"
+  to = "/.netlify/functions/voice-preview"
+  status = 200
+
+[[redirects]]
+  from = "/api/voice/voices"
+  to = "/.netlify/functions/voice-voices"
+  status = 200
+
+[[redirects]]
+  from = "/api/voice/status"
+  to = "/.netlify/functions/voice-status"
+  status = 200
+
+[[redirects]]
+  from = "/agents/voice"
+  to = "/agent-voice.html"
+  status = 200
+
+[[redirects]]
+  from = "/voice"
+  to = "/voice.html"
+  status = 200
+
+[[headers]]
+  for = "/voice.html"
+  [headers.values]
+    Cache-Control = "no-store"
