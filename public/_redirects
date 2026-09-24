@@ -1,0 +1,5 @@
+/api/voice/preview  /.netlify/functions/voice-preview  200
+/api/voice/voices   /.netlify/functions/voice-voices   200
+/api/voice/status   /.netlify/functions/voice-status   200
+/agents/voice       /agent-voice.html                  200
+/voice              /voice.html                        200
