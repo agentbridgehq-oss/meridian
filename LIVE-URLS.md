@@ -1,20 +1,28 @@
 # Ken — live product URLs
 
-**Updated:** 2026-09-14
+**Updated:** 2026-09-23
 **Rule:** GitHub + this file beat chat memory. Probe before calling a host live.
 
 Railway production for Meridian, SaberClaw, GiantBite, and AgentBridge is **down** (Application not found). Do not paste `*.up.railway.app` as live.
 
-## Clickable fronts (HTTP 200 on 2026-09-14)
+## Clickable fronts (HTTP 200 on 2026-09-14; voice routes added 2026-09-23)
 
 ### Live URLs
 - [Meridian black storefront](https://meridian-open.netlify.app/)
+- [Meridian ElevenLabs preview](https://meridian-open.netlify.app/voice.html) — live after this branch deploys to Netlify
 - [Meridian agents](https://meridian-open.netlify.app/agents.html)
 - [Meridian letter / why-agents](https://meridian-open.netlify.app/why-agents.html)
 - [ClaudeCraft](https://claudecraft-hq.netlify.app/)
 - [GiantBiteAI](https://giantbite-ai.netlify.app/)
 - [SaberClaw](https://saberclaw-app.netlify.app/)
 - [The Operator Suite](https://the-operator-suite.netlify.app/)
+
+### Voice API (Netlify functions on this branch)
+- https://meridian-open.netlify.app/api/voice/status
+- https://meridian-open.netlify.app/api/voice/voices
+- POST https://meridian-open.netlify.app/api/voice/preview
+
+Arm with Netlify env: `VOICE_ENABLE_ELEVENLABS=1` + `ELEVENLABS_API_KEY`. See `ELEVENLABS-PREVIEW.md`.
 
 ### Source of truth
 - Meridian code: [agentbridgehq-oss/meridian](https://github.com/agentbridgehq-oss/meridian) branch `meridian-agency-2-0`
