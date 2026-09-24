@@ -27,6 +27,14 @@ Railway service gone. Phone voice is not live. ElevenLabs preview still needs `E
 
 Fetch on open. Commit before final. No merge to master. No secrets.
 
+## 2026-09-23 — source-of-truth resync
+
+- Resynced before continuing to branch head `5f2a2ec` (latest GitHub commit at time of work).
+- GitHub branch `meridian-agency-2-0` remains the final source of truth; do not build from stale chat state.
+- Confirmed Meridian 2.0 offer, proposal, onboarding, operations/system-tree, agency runtime, Voice/Sales/Booking, deployment, inbound routing, provider registry, and test layers are already integrated on this branch.
+- Preserve the current Meridian front and existing voice work. No Railway changes and no merge to `master` without Kenny's explicit approval.
+- Continue all new work from the current branch head and commit changes back to this branch before reporting completion.
+
 ## 2026-09-23 — ElevenLabs preview on Netlify
 
 - Added `netlify/functions` proxy for `/api/voice/preview|voices|status`.
