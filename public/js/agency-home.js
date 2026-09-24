@@ -20,4 +20,25 @@
   document.querySelector('#scan-router').addEventListener('submit', event => {
     event.preventDefault(); location.assign(`/meridian-proposal.html?service=${encodeURIComponent(event.currentTarget.elements.namedItem('service').value)}`);
   });
+  // Make the hero command surface feel alive without interfering with controls.
+  const hero = document.querySelector('.hero-stage');
+  const consolePanel = document.querySelector('.hero-console');
+  if (hero && consolePanel && !matchMedia('(prefers-reduced-motion: reduce)').matches && matchMedia('(pointer:fine)').matches) {
+    hero.addEventListener('pointermove', event => {
+      const r = hero.getBoundingClientRect();
+      const x = (event.clientX - r.left) / r.width - .5;
+      const y = (event.clientY - r.top) / r.height - .5;
+      consolePanel.style.transform = `perspective(1000px) rotateY(${-4 + x * 4}deg) rotateX(${2 - y * 3}deg) translate3d(${x * 5}px,${y * 5}px,0)`;
+    });
+    hero.addEventListener('pointerleave', () => { consolePanel.style.transform = ''; });
+  }
+  const agents = [...document.querySelectorAll('.hero-console .agent')];
+  if (agents.length && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    let agentIndex = 0;
+    setInterval(() => {
+      agents.forEach((agent, i) => agent.classList.toggle('active', i === agentIndex));
+      agentIndex = (agentIndex + 1) % agents.length;
+    }, 1700);
+  }
+
 })();
