@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Voice preview · Meridian</title>
+<meta name="theme-color" content="#0A0A09">
+<style>
+  :root { color-scheme: dark; }
+  body { margin: 0; font: 16px/1.5 ui-sans-serif, system-ui, sans-serif; background: #0A0A09; color: #ecece6; }
+  .w { max-width: 720px; margin: 0 auto; padding: 32px 20px 64px; }
+  a { color: #ecece6; }
+  .ey { letter-spacing: .16em; text-transform: uppercase; font-size: .72rem; color: #8f8f86; }
+  h1 { font-size: 2rem; margin: 8px 0 12px; }
+  .lead { color: #b7b7ae; }
+  .studio { margin-top: 28px; padding: 22px; border: 1px solid #2a2a28; border-radius: 16px; background: #111110; }
+  .vd-status { color: #9a9a92; min-height: 1.2em; }
+  .vd-voices { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0; }
+  .vd-voice { background: #1a1a18; color: #ecece6; border: 1px solid #33332e; border-radius: 999px; padding: 8px 12px; cursor: pointer; }
+  .vd-voice strong { display: block; font-size: .85rem; }
+  .vd-voice span { display: block; font-size: .72rem; color: #8f8f86; }
+  .vd-voice.active { border-color: #ecece6; }
+  .vd-text { width: 100%; min-height: 88px; background: #0c0c0b; color: #ecece6; border: 1px solid #33332e; border-radius: 10px; padding: 10px; font: inherit; box-sizing: border-box; }
+  .vd-row { display: flex; gap: 8px; margin-top: 12px; }
+  [data-vd-play] { background: #ecece6; color: #111; border: 0; border-radius: 999px; padding: 10px 16px; font-weight: 600; cursor: pointer; }
+  [data-vd-stop] { background: transparent; color: #ecece6; border: 1px solid #333; border-radius: 999px; padding: 10px 16px; cursor: pointer; }
+  [data-vd-audio] { width: 100%; margin-top: 12px; }
+  .note { margin-top: 18px; color: #8f8f86; font-size: .88rem; }
+</style>
+</head>
+<body>
+  <main class="w">
+    <div class="ey">Meridian / Voice</div>
+    <h1>Hear the receptionist.</h1>
+    <p class="lead">Play uses ElevenLabs when the Netlify key is armed. If the key is missing, the browser still speaks so this page never dies.</p>
+    <section class="studio" id="voice-studio" aria-label="Voice preview">
+      <p class="vd-status" data-vd-status>Checking voices…</p>
+      <div class="vd-voices" data-vd-voices></div>
+      <textarea class="vd-text" data-vd-text maxlength="220"></textarea>
+      <div class="vd-row">
+        <button type="button" data-vd-play>Play sample</button>
+        <button type="button" data-vd-stop>Stop</button>
+      </div>
+      <audio data-vd-audio controls hidden></audio>
+    </section>
+    <p class="note">This is a website preview, not a live phone number. Production calls still require Railway + Twilio + OpenAI Realtime.</p>
+    <p class="note"><a href="/">← Storefront</a> · <a href="/agents.html">Agents</a></p>
+  </main>
+  <script src="/js/voice-demo.js" defer></script>
+</body>
+</html>
