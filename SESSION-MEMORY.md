@@ -4,12 +4,22 @@
 
 ## Current vs stale (read this first)
 
-As of 2026-09-21, PR #2 on `meridian-agency-2-0` is still the live build track. Head remains `317690be` (2026-09-14). No code shipped in the 2026-09-21 handoff chat.
+As of 2026-09-23, PR #2 on `meridian-agency-2-0` is still the live build track. Product head now includes ElevenLabs Netlify preview functions. Railway remains down.
 
 - Voice stack in PR #2 = PSTN → Twilio Elastic SIP → OpenAI Realtime (`gpt-realtime-2.1`) → Meridian tools. Browser demo = mic → WebRTC → Realtime.
+- Website Play can use ElevenLabs via Netlify Functions when `VOICE_ENABLE_ELEVENLABS=1` + `ELEVENLABS_API_KEY` are set. That is preview only.
 - Railway production is **DOWN**. Do not paste `*.up.railway.app` as live.
 - Public fronts that answered 200: Meridian Netlify, ClaudeCraft Netlify, GiantBite Netlify, SaberClaw Netlify, Operator Suite Netlify. See `LIVE-URLS.md`.
-- Older locked bullets below (Retell/Vapi, “24/7 Railway”) are historical. When they conflict with PR #2 + GO-LIVE.md + LIVE-URLS.md, the new files win until Kenny re-locks.
+- Older locked bullets below (Retell/Vapi, “24/7 Railway”) are historical. When they conflict with PR #2 + GO-LIVE.md + LIVE-URLS.md + ELEVENLABS-PREVIEW.md, the new files win until Kenny re-locks.
+
+## 2026-09-23 session — ElevenLabs preview path
+
+- Kenny asked for the live front + ElevenLabs API + a free GitHub/open-source host.
+- Verdict locked: GitHub Pages cannot host ElevenLabs. Netlify Functions can.
+- Shipped on `meridian-agency-2-0`: `netlify/functions/*`, `netlify.toml`, `public/voice.html`, `public/_redirects`, voice-id mapping in `lib/elevenlabs.mjs`, `ELEVENLABS-PREVIEW.md`.
+- Set Netlify env `VOICE_ENABLE_ELEVENLABS=1` on site `meridian-open`. Did **not** store an API key.
+- Still required from Kenny: paste `ELEVENLABS_API_KEY` into Netlify secrets and redeploy this branch to `meridian-open`.
+- Still not a phone product. Railway + Twilio + a real call remain the go-live gate.
 
 ## 2026-09-21 session — switch to new build chat
 
@@ -48,6 +58,7 @@ As of 2026-09-21, PR #2 on `meridian-agency-2-0` is still the live build track. 
 - Front is good enough for now (Kenny, 2026-09-14).
 - Not under ClaudeCraft in **product architecture**
 - Current voice path = OpenAI Realtime + Twilio SIP (PR #2). Retell/Vapi is historical.
+- Website preview TTS may use ElevenLabs on Netlify when armed.
 - 24/7 target: Railway. Not live until the service exists again.
 
 ## Repo / deploy
@@ -56,7 +67,9 @@ As of 2026-09-21, PR #2 on `meridian-agency-2-0` is still the live build track. 
 - Working branch: `meridian-agency-2-0`
 - PR: https://github.com/agentbridgehq-oss/meridian/pull/2
 - Public UI now: https://meridian-open.netlify.app/
+- Preview page: https://meridian-open.netlify.app/voice.html
 - Go-live: `GO-LIVE.md`
+- ElevenLabs preview: `ELEVENLABS-PREVIEW.md`
 
 ## Skills created/used
 
