@@ -107,3 +107,25 @@ Fetch on open. Commit before final. No merge to master. No secrets.
 - Validation: `npm test` passed 102/102; `npm audit --omit=dev` reported zero vulnerabilities; `git diff --check` passed.
 - Live probes: Railway `/healthz` returned `ok:true`, `status:degraded`; Railway and Netlify `/api/voice-demo/status` returned enabled but unavailable with `apiKeyConfigured:false`; Netlify ElevenLabs status returned key absent and flag unarmed.
 - Exact next action is unchanged: add `OPENAI_API_KEY` to Railway, verify `available:true`, and run a real browser microphone conversation. Phone launch still requires the webhook secret, Twilio SIP/DID routing, a logged real inbound call and verified customer connectors.
+
+
+## 2026-09-30 — current-session handoff: Meridian front, agents, content
+
+- Kenny reaffirmed the standing continuity rule: **every Meridian session starts from GitHub and every material session ends with the verified work + handoff saved back to GitHub.**
+- Source of truth remains `agentbridgehq-oss/meridian`, branch `meridian-agency-2-0`, PR #2. Do not merge `master` unless explicitly ordered. Never commit secrets.
+- Current public front: https://meridian-open.netlify.app/ (Netlify project `meridian-open`, site id `60f796ca-2590-4af4-8870-c6bfeaeef5c8`).
+- Current Netlify production upload deploy verified READY: `6abcf91c683e8f065c24776f`.
+- Current Railway project/service/environment: `1eb48be2-82d5-463e-8632-2ecf9f2175df` / `fe23148e-0c58-4e87-82c7-5dc0a95c9fcd` / `9dbfe413-b78a-4a9a-a974-eb371785cfde`.
+- Railway runtime: https://meridian-production-4996.up.railway.app and source branch is `meridian-agency-2-0`.
+- This session is **Meridian only**. The Operator Suite was mentioned by mistake at the start and was left untouched.
+- Verified current Meridian source already contains dedicated agent pages for Receptionist/Voice, Booking, Service and Sales with capability lists, setup/API instructions, voice preview surfaces and deployment guidance.
+- Kenny's current product/UI direction:
+  - remove any personal full-name exposure from the public opening area;
+  - do **not** lead with price; delay pricing until after value has been demonstrated;
+  - place a useful article/field note directly under the opening section;
+  - keep articles fresh daily so returning visitors see new value;
+  - Voice, Sales and Booking cards must each open a complete dedicated agent page/window with voice testing, expert capabilities, special-instruction intake, integrations, install/setup guidance and deployment requirements.
+- Existing Meridian article backend is already present in `lib/articles.mjs` + `lib/openclaw-articles.mjs`; it currently defaults to a 2.5-day interval and ops-gated publication unless auto-publish is explicitly armed. Reuse and harden this system instead of creating a duplicate article engine.
+- Current homepage source exposes price too early in the hero/card layer. That presentation change is **requested but not yet committed in this handoff**; do not claim it is live.
+- Voice/provider truth remains unchanged: browser/phone voice must not be called customer-live until required OpenAI/Twilio/ElevenLabs credentials and the relevant real acceptance tests pass.
+- Exact next work: make the Meridian front-end/content changes on `meridian-agency-2-0`, preserve runtime/payment/provider wiring, run tests, deploy the front, and verify all three primary agent cards/pages and voice preview paths end-to-end.
