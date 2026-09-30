@@ -21,7 +21,16 @@ n8n does **not** talk to the caller. n8n only answers signed tool calls with rea
 
 ## What this workflow adds
 
-No importable calendar workflow is committed yet. Configure a signed HTTPS calendar adapter using the contract below, or implement and validate an n8n workflow before offering live calendar actions. `n8n/meridian-calendar-receptionist.json` is not present; do not promise an import.
+Import `n8n/meridian-calendar-receptionist.json`. This is an **authenticated bridge to a verified HTTPS calendar adapter**, not a direct Google Calendar OAuth workflow. It is inactive and fails closed until its header credentials and adapter URL are configured.
+
+1. Select Header Auth on Calendar Webhook with `Authorization: Bearer <the per-deployment connector secret>`.
+2. Set the approved adapter endpoint in Configure Adapter URL. Caller payload cannot choose the endpoint.
+3. Select the downstream Header Auth credential on Verified Calendar Adapter. Use the same secret if the adapter implements Meridian’s existing HMAC/bearer contract.
+4. Connect the downstream adapter to the actual calendar and configure timezone, business hours, buffers and idempotent writes.
+5. Verify availability/book/reschedule/cancel plus duplicate and unavailable-slot rejection. Activate only after those checks.
+
+The template was structurally and behaviorally tested locally; it has not been imported into a running n8n account or connected to a real calendar.
+
 
 It exposes one HTTPS webhook that handles:
 
@@ -63,7 +72,7 @@ Voice-only deployments get calendar as an **optional** integration. Booking tool
 ### n8n side
 
 - n8n Cloud or self-host with a public HTTPS webhook
-- Google Calendar OAuth credential attached to the Google Calendar nodes
+- Real calendar OAuth attached to the downstream adapter (this bridge has no Google Calendar nodes)
 - Calendar the business actually uses (`primary` or a dedicated booking calendar)
 - Env vars:
 

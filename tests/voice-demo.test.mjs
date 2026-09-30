@@ -65,7 +65,7 @@ test('demo session configuration has no tools and cannot claim real-world action
 test('demo is disabled by default and does not invoke the provider', async () => {
   delete process.env.MERIDIAN_VOICE_DEMO_ENABLED;
   let calls = 0;
-  await withServer({ createCall: async () => { calls += 1; return { ok: true, answerSdp: ANSWER_SDP }; } }, async base => {
+  await withServer({ createCall: async () => { calls += 1; return { ok: true, answerSdp: ANSWER_SDP, callId: `rtc_demo_throttle_${calls}` }; } }, async base => {
     const result = await post(base, '/api/voice-demo/session', { sdp: OFFER_SDP, consent: true });
     assert.equal(result.status, 503);
     assert.equal(result.body.error, 'voice_demo_disabled');
@@ -76,7 +76,7 @@ test('demo is disabled by default and does not invoke the provider', async () =>
 test('enabled demo requires consent and valid audio SDP before provider use', async () => {
   process.env.MERIDIAN_VOICE_DEMO_ENABLED = '1';
   let calls = 0;
-  await withServer({ createCall: async () => { calls += 1; return { ok: true, answerSdp: ANSWER_SDP }; } }, async base => {
+  await withServer({ createCall: async () => { calls += 1; return { ok: true, answerSdp: ANSWER_SDP, callId: `rtc_demo_throttle_${calls}` }; } }, async base => {
     const noConsent = await post(base, '/api/voice-demo/session', { sdp: OFFER_SDP, consent: false });
     assert.equal(noConsent.status, 400);
     assert.equal(noConsent.body.error, 'voice_demo_consent_required');
@@ -137,7 +137,7 @@ test('demo cost throttle rejects the fourth start from the same forwarded client
   process.env.MERIDIAN_VOICE_DEMO_MAX_STARTS_PER_10M = '3';
   let calls = 0;
   await withServer({
-    createCall: async () => { calls += 1; return { ok: true, answerSdp: ANSWER_SDP }; },
+    createCall: async () => { calls += 1; return { ok: true, answerSdp: ANSWER_SDP, callId: `rtc_demo_throttle_${calls}` }; },
     now: () => 1_000_000,
   }, async base => {
     for (let i = 0; i < 3; i += 1) {
@@ -150,4 +150,25 @@ test('demo cost throttle rejects the fourth start from the same forwarded client
   });
   assert.equal(calls, 3);
   delete process.env.MERIDIAN_VOICE_DEMO_MAX_STARTS_PER_10M;
+});
+
+test('server ends an unattended demo at its duration limit without a browser request',async()=>{
+  process.env.MERIDIAN_VOICE_DEMO_ENABLED='1';let expiry,hungUp='';
+  await withServer({createCall:async()=>({ok:true,answerSdp:ANSWER_SDP,callId:'rtc_bounded_demo'}),
+    hangupCall:async({callId})=>{hungUp=callId;return {ok:true};},
+    schedule:(fn,ms)=>{assert.equal(ms,90000);expiry=fn;return {unref(){}};},cancelScheduled:()=>{}
+  },async base=>{
+    const response=await post(base,'/api/voice-demo/session',{sdp:OFFER_SDP,consent:true});
+    assert.equal(response.status,201);assert.equal(response.body.maxSessionSeconds,90);
+    await expiry();assert.equal(hungUp,'rtc_bounded_demo');
+    assert.equal((await post(base,`/api/voice-demo/session/${response.body.sessionId}/end`,{})).status,404);
+  });
+});
+
+test('untrackable provider sessions are not delivered to the browser',async()=>{
+  process.env.MERIDIAN_VOICE_DEMO_ENABLED='1';
+  await withServer({createCall:async()=>({ok:true,answerSdp:ANSWER_SDP})},async base=>{
+    const response=await post(base,'/api/voice-demo/session',{sdp:OFFER_SDP,consent:true});
+    assert.equal(response.status,502);assert.equal('sdp' in response.body,false);
+  });
 });

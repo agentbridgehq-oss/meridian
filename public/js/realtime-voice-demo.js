@@ -12,6 +12,7 @@
   let sessionId = '';
   let available = false;
   let starting = false;
+  let durationTimer = null;
 
   function setStatus(message) {
     status.textContent = message;
@@ -67,6 +68,7 @@
   }
 
   function closeLocalConnection() {
+    clearTimeout(durationTimer); durationTimer = null;
     try { dataChannel?.close(); } catch {}
     dataChannel = null;
     try { pc?.close(); } catch {}
@@ -149,6 +151,10 @@
         body: JSON.stringify({ sdp, consent: true, role: document.querySelector('#voice-demo-role')?.value || new URLSearchParams(location.search).get('role') || 'receptionist' }),
       }));
       sessionId = data.sessionId || '';
+      durationTimer = setTimeout(async () => {
+        await endProviderSession(); closeLocalConnection();
+        setStatus('Your demo has ended after 90 seconds. Start again to try another role.');
+      }, Math.min(90, Number(data.maxSessionSeconds) || 90) * 1000);
       await pc.setRemoteDescription({ type: 'answer', sdp: data.sdp });
       setStatus('Connected. Speak naturally; the demo will respond by voice.');
     } catch (error) {
