@@ -2,26 +2,27 @@
 
 GitHub is source of truth.
 
-## Current pointer (2026-09-23)
+## Current pointer (2026-09-30)
 
-- Working branch: `meridian-agency-2-0` — ElevenLabs Netlify preview shipped this session
+- Working branch: `meridian-agency-2-0`
 - Protected: `master` @ `05a6bbcd`
 - PR #2 open, mergeable=clean. Do not merge.
-- Public black UI: https://meridian-open.netlify.app/
-- Preview page added: `/voice.html` (live after Netlify redeploy of this branch)
+- Public UI: https://meridian-open.netlify.app/
+- Railway runtime: https://meridian-production-4996.up.railway.app
+- Railway health and `/data` volume are verified. Browser and phone voice remain unavailable until their required credentials and staging checks pass.
 - CI: idle on current head. Latest listed runs are 2026-09-05.
 
 ## Locked decision
 
-**Runtime host is Railway. Always.** Netlify is the static front while Railway is gone. ElevenLabs on Netlify is preview TTS only — not the phone runtime.
+**Runtime host is Railway. Always.** Netlify is the static front. ElevenLabs on Netlify is preview TTS only — not the phone runtime.
 
 Kenny: **Meridian front is fine for now.** Do not publish `/agency`, do not rebuild the site, do not switch hosts unless he explicitly asks.
 
-Project: https://railway.com/project/3325e670-00e8-46e2-8d38-e1e4f77b8e66
+Project: https://railway.com/project/1eb48be2-82d5-463e-8632-2ecf9f2175df
 
 ## Blocker
 
-Railway service gone. Phone voice is not live. ElevenLabs preview still needs `ELEVENLABS_API_KEY` in Netlify and a redeploy of `meridian-agency-2-0` onto `meridian-open`.
+Phone voice is not live. Railway still needs `OPENAI_API_KEY` and `OPENAI_WEBHOOK_SECRET`; Twilio SIP/DID routing and a real inbound call remain unverified. ElevenLabs preview still needs `ELEVENLABS_API_KEY` plus `VOICE_ENABLE_ELEVENLABS=1` in Netlify Functions scope and a redeploy.
 
 ## Standing consent — permanent cross-chat continuity
 
@@ -95,3 +96,14 @@ Fetch on open. Commit before final. No merge to master. No secrets.
 - OpenAI belongs in Railway. Real PSTN voice and customer-system actions remain unverified. Fiverr/Upwork copy prepared only; profiles not created or published.
 - Final source tests 102/102 pass; audit zero vulnerabilities. Visual browser inspection could not run (Chromium download unavailable); premium UI has HTTP/source verification only.
 - Next: owner adds OPENAI_API_KEY to Railway, then verify a browser audio conversation; add webhook signing secret, Twilio SIP/DID and deterministic deployment routing; verify a real inbound call and each advertised customer integration before client activation.
+
+## 2026-09-30 12:30 UTC — continuity and runtime-truth repair
+
+- Starting GitHub head: `4d7ca0f23483f10c60cbef897ddf4a9c510e032b`; PR #2 remained open and mergeable. No `master`, Railway, Netlify or CI configuration change was made.
+- Repaired the stale top-level handoff pointers that still described Railway as absent after its verified restoration.
+- Removed two false references to a delivered `n8n/meridian-calendar-receptionist.json`; the signed calendar contract remains implemented, but the importable Google Calendar workflow is not committed and must not be sold as one-click.
+- Removed retired Vapi/Retell fallback claims from the ElevenLabs status text. Phone voice remains OpenAI Realtime; ElevenLabs remains optional website sample audio.
+- Added the standard `npm test` alias so the canonical test command runs the agency suite instead of failing with `Missing script: test`.
+- Validation: `npm test` passed 102/102; `npm audit --omit=dev` reported zero vulnerabilities; `git diff --check` passed.
+- Live probes: Railway `/healthz` returned `ok:true`, `status:degraded`; Railway and Netlify `/api/voice-demo/status` returned enabled but unavailable with `apiKeyConfigured:false`; Netlify ElevenLabs status returned key absent and flag unarmed.
+- Exact next action is unchanged: add `OPENAI_API_KEY` to Railway, verify `available:true`, and run a real browser microphone conversation. Phone launch still requires the webhook secret, Twilio SIP/DID routing, a logged real inbound call and verified customer connectors.

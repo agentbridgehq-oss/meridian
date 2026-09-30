@@ -5,6 +5,7 @@
   "type": "module",
   "description": "Meridian Agency — independent AI agency (Voice, Sales, Booking). Not ClaudeCraft.",
   "scripts": {
+    "test": "npm run test:agency",
     "start": "node server.mjs",
     "dev": "node --watch server.mjs",
     "openclaw": "node openclaw/daily.mjs",

@@ -97,7 +97,10 @@ If no slots: offer waitlist and 2 alternate days.
 
 Do not put the phone call inside n8n. Voice stays on Meridian Realtime.
 
-Use `n8n/meridian-calendar-receptionist.json` as the verified `calendar` integration endpoint.
+Implement and validate a signed HTTPS calendar adapter against
+`n8n/CALENDAR-RECEPTIONIST.md`, then register that verified endpoint as the
+deployment's `calendar` integration. No importable Google Calendar workflow is
+currently committed, so do not promise a one-click n8n import.
 
 Realtime tools that call it:
 

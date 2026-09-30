@@ -2,15 +2,15 @@
 
 **Keep this chat/context permanent.** Resume with: “pull up Meridian”, “Meridian ads”, “live urls”, “know me”.
 
-## Current vs stale (read this first)
+## Current deployment truth (read this first)
 
-As of 2026-09-23, PR #2 on `meridian-agency-2-0` is still the live build track. Product head now includes ElevenLabs Netlify preview functions. Railway remains down.
+As of 2026-09-30, PR #2 on `meridian-agency-2-0` is the live build track. Railway runtime and the Netlify front are deployed from the tested feature branch. `master` remains protected and unmerged.
 
 - Voice stack in PR #2 = PSTN → Twilio Elastic SIP → OpenAI Realtime (`gpt-realtime-2.1`) → Meridian tools. Browser demo = mic → WebRTC → Realtime.
 - Website Play can use ElevenLabs via Netlify Functions when `VOICE_ENABLE_ELEVENLABS=1` + `ELEVENLABS_API_KEY` are set. That is preview only.
-- Railway production is **DOWN**. Do not paste `*.up.railway.app` as live.
+- Railway runtime https://meridian-production-4996.up.railway.app is live and its health check and `/data` volume are verified. Browser voice remains unavailable until `OPENAI_API_KEY` is configured; phone voice remains unverified until the webhook secret, Twilio SIP/DID routing and a real inbound call pass.
 - Public fronts that answered 200: Meridian Netlify, ClaudeCraft Netlify, GiantBite Netlify, SaberClaw Netlify, Operator Suite Netlify. See `LIVE-URLS.md`.
-- Older locked bullets below (Retell/Vapi, “24/7 Railway”) are historical. When they conflict with PR #2 + GO-LIVE.md + LIVE-URLS.md + ELEVENLABS-PREVIEW.md, the new files win until Kenny re-locks.
+- Older locked bullets below (Retell/Vapi and the former Railway outage) are historical. When they conflict with AGENTS.md, PR #2, GO-LIVE.md, LIVE-URLS.md or the latest dated entry in this file, the newer source wins.
 
 ## 2026-09-23 session — ElevenLabs preview path
 
@@ -105,3 +105,11 @@ As of 2026-09-23, PR #2 on `meridian-agency-2-0` is still the live build track. 
 - OpenAI belongs in Railway. Real PSTN voice and customer-system actions remain unverified. Fiverr/Upwork copy prepared only; profiles not created or published.
 - Final source tests 102/102 pass; audit zero vulnerabilities. Visual browser inspection could not run (Chromium download unavailable); premium UI has HTTP/source verification only.
 - Next: owner adds OPENAI_API_KEY to Railway, then verify a browser audio conversation; add webhook signing secret, Twilio SIP/DID and deterministic deployment routing; verify a real inbound call and each advertised customer integration before client activation.
+
+## 2026-09-30 12:30 UTC — continuity and runtime-truth repair
+
+- Starting GitHub head: `4d7ca0f23483f10c60cbef897ddf4a9c510e032b`; PR #2 remained open and mergeable. No `master`, Railway, Netlify or CI configuration change was made.
+- Repaired stale handoff text that contradicted the restored Railway runtime, corrected false one-click calendar-workflow references, and removed retired Vapi/Retell fallback wording.
+- Added the canonical `npm test` alias. Validation passed: 102/102 tests, zero production audit vulnerabilities and clean `git diff --check`.
+- Live status remains credential-blocked, not code-blocked: Railway health is reachable but degraded; OpenAI browser demo is enabled and unavailable because the API key is absent; ElevenLabs is unconfigured and unarmed on Netlify.
+- Next: owner adds `OPENAI_API_KEY` to Railway, then verify `available:true` and complete a real browser microphone conversation. Do not claim phone launch until webhook signing, Twilio SIP/DID routing, a logged real call and customer connector acceptance pass.
