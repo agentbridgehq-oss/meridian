@@ -10,7 +10,7 @@ Caller → Twilio Elastic SIP → OpenAI Realtime (gpt-realtime-2.1) → Meridia
 
 Rate card locked 2026-09-14:
 
-- Setup $997 per agent (or Full Auto $1,497 for the trio on one number)
+- Setup $997 per agent. The previously documented $1,497 trio bundle has no implemented proposal path and is not offered as a verified checkout.
 - Number $19 / mo
 - 200 minutes included
 - $0.20 / min after that

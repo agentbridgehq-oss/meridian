@@ -1,125 +1,15 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Voice Agent · Meridian</title>
-<meta name="description" content="Meridian Voice Agent — 24/7 receptionist. Hear a sample, then buy the kit.">
-<meta name="theme-color" content="#0A0A09">
-<link rel="stylesheet" href="/agent-detail.css">
-<style>
-  .voice-studio { margin: 36px 0 8px; padding: 22px; border: 1px solid var(--line, #2a2a28); border-radius: 16px; background: #111110; }
-  .voice-studio h2 { margin: 0 0 8px; font-size: 1.15rem; }
-  .vd-status { color: #9a9a92; font-size: 0.88rem; margin: 0 0 14px; min-height: 1.2em; }
-  .vd-voices { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 14px; }
-  .vd-voice { background: #1a1a18; color: #ecece6; border: 1px solid #33332e; border-radius: 999px; padding: 8px 12px; cursor: pointer; }
-  .vd-voice strong { display: block; font-size: 0.85rem; }
-  .vd-voice span { display: block; font-size: 0.72rem; color: #8f8f86; }
-  .vd-voice.active { border-color: #ecece6; background: #222; }
-  .vd-text { width: 100%; min-height: 72px; background: #0c0c0b; color: #ecece6; border: 1px solid #33332e; border-radius: 10px; padding: 10px; margin: 0 0 12px; font: inherit; }
-  .vd-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
-  .vd-row button { border-radius: 999px; padding: 10px 16px; cursor: pointer; border: 1px solid #333; }
-  [data-vd-play] { background: #ecece6; color: #111; border: 0; font-weight: 600; }
-  [data-vd-stop] { background: transparent; color: #ecece6; }
-  [data-vd-audio] { width: 100%; margin-top: 12px; }
-</style>
-</head>
-<body>
-<header class="nav">
-  <a class="brand" href="/">Meridian</a>
-  <div class="nav-links">
-    <a class="g" href="/agents">All agents</a>
-    <a class="g" href="/agents/sales">Sales</a>
-    <a class="g" href="/agents/booking">Booking</a>
-    <a class="btn btn-dark" href="/checkout/voice">Buy kit</a>
-  </div>
-</header>
-<main class="wrap">
-  <p class="crumb"><a href="/">Home</a> · <a href="/agents">Agents</a> · Voice</p>
-  <div class="eyebrow">01 · Voice Agent</div>
-  <h1>Never miss another paying call.</h1>
-  <p class="lede">
-    A 24/7 receptionist that answers, qualifies, books, and transfers — without missing after-hours revenue.
-    Production phones use Retell (default) / Vapi / Bland. Meridian is the brain, prompts, and install kit.
-  </p>
-  <div class="price">$497 <small>one-time kit</small></div>
-  <div class="actions">
-    <a class="btn btn-dark" href="/checkout/voice">Buy Voice Agent</a>
-    <a class="btn btn-light" href="/checkout/auto_voice">Full Auto · $997</a>
-    <a class="btn btn-light" href="#voice-studio">Hear it now</a>
-  </div>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Receptionist Agent · Meridian</title><meta name="description" content="A natural first conversation for every new call. Answer approved questions, capture the reason for calling, and bring the right person into the conversation."><meta name="theme-color" content="#0A0A09"><link rel="stylesheet" href="/agent-detail.css"><link rel="stylesheet" href="/css/meridian-premium.css"></head>
+<body class="agent-profile"><header class="nav"><a class="brand" href="/">Meridian</a><nav class="nav-links" aria-label="Agents"><a class="g" href="/agents/voice">Receptionist</a><a class="g" href="/agents/booking">Booking</a><a class="g" href="/agents/service">Service</a><a class="g" href="/agents/sales">Sales</a><a class="btn btn-dark" href="/meridian-proposal.html?service=voice">Scope my system →</a></nav></header>
+<main class="wrap"><p class="crumb"><a href="/">Home</a> / <a href="/agents">Agents</a> / Receptionist</p><div class="profile-hero"><div><div class="eyebrow">01 / Managed voice operations</div><h1>Your front desk. Always composed.</h1><p class="lede">A natural first conversation for every new call. Answer approved questions, capture the reason for calling, and bring the right person into the conversation.</p><span class="profile-pill">Configured for your business · verified before launch</span><div class="price">$997<small>managed setup · provider usage defined in your proposal</small></div><div class="actions"><a class="btn btn-dark" href="/meridian-proposal.html?service=voice">Build my proposal →</a><a class="btn btn-light" href="/meridian-voice-demo.html?role=receptionist">Try a conversation</a></div></div>
+<section class="voice-studio" id="voice-studio" data-vd-role="receptionist" aria-label="Receptionist voice preview"><div class="eyebrow">The sound of Meridian</div><h2>Hear the receptionist role.</h2><p class="vd-note">Select a studio voice. Preview a short AI-generated sample.</p><div class="vd-voices" data-vd-voices></div><label for="agent-sample" class="eyebrow">Sample script</label><textarea id="agent-sample" class="vd-text" data-vd-text maxlength="220" rows="4"></textarea><div class="vd-row"><button class="btn btn-dark" type="button" data-vd-play>Play studio sample</button><button class="btn btn-light" type="button" data-vd-stop>Stop</button></div><p data-vd-status class="vd-status" role="status" aria-live="polite">Checking studio…</p><audio data-vd-audio controls hidden></audio><button class="btn btn-light" type="button" data-vd-device hidden>Use device voice instead</button><p class="vd-note">Sample audio is separate from the live phone agent. Production calls use OpenAI Realtime + Twilio SIP. A browser conversation is a demonstration, with business actions disabled.</p></section></div>
+<div class="profile-grid"><section class="block"><h2>What it can do</h2><ul><li>Answers opening hours, locations and approved service questions</li><li>Triages new enquiries, appointments and existing jobs</li><li>Captures name, callback number and call outcome</li><li>Books only through a verified calendar; transfers only to an approved destination</li></ul></section><section class="block"><h2>What we connect</h2><ul><li>Business name, services, hours and service area</li><li>Greeting, approved answers and escalation rules</li><li>Twilio number, SIP trunk and human transfer destination</li></ul></section><section class="block"><h2>What we prove</h2><ul><li>Greeting and business facts match the approved intake</li><li>Caller can interrupt without talking over the agent</li><li>Missed transfer becomes a recorded callback</li><li>Outcome exists in the call ledger</li></ul></section></div>
+<section class="block"><div class="eyebrow">From brief to deployment</div><h2>A service built around your operation.</h2><ol class="profile-steps"><li><strong>Define the job</strong>Approve the scope, business facts, tone, hours, escalation owner and provider budget.</li><li><strong>Connect securely</strong>Configure provider secrets on the server. Connect the phone number and only the customer systems in scope.</li><li><strong>Rehearse the difficult calls</strong>Test interruption, unclear questions, unavailable systems, transfers and failed bookings using staging.</li><li><strong>Accept and launch</strong>Review evidence from a real call. Approve the client deployment, rollback owner and monitoring before activation.</li></ol></section>
+<section class="block"><h2>Setup &amp; API instructions</h2><details><summary>Managed installation — recommended</summary><p>Meridian handles configuration. You provide approved business facts, account access through secure provider invitations, calendar rules and a human fallback number. Credentials stay in server secret storage.</p></details><details><summary>Technical connection checklist</summary><p>Railway runs the phone runtime. Configure OPENAI_API_KEY and OPENAI_WEBHOOK_SECRET there. Connect Twilio Elastic SIP to the OpenAI project and route the authorised number to this deployment. Enable calendar and CRM tools only after their signed HTTPS adapters pass verification. <a href="/install">Open the full integration guide →</a></p></details><details><summary>Authenticated customer API</summary><p>After provisioning, Meridian supplies your actual runtime URL, agent ID and private API key. Send requests from your server. Keep the key out of browser code.</p><pre>POST /api/v1/agents/:id/health
+Authorization: Bearer [your provisioned agent key]
 
-  <section class="voice-studio vd-visible" id="voice-studio" aria-label="Voice preview">
-    <h2>Hear the receptionist</h2>
-    <p class="vd-status" data-vd-status>Pick a voice and press Play. Audio starts immediately.</p>
-    <div class="vd-voices" data-vd-voices></div>
-    <textarea class="vd-text" data-vd-text maxlength="220"></textarea>
-    <div class="vd-row">
-      <button type="button" data-vd-play>Play sample</button>
-      <button type="button" data-vd-stop>Stop</button>
-    </div>
-    <audio data-vd-audio controls hidden></audio>
-  </section>
-
-  <section class="block">
-    <h2>Description</h2>
-    <p>
-      Voice is the front door. Callers get a natural answer every time — business hours, FAQs, booking windows,
-      and human handoff for emergencies. Built for local trades, clinics, and service businesses.
-    </p>
-    <ul>
-      <li>Answers every call including after hours</li>
-      <li>Books / reschedules into calendar flows</li>
-      <li>Captures name, phone, reason for call</li>
-      <li>Escalates emergencies to a human number</li>
-      <li>Meridian brain + voice-turn API for real business facts</li>
-    </ul>
-  </section>
-
-  <section class="block">
-    <h2>Special instructions</h2>
-    <p>Give these to the operator or client before go-live:</p>
-    <ul>
-      <li><strong style="color:var(--ink)">Never invent prices</strong> — only quote facts from the knowledge pack / intake sheet.</li>
-      <li><strong style="color:var(--ink)">Emergency path</strong> — define one transfer number for flood, fire, medical, or safety.</li>
-      <li><strong style="color:var(--ink)">Hours &amp; service area</strong> — must match the public site or callers lose trust.</li>
-      <li><strong style="color:var(--ink)">Phone ownership</strong> — customer attaches the number in Retell (human step).</li>
-      <li><strong style="color:var(--ink)">Premium speech</strong> — hosted neural TTS is pay-first packs/subs; this page Play does not spend budget.</li>
-    </ul>
-    <div class="note">
-      <strong>Install order for full stack:</strong> Booking → Sales → Voice.
-      Voice last so calendar and lead paths already exist.<br>
-      <strong>Default phone vendor:</strong> Retell (~$0.10–$0.20/min all-in). See VOICE-STACK.md.
-    </div>
-  </section>
-
-  <section class="block">
-    <h2>What you get in the kit</h2>
-    <ul>
-      <li>System prompt &amp; call flow</li>
-      <li>Client intake sheet</li>
-      <li>Meridian brain + voice-turn API notes</li>
-      <li>Retell / Vapi / Bland wiring</li>
-      <li>Go-live checklist</li>
-    </ul>
-  </section>
-
-  <section class="block">
-    <h2>Usage billing (optional premium speech)</h2>
-    <p>Hosted neural speech: customer prepays, then speaks. No unpaid overage by default.</p>
-    <div class="actions" style="margin-top:16px;margin-bottom:0">
-      <a class="btn btn-light" href="/checkout/voice-pack/starter">100 turns · $49</a>
-      <a class="btn btn-light" href="/checkout/voice-sub">Premium $197/mo</a>
-      <a class="btn btn-light" href="/checkout/voice-pro">Pro $497/mo</a>
-    </div>
-  </section>
-
-  <p class="foot">
-    <a href="/agents">← All agents</a> ·
-    <a href="/install">Install guide</a> ·
-    <a href="/kits/voice/VOICE-AGENT-KIT.md">Kit markdown</a>
-  </p>
-</main>
-<script src="/js/voice-demo.js" defer></script>
-</body>
-</html>
+POST /api/v1/agents/:id/chat
+Content-Type: application/json
+Authorization: Bearer [your provisioned agent key]
+{"message":"What services do you provide?"}</pre><p>This checks the customer API. A real inbound call is a separate phone acceptance test.</p></details></section>
+<section class="block"><h2>Clear limits. Better delivery.</h2><p>Availability, prices, job status and completed actions come from approved facts and verified tools. When a connection fails, the agent explains the limit and offers an agreed human fallback. The studio never claims a real booking or transfer.</p></section>
+<section class="block"><h2>Choose the right engagement.</h2><p>A self-install kit and a managed voice deployment are separate products. Managed receptionist, booking and service agents follow the committed rate card: $997 setup per agent, $19 per month for the number, 200 included minutes and $0.20 per additional minute (USD). Inclusion period and provider costs are confirmed in the signed proposal. Sales scope is priced separately.</p><div class="actions"><a class="btn btn-dark" href="/meridian-proposal.html?service=voice">Scope a managed installation</a><a class="btn btn-light" href="/checkout/voice">Self-install kit · $497</a></div></section><footer class="foot"><a href="/">← Meridian</a> · <a href="/install">Integration guide</a> · <a href="/privacy.html">Privacy</a></footer></main><script src="/js/voice-demo.js" defer></script></body></html>

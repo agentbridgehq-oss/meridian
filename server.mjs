@@ -3118,6 +3118,9 @@ app.get(['/agents/sales', '/agent/sales', '/sales-agent'], (_req, res) => {
 app.get(['/agents/booking', '/agent/booking', '/booking-agent'], (_req, res) => {
   sendPublicHtml(res, 'agent-booking.html');
 });
+app.get(['/agents/service', '/agent/service', '/service-agent'], (_req, res) => {
+  sendPublicHtml(res, 'agent-service.html');
+});
 app.get('/article', (_req, res) => {
   res.redirect(302, '/why-agents');
 });

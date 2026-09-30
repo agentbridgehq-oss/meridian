@@ -146,7 +146,7 @@
       const data = await readJson(await fetch('/api/voice-demo/session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sdp, consent: true }),
+        body: JSON.stringify({ sdp, consent: true, role: document.querySelector('#voice-demo-role')?.value || new URLSearchParams(location.search).get('role') || 'receptionist' }),
       }));
       sessionId = data.sessionId || '';
       await pc.setRemoteDescription({ type: 'answer', sdp: data.sdp });
@@ -192,5 +192,9 @@
     closeLocalConnection();
   });
 
+  const roleSelect = document.querySelector('#voice-demo-role');
+  const requestedRole = new URLSearchParams(location.search).get('role');
+  if (roleSelect && ['receptionist', 'booking', 'service', 'sales'].includes(requestedRole)) roleSelect.value = requestedRole;
+  roleSelect?.addEventListener('change', () => { if (pc) stopDemo(); });
   loadStatus();
 })();

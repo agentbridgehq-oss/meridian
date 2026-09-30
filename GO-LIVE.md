@@ -1,3 +1,16 @@
+# Meridian go-live — current checkpoint 2026-09-30
+
+Ken authorised runtime restoration. Railway project and service now exist.
+
+Runtime: https://meridian-production-4996.up.railway.app
+Project: https://railway.com/project/1eb48be2-82d5-463e-8632-2ecf9f2175df
+
+See [current connection and credential guide](docs/VOICE-GO-LIVE-2026-09-30.md).
+
+HTTP 200 health and persistent storage are verified. Real phone voice remains unverified until credentials, SIP routing and a staging call pass. No master merge is authorised. Netlify stays the static front; Railway stays the phone runtime.
+
+The older checklist below is historical. The former project is not accessible to the connected Railway account.
+
 # Meridian go-live
 
 **Host: Railway only. Always.**

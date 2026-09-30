@@ -100,7 +100,8 @@ export async function speak(text, voiceId) {
       text: clean,
       model_id: process.env.ELEVENLABS_MODEL_ID || DEFAULT_MODEL,
       voice_settings: {
-        stability: Number(process.env.ELEVENLABS_STABILITY || 0.45),
+        stability: Number(process.env.ELEVENLABS_STABILITY || 0.35),
+        use_speaker_boost: true,
         similarity_boost: Number(process.env.ELEVENLABS_SIMILARITY || 0.75),
       },
     }),
@@ -109,7 +110,7 @@ export async function speak(text, voiceId) {
 
   if (!res.ok) {
     const err = await res.text().catch(() => res.statusText);
-    return { ok: false, mode: 'elevenlabs', error: String(err).slice(0, 240) };
+    return { ok: false, mode: 'elevenlabs', error: `studio_provider_${res.status}` };
   }
 
   const buf = Buffer.from(await res.arrayBuffer());

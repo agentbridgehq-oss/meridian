@@ -21,7 +21,7 @@ n8n does **not** talk to the caller. n8n only answers signed tool calls with rea
 
 ## What this workflow adds
 
-Import `n8n/meridian-calendar-receptionist.json`.
+No importable calendar workflow is committed yet. Configure a signed HTTPS calendar adapter using the contract below, or implement and validate an n8n workflow before offering live calendar actions. `n8n/meridian-calendar-receptionist.json` is not present; do not promise an import.
 
 It exposes one HTTPS webhook that handles:
 

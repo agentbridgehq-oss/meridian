@@ -1,229 +1,106 @@
-/**
- * Meridian voice studio — homepage (#voice-demo) and /agents/voice (#voice-studio).
- * Play always speaks. Browser neural/OS voices first; server audio replaces if it arrives.
- */
-(function () {
-  const root =
-    document.getElementById('voice-studio') || document.getElementById('voice-demo');
+/* Premium samples first. Device speech is an explicit fallback, never substituted silently. */
+(() => {
+  const root = document.getElementById('voice-studio') || document.getElementById('voice-demo');
   if (!root) return;
-
-  const statusEl = root.querySelector('[data-vd-status]');
-  const listEl = root.querySelector('[data-vd-voices]');
-  const textEl = root.querySelector('[data-vd-text]');
-  const playBtn = root.querySelector('[data-vd-play]');
-  const stopBtn = root.querySelector('[data-vd-stop]');
-  const openGuide = root.querySelector('[data-vd-guide]');
-  const audio = root.querySelector('[data-vd-audio]');
-  let selected = localStorage.getItem('mdn_voice') || 'ara';
-  let catalog = [];
-  let playing = null;
-
-  const DEFAULT_TEXT =
-    "Thanks for calling. You've reached the Meridian demo receptionist. I can answer after hours, book appointments, and follow up with leads — how can I help you today?";
-
-  if (textEl && !textEl.value) textEl.value = DEFAULT_TEXT;
-
-  function setStatus(t) {
-    if (statusEl) statusEl.textContent = t;
-  }
-
-  function genderOf(id) {
-    const v = catalog.find((x) => (x.id || x.voice_id) === id);
-    return (v && v.gender) || (/leo|rex|orion|helix|zagan/.test(id) ? 'male' : 'female');
-  }
-
-  function pickBrowserVoice(id) {
-    if (!window.speechSynthesis) return null;
-    const voices = window.speechSynthesis.getVoices() || [];
-    if (!voices.length) return null;
-    const wantMale = genderOf(id) === 'male';
-    const scored = voices.map((v) => {
-      const n = (v.name + ' ' + v.lang).toLowerCase();
-      let s = 0;
-      if (/en[-_]?(us|gb|ca|au)|en$/.test(v.lang.toLowerCase())) s += 4;
-      if (wantMale && /male|david|daniel|guy|james|george|alex|fred/.test(n)) s += 5;
-      if (!wantMale && /female|samantha|siri|zira|karen|moira|aria|jenny|sara|natural/.test(n)) s += 5;
-      if (/neural|natural|premium|enhanced|online/.test(n)) s += 3;
-      if (/google|microsoft|apple/.test(n)) s += 1;
-      return { v, s };
-    });
-    scored.sort((a, b) => b.s - a.s);
-    return scored[0].v;
-  }
-
+  const q = selector => root.querySelector(selector);
+  const status = q('[data-vd-status]'), list = q('[data-vd-voices]'), text = q('[data-vd-text]');
+  const play = q('[data-vd-play]'), stop = q('[data-vd-stop]'), device = q('[data-vd-device]');
+  const audio = q('[data-vd-audio]');
+  const roles = {
+    receptionist: { voice: 'ara', path: 'voice', text: "Thanks for calling Meridian's demo front desk. I'm your AI receptionist. I can help with a question or get the right person involved. What can I help you with?" },
+    booking: { voice: 'eve', path: 'booking', text: "Hi, I'm Meridian's AI scheduling assistant. In a connected service, I check the calendar before offering a time. For this demo, what kind of appointment are you looking for?" },
+    service: { voice: 'leo', path: 'service', text: "You've reached Meridian's AI service desk demo. Tell me what's happening, and I'll explain how I'd log the issue and route it to the team. Is this about an existing job?" },
+    sales: { voice: 'rex', path: 'sales', text: "Hi, I'm Meridian's AI sales assistant. This is a demo of how I qualify new enquiries and help with the next step. What are you hoping to improve in your business?" },
+  };
+  let role = root.dataset.vdRole || 'receptionist', selected = roles[role]?.voice || 'ara';
+  let request = null, generation = 0;
+  const setStatus = value => { if (status) status.textContent = value; };
   function stopAll() {
-    try {
-      window.speechSynthesis && window.speechSynthesis.cancel();
-    } catch {}
-    if (audio) {
-      try {
-        audio.pause();
-        audio.removeAttribute('src');
-      } catch {}
-    }
-    if (playing && playing.abort) playing.abort();
-    playing = null;
+    generation++;
+    request?.abort(); request = null;
+    window.speechSynthesis?.cancel();
+    if (audio) { audio.pause(); audio.removeAttribute('src'); audio.load(); }
+    if (play) play.disabled = false;
+    root.classList.remove('is-speaking');
   }
-
-  function speakBrowser(text, id) {
-    if (!window.speechSynthesis) return false;
-    window.speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(text);
-    const voice = pickBrowserVoice(id);
-    if (voice) u.voice = voice;
-    u.rate = id === 'eve' ? 1.06 : id === 'leo' ? 0.96 : 1;
-    u.pitch = genderOf(id) === 'male' ? 0.9 : 1.05;
-    window.speechSynthesis.speak(u);
-    return true;
+  function selectRole(next) {
+    if (!roles[next]) return;
+    stopAll(); role = next; selected = roles[role].voice;
+    if (text) text.value = roles[role].text;
+    root.querySelectorAll('[data-vd-role]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.vdRole === role)));
+    const detail = q('[data-vd-detail]');
+    if (detail) detail.href = '/agents/' + roles[role].path;
+    list?.querySelectorAll('button').forEach(b => { const active = b.dataset.voice === selected; b.classList.toggle('active', active); b.setAttribute('aria-pressed', String(active)); });
+    setStatus('Ready to preview the ' + role + ' role.');
+    if (device) device.hidden = true;
   }
-
   async function loadVoices() {
-    setStatus('Loading voices…');
+    let voices = [];
     try {
-      const res = await fetch('/api/voice/voices');
-      const data = await res.json();
-      catalog = data.voices || data.catalog || [];
-      if (!listEl) return;
-      listEl.innerHTML = '';
-      const pick = catalog.length
-        ? catalog
-        : [
-            { id: 'ara', name: 'Ara', tagline: 'Warm', gender: 'female' },
-            { id: 'eve', name: 'Eve', tagline: 'Energetic', gender: 'female' },
-            { id: 'leo', name: 'Leo', tagline: 'Authoritative', gender: 'male' },
-            { id: 'rex', name: 'Rex', tagline: 'Professional', gender: 'male' },
-          ];
-      if (!pick.some((v) => (v.id || v.voice_id) === selected)) selected = pick[0].id || 'ara';
-      pick.slice(0, 10).forEach((v) => {
-        const id = v.id || v.voice_id;
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'vd-voice' + (id === selected ? ' active' : '');
-        btn.innerHTML = `<strong>${v.name || id}</strong><span>${v.tagline || v.useCases || 'Voice'}</span>`;
-        btn.addEventListener('click', () => {
-          selected = id;
-          listEl.querySelectorAll('.vd-voice').forEach((b) => b.classList.remove('active'));
-          btn.classList.add('active');
-          try {
-            localStorage.setItem('mdn_voice', id);
-          } catch {}
-        });
-        listEl.appendChild(btn);
-      });
-      setStatus('Pick a voice and press Play — sample starts immediately');
-    } catch {
-      setStatus('Catalog offline — Play still works with on-device voice');
-    }
-    try {
-      window.speechSynthesis && window.speechSynthesis.getVoices();
+      const response = await fetch('/api/voice/voices', { cache: 'no-store' });
+      if (response.ok) { const data = await response.json(); voices = data.voices || []; }
     } catch {}
-  }
-
-  async function play() {
-    const text = (textEl?.value || DEFAULT_TEXT).trim().slice(0, 220);
-    if (!text) return;
-    stopAll();
-    playBtn && (playBtn.disabled = true);
-
-    const started = speakBrowser(text, selected);
-    setStatus(
-      started
-        ? `Playing ${selected} · on-device voice · fetching studio sample…`
-        : 'Generating sample…',
-    );
-
-    const ac = typeof AbortController !== 'undefined' ? new AbortController() : null;
-    playing = ac;
-    try {
-      const res = await fetch('/api/voice/preview', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ voiceId: selected, text }),
-        signal: ac ? ac.signal : undefined,
+    if (!voices.length) voices = [{ id:'ara', name:'Ara', tagline:'Warm front desk' },{ id:'eve', name:'Eve', tagline:'Clear scheduling' },{ id:'leo', name:'Leo', tagline:'Calm service' },{ id:'rex', name:'Rex', tagline:'Confident enquiries' }];
+    if (list) {
+      list.replaceChildren();
+      voices.slice(0,10).forEach(v => {
+        const id = v.id || v.voice_id, button = document.createElement('button');
+        button.type = 'button'; button.dataset.voice = id; button.className = 'vd-voice';
+        const name = document.createElement('strong'), label = document.createElement('span');
+        name.textContent = v.name || id; label.textContent = v.tagline || 'Studio voice';
+        button.append(name,label);
+        button.addEventListener('click', () => {
+          stopAll(); selected = id;
+          list.querySelectorAll('button').forEach(b => { const active = b === button; b.classList.toggle('active',active); b.setAttribute('aria-pressed',String(active)); });
+          setStatus('Voice selected. Press Play studio sample.');
+        });
+        list.appendChild(button);
       });
-      let data = {};
-      try {
-        data = await res.json();
-      } catch {
-        data = {};
-      }
-
-      if (data.useBrowser || data.mode === 'browser_handoff') {
-        if (!started) speakBrowser(text, selected);
-        setStatus(`Playing ${selected} · on-device preview`);
-        return;
-      }
-
-      if (!res.ok || !data.ok) {
-        if (!started) speakBrowser(text, selected);
-        setStatus((data.error || 'Studio sample skipped') + ' · on-device voice playing');
-        return;
-      }
-
-      let src = data.audioUrl || data.url;
-      if (!src && data.audioBase64) src = `data:${data.contentType || 'audio/mpeg'};base64,${data.audioBase64}`;
-      if (!src && data.audio) src = `data:audio/mpeg;base64,${data.audio}`;
-      if (!src || !audio) {
-        if (!started) speakBrowser(text, selected);
-        setStatus(`Playing ${selected} · on-device preview`);
-        return;
-      }
-
-      try {
-        window.speechSynthesis && window.speechSynthesis.cancel();
-      } catch {}
-      audio.pause();
-      audio.src = src;
-      audio.hidden = false;
-      await audio.play();
-      if (data.mode === 'xai') {
-        setStatus(`Playing ${selected} · xAI neural · free sample`);
-      } else if (data.mode === 'demo_fallback') {
-        setStatus(`Playing ${selected} · studio sample (premium neural on paid installs)`);
-      } else {
-        setStatus(`Playing ${selected} · studio sample`);
-      }
-    } catch (e) {
-      if (e && e.name === 'AbortError') return;
-      if (!started) speakBrowser(text, selected);
-      setStatus('Network skip · on-device voice playing');
+    }
+    list?.querySelectorAll('button').forEach(b => { const active = b.dataset.voice === selected; b.classList.toggle('active', active); b.setAttribute('aria-pressed', String(active)); });
+  }
+  async function playSample() {
+    stopAll(); const run = generation;
+    const sample = (text?.value || roles[role].text).trim().slice(0,220);
+    if (!sample) return setStatus('Enter a short sample first.');
+    if (play) play.disabled = true;
+    if (device) device.hidden = true;
+    setStatus('Preparing studio audio…');
+    const controller = new AbortController(); request = controller;
+    const timeout = setTimeout(() => controller.abort(),30000);
+    try {
+      const response = await fetch('/api/voice/preview', { method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({voiceId:selected,text:sample}),signal:controller.signal });
+      const data = await response.json();
+      if (run !== generation) return;
+      if (!response.ok || !data.ok || data.useBrowser || data.mode === 'demo_fallback') throw new Error('studio_unavailable');
+      const source = data.audioBase64 ? `data:${data.contentType || 'audio/mpeg'};base64,${data.audioBase64}` : data.audioUrl;
+      if (!source || !audio) throw new Error('studio_unavailable');
+      audio.src = source; audio.hidden = false;
+      try { await audio.play(); } catch { setStatus('Studio audio ready. Tap the audio player to listen.'); return; }
+      root.classList.add('is-speaking');
+      setStatus('Playing ' + selected + ' · AI-generated studio sample · ' + role);
+    } catch {
+      if (run !== generation) return;
+      setStatus('Studio audio is unavailable. Connect ElevenLabs to hear the premium sample.');
+      if (device) device.hidden = false;
     } finally {
-      playBtn && (playBtn.disabled = false);
+      clearTimeout(timeout);
+      if (run === generation) { request = null; if (play) play.disabled = false; }
     }
   }
-
-  if (playBtn) playBtn.addEventListener('click', play);
-  if (stopBtn) stopBtn.addEventListener('click', () => {
+  play?.addEventListener('click',playSample);
+  stop?.addEventListener('click',() => { stopAll(); setStatus('Stopped.'); });
+  device?.addEventListener('click',() => {
     stopAll();
-    setStatus('Stopped');
+    if (!window.speechSynthesis) return setStatus('Device speech is unavailable in this browser.');
+    const utterance = new SpeechSynthesisUtterance(text?.value || roles[role].text);
+    const available = window.speechSynthesis.getVoices().filter(v => /^en/i.test(v.lang));
+    utterance.voice = available.find(v => /natural|neural|premium/i.test(v.name)) || available.find(v => v.lang === 'en-CA') || available[0];
+    utterance.rate = 1.03; window.speechSynthesis.speak(utterance);
+    setStatus('Playing device voice · lower quality fallback · not the production voice.');
   });
-  if (openGuide) {
-    openGuide.addEventListener('click', (e) => {
-      e.preventDefault();
-      if (window.MeridianGuide) window.MeridianGuide.open('voice');
-      else location.hash = '#ai-guide';
-    });
-  }
-  if ('speechSynthesis' in window) {
-    window.speechSynthesis.addEventListener('voiceschanged', () => {});
-  }
-
-  if ('IntersectionObserver' in window) {
-    const io = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((en) => {
-          if (en.isIntersecting) {
-            root.classList.add('vd-visible');
-            io.disconnect();
-          }
-        });
-      },
-      { threshold: 0.12 },
-    );
-    io.observe(root);
-  } else {
-    root.classList.add('vd-visible');
-  }
-
-  loadVoices();
+  root.querySelectorAll('[data-vd-role]').forEach(b => b.addEventListener('click',() => selectRole(b.dataset.vdRole)));
+  audio?.addEventListener('ended',() => { root.classList.remove('is-speaking'); setStatus('Sample ended.'); });
+  window.addEventListener('pagehide',stopAll);
+  root.classList.add('vd-visible'); selectRole(role); loadVoices();
 })();

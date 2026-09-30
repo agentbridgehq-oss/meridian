@@ -1,51 +1,15 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Service Voice Agent · Meridian</title>
-<meta name="description" content="Meridian Service Voice Agent — status, complaints, dispatch, no invented ETAs.">
-<meta name="theme-color" content="#0A0A09">
-<link rel="stylesheet" href="/agent-detail.css">
-</head>
-<body>
-<header class="nav">
-  <a class="brand" href="/">Meridian</a>
-  <div class="nav-links">
-    <a class="g" href="/agents">All agents</a>
-    <a class="g" href="/agent-voice.html">Receptionist</a>
-    <a class="g" href="/agent-booking.html">Booking</a>
-    <a class="btn btn-dark" href="/meridian-proposal.html?service=service">Get proposal</a>
-  </div>
-</header>
-<main class="wrap">
-  <p class="crumb"><a href="/">Home</a> · Service Voice</p>
-  <div class="eyebrow">03 · Service Voice Agent</div>
-  <h1>Status and dispatch without fake arrival times.</h1>
-  <p class="lede">Logs the job, flags safety, and gets a human on it. Does not diagnose beyond approved facts.</p>
-  <div class="price">$997 <small>install · then metered minutes</small></div>
-  <div class="actions">
-    <a class="btn btn-dark" href="/meridian-proposal.html?service=service">Build Service proposal</a>
-    <a class="btn btn-light" href="/agent-voice.html">Receptionist</a>
-    <a class="btn btn-light" href="/agent-booking.html">Booking</a>
-  </div>
-  <section class="block">
-    <h2>What it does</h2>
-    <ul>
-      <li>Captures name, callback, job reference, and the problem in the caller’s words</li>
-      <li>Routes safety language to emergency services plus the owner</li>
-      <li>Records the outcome on every call</li>
-      <li>Hands off only when a transfer destination is verified</li>
-    </ul>
-  </section>
-  <section class="block">
-    <h2>Hard rules</h2>
-    <ul>
-      <li>No invented ETAs</li>
-      <li>No discounts or warranty rulings</li>
-      <li>No medical, legal, or gas-leak dispatch theater</li>
-    </ul>
-  </section>
-</main>
-</body>
-</html>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Service Agent · Meridian</title><meta name="description" content="A composed service desk for job questions, complaints and follow-up. Capture the issue accurately and bring it to the person who can resolve it."><meta name="theme-color" content="#0A0A09"><link rel="stylesheet" href="/agent-detail.css"><link rel="stylesheet" href="/css/meridian-premium.css"></head>
+<body class="agent-profile"><header class="nav"><a class="brand" href="/">Meridian</a><nav class="nav-links" aria-label="Agents"><a class="g" href="/agents/voice">Receptionist</a><a class="g" href="/agents/booking">Booking</a><a class="g" href="/agents/service">Service</a><a class="g" href="/agents/sales">Sales</a><a class="btn btn-dark" href="/meridian-proposal.html?service=service">Scope my system →</a></nav></header>
+<main class="wrap"><p class="crumb"><a href="/">Home</a> / <a href="/agents">Agents</a> / Service</p><div class="profile-hero"><div><div class="eyebrow">03 / Managed voice operations</div><h1>Every concern gets a clear next step.</h1><p class="lede">A composed service desk for job questions, complaints and follow-up. Capture the issue accurately and bring it to the person who can resolve it.</p><span class="profile-pill">Configured for your business · verified before launch</span><div class="price">$997<small>managed setup · provider usage defined in your proposal</small></div><div class="actions"><a class="btn btn-dark" href="/meridian-proposal.html?service=service">Build my proposal →</a><a class="btn btn-light" href="/meridian-voice-demo.html?role=service">Try a conversation</a></div></div>
+<section class="voice-studio" id="voice-studio" data-vd-role="service" aria-label="Service voice preview"><div class="eyebrow">The sound of Meridian</div><h2>Hear the service role.</h2><p class="vd-note">Select a studio voice. Preview a short AI-generated sample.</p><div class="vd-voices" data-vd-voices></div><label for="agent-sample" class="eyebrow">Sample script</label><textarea id="agent-sample" class="vd-text" data-vd-text maxlength="220" rows="4"></textarea><div class="vd-row"><button class="btn btn-dark" type="button" data-vd-play>Play studio sample</button><button class="btn btn-light" type="button" data-vd-stop>Stop</button></div><p data-vd-status class="vd-status" role="status" aria-live="polite">Checking studio…</p><audio data-vd-audio controls hidden></audio><button class="btn btn-light" type="button" data-vd-device hidden>Use device voice instead</button><p class="vd-note">Sample audio is separate from the live phone agent. Production calls use OpenAI Realtime + Twilio SIP. A browser conversation is a demonstration, with business actions disabled.</p></section></div>
+<div class="profile-grid"><section class="block"><h2>What it can do</h2><ul><li>Captures the job reference and caller’s description</li><li>Records complaints without inventing a resolution</li><li>Escalates hazards and urgent human requests</li><li>Routes to the approved team; job lookup requires a connected adapter</li></ul></section><section class="block"><h2>What we connect</h2><ul><li>Job reference policy and approved service facts</li><li>Urgent escalation and human transfer numbers</li><li>CRM or job-system connector if status lookup is required</li></ul></section><section class="block"><h2>What we prove</h2><ul><li>No invented arrival time or warranty decision</li><li>Caller’s issue is preserved in the outcome</li><li>Emergency language follows the agreed escalation path</li><li>A failed lookup results in a documented callback</li></ul></section></div>
+<section class="block"><div class="eyebrow">From brief to deployment</div><h2>A service built around your operation.</h2><ol class="profile-steps"><li><strong>Define the job</strong>Approve the scope, business facts, tone, hours, escalation owner and provider budget.</li><li><strong>Connect securely</strong>Configure provider secrets on the server. Connect the phone number and only the customer systems in scope.</li><li><strong>Rehearse the difficult calls</strong>Test interruption, unclear questions, unavailable systems, transfers and failed bookings using staging.</li><li><strong>Accept and launch</strong>Review evidence from a real call. Approve the client deployment, rollback owner and monitoring before activation.</li></ol></section>
+<section class="block"><h2>Setup &amp; API instructions</h2><details><summary>Managed installation — recommended</summary><p>Meridian handles configuration. You provide approved business facts, account access through secure provider invitations, calendar rules and a human fallback number. Credentials stay in server secret storage.</p></details><details><summary>Technical connection checklist</summary><p>Railway runs the phone runtime. Configure OPENAI_API_KEY and OPENAI_WEBHOOK_SECRET there. Connect Twilio Elastic SIP to the OpenAI project and route the authorised number to this deployment. Enable calendar and CRM tools only after their signed HTTPS adapters pass verification. <a href="/install">Open the full integration guide →</a></p></details><details><summary>Authenticated customer API</summary><p>After provisioning, Meridian supplies your actual runtime URL, agent ID and private API key. Send requests from your server. Keep the key out of browser code.</p><pre>POST /api/v1/agents/:id/health
+Authorization: Bearer [your provisioned agent key]
+
+POST /api/v1/agents/:id/chat
+Content-Type: application/json
+Authorization: Bearer [your provisioned agent key]
+{"message":"What services do you provide?"}</pre><p>This checks the customer API. A real inbound call is a separate phone acceptance test.</p></details></section>
+<section class="block"><h2>Clear limits. Better delivery.</h2><p>Availability, prices, job status and completed actions come from approved facts and verified tools. When a connection fails, the agent explains the limit and offers an agreed human fallback. The studio never claims a real booking or transfer.</p></section>
+<section class="block"><h2>Choose the right engagement.</h2><p>A self-install kit and a managed voice deployment are separate products. Managed receptionist, booking and service agents follow the committed rate card: $997 setup per agent, $19 per month for the number, 200 included minutes and $0.20 per additional minute (USD). Inclusion period and provider costs are confirmed in the signed proposal. Sales scope is priced separately.</p><div class="actions"><a class="btn btn-dark" href="/meridian-proposal.html?service=service">Scope a managed installation</a></div></section><footer class="foot"><a href="/">← Meridian</a> · <a href="/install">Integration guide</a> · <a href="/privacy.html">Privacy</a></footer></main><script src="/js/voice-demo.js" defer></script></body></html>

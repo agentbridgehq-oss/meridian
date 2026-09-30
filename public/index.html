@@ -936,6 +936,7 @@
   .vd-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
   .vd-status { font-size: 0.78rem; color: var(--muted); margin-top: 10px; }
 </style>
+<link rel="stylesheet" href="/css/meridian-premium.css">
 </head>
 <body>
 
@@ -1139,15 +1140,19 @@
 
 <section class="voice-demo" id="voice-demo" aria-label="Voice sample">
   <div class="voice-demo-panel">
-    <h2>Voice sample</h2>
-    <p class="vd-lede">One short line. Pick a voice and play.</p>
+    <h2>A voice worth answering.</h2>
+    <p class="vd-lede">Try each role. Hear the delivery. Then explore its complete service page.</p>
+    <div class="vd-roles" aria-label="Agent role"><button type="button" data-vd-role="receptionist" aria-pressed="true">Receptionist</button><button type="button" data-vd-role="booking" aria-pressed="false">Booking</button><button type="button" data-vd-role="service" aria-pressed="false">Service</button><button type="button" data-vd-role="sales" aria-pressed="false">Sales</button></div>
     <div class="vd-voices" data-vd-voices></div>
     <textarea class="vd-text" id="vd-text" data-vd-text maxlength="220" rows="2">Thanks for calling. I can help with hours, booking, or a quick question — how can I help you today?</textarea>
     <div class="vd-row">
       <button type="button" class="btn btn-dark" data-vd-play>Play</button>
-      <a class="btn btn-light" href="#stack">Full stack</a>
+      <button type="button" class="btn btn-light" data-vd-stop>Stop</button><a class="btn btn-light" data-vd-detail href="/agents/voice">Explore this agent →</a>
     </div>
-    <p class="vd-status" data-vd-status>Loading…</p>
+    <p class="vd-status" data-vd-status role="status" aria-live="polite">Checking studio…</p>
+    <audio data-vd-audio controls hidden></audio>
+    <button type="button" class="btn btn-light" data-vd-device hidden>Use device voice instead</button>
+    <p class="vd-note">AI-generated sample. Phone conversations use OpenAI Realtime; ElevenLabs samples demonstrate delivery, not live bookings.</p>
   </div>
 </section>
 

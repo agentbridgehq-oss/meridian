@@ -6,14 +6,14 @@ export async function handler(event) {
   }
   const armed = elevenlabsArmed();
   return json(200, {
-    mode: armed ? 'elevenlabs' : 'browser',
-    provider: armed ? 'elevenlabs' : 'browser',
+    mode: armed ? 'elevenlabs' : 'unconfigured',
+    provider: armed ? 'elevenlabs' : 'unconfigured',
     elevenlabs: armed,
     elevenlabsKeyPresent: keyPresent(),
     elevenlabsArmed: process.env.VOICE_ENABLE_ELEVENLABS === '1',
-    preview: { neverBillsXai: true, clientFirst: true, elevenlabsIfArmed: true },
+    preview: { neverBillsXai: true, clientFirst: false, elevenlabsIfArmed: true },
     note: armed
       ? 'ElevenLabs preview armed on Netlify. Production phone path is still Railway + OpenAI Realtime.'
-      : 'Preview will use on-device browser speech until VOICE_ENABLE_ELEVENLABS=1 and ELEVENLABS_API_KEY are set in Netlify.',
+      : 'Premium preview needs VOICE_ENABLE_ELEVENLABS=1 and ELEVENLABS_API_KEY in Netlify. Device voice is an explicit optional fallback.',
   });
 }
