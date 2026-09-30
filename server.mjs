@@ -3527,7 +3527,7 @@ if (process.env.MERIDIAN_KNOWLEDGE_REFRESH === '1') {
   setInterval(runWeekly, weekMs);
 }
 
-// Long-form AI articles every ~2.5 days via OpenClaw content-articles expert
+// Long-form AI articles daily via OpenClaw content-articles expert
 // draft → Claude vet → fix → ready → (ops publish). Set MERIDIAN_ARTICLES=1.
 if (process.env.MERIDIAN_ARTICLES === '1') {
   const articlePollMs = Number(process.env.MERIDIAN_ARTICLE_POLL_MS || 6 * 60 * 60 * 1000); // check every 6h
