@@ -30,6 +30,8 @@ Do not leave work only in chat or wait for the browser window to close. Closing 
 
 ## Current production truth — 2026-09-30
 
+Latest tested product: `de957b2813eaabacc7ecad14c7295709ed481db1`, deployed on Railway and Netlify. Connection hub `/voice-connect.html`; public configuration endpoint `/api/voice/connections`; 109/109 tests. Importable n8n bridge now exists, but downstream calendar and real-call acceptance remain unverified. See docs/VOICE-CONNECTION-PIPELINE.md and the latest handoff entries.
+
 Ken authorised restoration. Runtime https://meridian-production-4996.up.railway.app is deployed successfully from meridian-agency-2-0; /healthz 200 and /data volume verified.
 
 Project: https://railway.com/project/1eb48be2-82d5-463e-8632-2ecf9f2175df
