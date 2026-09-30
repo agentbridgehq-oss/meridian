@@ -25,6 +25,29 @@
       const select = form.elements.namedItem(name), value = params.get(param);
       if ([...select.options].some(o => o.value === value)) select.value = value;
     }
+    if (params.get('prefill') === 'agent') {
+      try {
+        const brief = JSON.parse(sessionStorage.getItem('meridianAgentBrief') || 'null');
+        if (brief && typeof brief === 'object') {
+          const selectedRole = form.elements.namedItem('primaryNeed').value;
+          if (!brief.role || brief.role === selectedRole) {
+            const rows = [
+              brief.businessType && `Business type: ${brief.businessType}`,
+              brief.mustDo && `Must do: ${brief.mustDo}`,
+              brief.mustNever && `Must never do: ${brief.mustNever}`,
+              brief.handoff && `Human handoff rule: ${brief.handoff}`,
+              brief.specialInstructions && `Special instructions: ${brief.specialInstructions}`,
+            ].filter(Boolean);
+            const goals = form.elements.namedItem('goals');
+            if (goals && rows.length && !goals.value) goals.value = rows.join('\n\n').slice(0, 4000);
+            const status = form.querySelector('.status');
+            if (status && rows.length) status.textContent = 'Your agent instructions have been carried into this scope. Review them before submitting.';
+          }
+        }
+      } catch {
+        /* The proposal form remains usable if browser storage is unavailable. */
+      }
+    }
     form.addEventListener('submit', async event => {
       event.preventDefault(); const button = form.querySelector('button[type=submit]'), status = form.querySelector('.status');
       button.disabled = true; status.textContent = 'Saving your request and preparing the first scope…';
@@ -38,6 +61,7 @@
         document.querySelector('#onboarding-link').href = data.onboardingPath;
         const result = document.querySelector('#proposal-result'); result.hidden = false;
         status.textContent = 'Request saved. Your first scope is below. Save the private onboarding link.';
+        try { sessionStorage.removeItem('meridianAgentBrief'); } catch {}
         result.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' });
         // Keep the submitted form disabled to prevent accidental duplicate project creation.
         button.textContent = 'Request saved';
