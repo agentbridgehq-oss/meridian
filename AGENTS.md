@@ -28,14 +28,13 @@ Before sending the final response for any Meridian task that changed files or ma
 
 Do not leave work only in chat or wait for the browser window to close. Closing or clearing a chat cannot trigger a later commit, so finish the GitHub handoff before the final response. A new chat must be able to reconstruct the full project state from GitHub alone. If nothing material changed, do not create an empty commit.
 
-## Current production truth
+## Current production truth — 2026-09-30
 
-Railway public hosts are **down** (`Application not found`):
+Ken authorised restoration. Runtime https://meridian-production-4996.up.railway.app is deployed successfully from meridian-agency-2-0; /healthz 200 and /data volume verified.
 
-- https://meridian-production-2eb0.up.railway.app/
-- https://meridian-production-915d.up.railway.app/
+Project: https://railway.com/project/1eb48be2-82d5-463e-8632-2ecf9f2175df
 
-Do not call Meridian live. Recreate the service using `GO-LIVE.md`. Project: https://railway.com/project/3325e670-00e8-46e2-8d38-e1e4f77b8e66
+Netlify https://meridian-open.netlify.app serves the premium front and proxies runtime API/demo routes to Railway. OpenAI key is absent at the last probe. Browser demo is enabled but unavailable until the key is configured. Phone voice is NOT verified: require OpenAI webhook secret, Twilio SIP/DID and a real inbound ledger call before client launch. See GO-LIVE.md and docs/VOICE-GO-LIVE-2026-09-30.md.
 
 ## Do not
 
