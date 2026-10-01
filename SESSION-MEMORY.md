@@ -173,3 +173,14 @@ As of 2026-09-30, PR #2 on `meridian-agency-2-0` is the live build track. Railwa
 - Netlify upload `6abd33f4300260cbfc0f53ab` ready. Two earlier upload attempts failed because of local dependency symlink/worktree metadata; clean Git archive resolved both. Uploaded source is exactly the tested product snapshot; commit_ref is null for uploads.
 - Live runtime hub and configuration endpoint return 200. Netlify gateway reaches the new endpoint. Browser enabled but available:false; OpenAI key/webhook and Twilio account/credential all absent at the live probe. Phone liveCallVerified:null intentionally reports no public acceptance proof.
 - Next: owner adds OPENAI_API_KEY in Railway and ELEVENLABS_API_KEY plus VOICE_ENABLE_ELEVENLABS=1 in Netlify Functions, redeploys, then performs real studio/microphone acceptance. Configure OpenAI webhook/Twilio routing and verified customer connectors before phone/client activation. Do not claim customer voice is live. Fiverr/Upwork profiles remain prepared copy only. See docs/VOICE-CONNECTION-PIPELINE.md.
+
+
+## 2026-10-01 — portfolio launch audit and voice activation request
+
+Ken authorized completing Meridian phone agents and deploying customer-ready receptionist/assistant workflows. Existing Twilio SIP + OpenAI Realtime architecture remains the implementation path; ElevenLabs remains optional website samples. No master merge authorized.
+
+Fresh production GET /api/voice/connections returned HTTP 200, browser available:false, OpenAI key absent, webhook absent, Twilio account and credential absent, liveCallVerified:null. No live phone/microphone test or connector acceptance was performed. No runtime settings or secrets were changed. Twilio plugin discovery returned no matching plugin; account provisioning remains unresolved.
+
+Next: provision dedicated provider credentials through secure account setup, configure Twilio number/SIP routing and signed webhook, then verify real microphone/inbound calls, interruption, calendar availability/book/reschedule/cancel, human transfer and failure recovery. Do not advertise unrestricted secretary capabilities or permanent availability without validated scope and operations.
+
+Portfolio audit: Claudecraft paid checkout 404 and Stripe connector requires reauthentication; AgentBridge health/config 404; SaberClaw API health responds with HTML. Three Claudecraft free downloads returned 200. Separate recovery PRs: ClaudeCraft #5, agentbridge-final #6, operator-growth-engine #7. Growth Engine public release remains authorized but incomplete; GiantBite held for final adjustments. No sales, public visibility changes or agent activation claimed.
