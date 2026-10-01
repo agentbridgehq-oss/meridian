@@ -1,0 +1,103 @@
+# Static front + serverless ElevenLabs preview.
+# Production phone runtime stays Railway. Do not treat Netlify as the SIP host.
+
+[build]
+  publish = "public"
+  command = "echo meridian-static-front"
+
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+[[redirects]]
+  from = "/api/voice/preview"
+  to = "/.netlify/functions/voice-preview"
+  status = 200
+
+[[redirects]]
+  from = "/api/voice/voices"
+  to = "/.netlify/functions/voice-voices"
+  status = 200
+
+[[redirects]]
+  from = "/api/voice/status"
+  to = "/.netlify/functions/voice-status"
+  status = 200
+
+[[redirects]]
+  from = "/agents/voice"
+  to = "/agent-voice.html"
+  status = 200
+
+[[redirects]]
+  from = "/voice"
+  to = "/voice.html"
+  status = 200
+
+[[headers]]
+  for = "/voice.html"
+  [headers.values]
+    Cache-Control = "no-store"
+
+[[redirects]]
+  from = "/agents"
+  to = "/agents.html"
+  status = 200
+
+[[redirects]]
+  from = "/agents/sales"
+  to = "/agent-sales.html"
+  status = 200
+
+[[redirects]]
+  from = "/agents/booking"
+  to = "/agent-booking.html"
+  status = 200
+
+[[redirects]]
+  from = "/agents/service"
+  to = "/agent-service.html"
+  status = 200
+
+[[redirects]]
+  from = "/install"
+  to = "/install-guide.html"
+  status = 200
+
+[[redirects]]
+  from = "/why-agents"
+  to = "/why-agents.html"
+  status = 200
+
+# Same-origin gateway: Netlify is the front; Railway owns the runtime.
+[[redirects]]
+  from = "/api/*"
+  to = "https://meridian-production-4996.up.railway.app/api/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/meridian-voice-demo.html"
+  to = "https://meridian-production-4996.up.railway.app/meridian-voice-demo.html"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/meridian-voice-demo"
+  to = "https://meridian-production-4996.up.railway.app/meridian-voice-demo.html"
+  status = 200
+  force = true
+
+[[headers]]
+  for = "/meridian-voice-demo*"
+  [headers.values]
+    Cache-Control = "no-store"
+    Permissions-Policy = "microphone=(self), camera=(), geolocation=()"
+
+[[headers]]
+  for = "/api/*"
+  [headers.values]
+    Cache-Control = "no-store"

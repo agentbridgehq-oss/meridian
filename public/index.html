@@ -935,7 +935,22 @@
   }
   .vd-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
   .vd-status { font-size: 0.78rem; color: var(--muted); margin-top: 10px; }
+
+  /* Daily field note directly under the opening section */
+  .daily-value { max-width:var(--max); margin:10px auto 34px; padding:0 24px; }
+  .daily-value .daily-note-inner {
+    border:1px solid rgba(61,220,132,.18); border-radius:24px; padding:clamp(24px,4vw,34px);
+    background:linear-gradient(145deg,rgba(61,220,132,.06),rgba(255,255,255,.02));
+    box-shadow:0 22px 52px rgba(0,0,0,.24);
+  }
+  .daily-note-top { display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; color:var(--muted); font-size:.68rem; font-weight:600; letter-spacing:.13em; text-transform:uppercase; margin-bottom:12px; }
+  .daily-value h2 { font-family:var(--serif); font-weight:400; font-size:clamp(1.7rem,3.6vw,2.35rem); letter-spacing:-.03em; line-height:1.12; max-width:22ch; margin:0 0 12px; }
+  .daily-value p { color:var(--muted); max-width:66ch; font-size:1rem; line-height:1.7; }
+  .daily-note-actions { display:flex; flex-wrap:wrap; gap:16px; margin-top:18px; }
+  .daily-note-actions a { font-size:.86rem; font-weight:600; text-decoration:none; }
+
 </style>
+<link rel="stylesheet" href="/css/meridian-premium.css">
 </head>
 <body>
 
@@ -958,7 +973,7 @@
         <a href="/agents/booking">Booking <span>Calendar · no-shows</span></a>
       </div>
     </details>
-    <a class="ghost" href="#voice-demo">Try voice</a>
+    <a class="ghost" href="#voice-demo">Try voice</a><a class="ghost" href="/voice-connect.html">Connect voice</a>
     <a class="ghost" href="#method">Method</a>
     <a class="ghost" href="/why-agents">Why agents</a>
     <a class="ghost" href="/install">Install guide</a>
@@ -987,10 +1002,10 @@
       <div class="hero-cta-chips" id="heroCtaChips" data-hero-cta-track>
         <!-- Set A + set B (duplicate) = seamless half-width loop, same pattern as ClaudeCraft chips -->
         <a class="btn btn-dark btn-lg" href="/agents">View agents</a>
-        <a class="btn btn-light btn-lg" href="#stack">Full stack — $997</a>
+        <a class="btn btn-light btn-lg" href="#stack">Explore the full stack</a>
         <a class="btn btn-light btn-lg" href="#proposal">Get a proposal</a>
         <a class="btn btn-dark btn-lg" href="/agents" data-cta-clone tabindex="-1" aria-hidden="true">View agents</a>
-        <a class="btn btn-light btn-lg" href="#stack" data-cta-clone tabindex="-1" aria-hidden="true">Full stack — $997</a>
+        <a class="btn btn-light btn-lg" href="#stack" data-cta-clone tabindex="-1" aria-hidden="true">Explore the full stack</a>
         <a class="btn btn-light btn-lg" href="#proposal" data-cta-clone tabindex="-1" aria-hidden="true">Get a proposal</a>
       </div>
     </div>
@@ -1015,7 +1030,7 @@
       <div class="hero-composer-hints">
         <button type="button" class="hero-composer-hint" data-hero-hint="What does the Voice agent do?">Voice</button>
         <button type="button" class="hero-composer-hint" data-hero-hint="What does the Sales agent do?">Sales</button>
-        <button type="button" class="hero-composer-hint" data-hero-hint="What is the Full Stack for $997?">Stack</button>
+        <button type="button" class="hero-composer-hint" data-hero-hint="What does the Full Stack include?">Stack</button>
       </div>
     </div>
   </div>
@@ -1023,6 +1038,14 @@
   <button type="button" class="hero-video-toggle" id="hero-video-toggle" aria-pressed="false" title="Optional hero video">
     Video
   </button>
+</section>
+
+<section class="daily-value" data-daily-field-note data-note-context="home" aria-label="Today’s Meridian field note">
+  <div class="daily-note-inner">
+    <div class="daily-note-top"><span>Today’s Meridian Field Note</span><span>Operations</span></div>
+    <h2>Useful automation starts with one clear next action.</h2>
+    <p>Define what should happen after a call, lead or booking request before adding automation. Meridian then connects that outcome to the right agent and system.</p>
+  </div>
 </section>
 
 <section class="agent-reel" aria-label="Meridian agents in action">
@@ -1139,15 +1162,19 @@
 
 <section class="voice-demo" id="voice-demo" aria-label="Voice sample">
   <div class="voice-demo-panel">
-    <h2>Voice sample</h2>
-    <p class="vd-lede">One short line. Pick a voice and play.</p>
+    <h2>A voice worth answering.</h2>
+    <p class="vd-lede">Try each role. Hear the delivery. Then explore its complete service page.</p>
+    <div class="vd-roles" aria-label="Agent role"><button type="button" data-vd-role="receptionist" aria-pressed="true">Receptionist</button><button type="button" data-vd-role="booking" aria-pressed="false">Booking</button><button type="button" data-vd-role="service" aria-pressed="false">Service</button><button type="button" data-vd-role="sales" aria-pressed="false">Sales</button></div>
     <div class="vd-voices" data-vd-voices></div>
     <textarea class="vd-text" id="vd-text" data-vd-text maxlength="220" rows="2">Thanks for calling. I can help with hours, booking, or a quick question — how can I help you today?</textarea>
     <div class="vd-row">
       <button type="button" class="btn btn-dark" data-vd-play>Play</button>
-      <a class="btn btn-light" href="#stack">Full stack</a>
+      <button type="button" class="btn btn-light" data-vd-stop>Stop</button><a class="btn btn-light" data-vd-detail href="/agents/voice">Explore this agent →</a>
     </div>
-    <p class="vd-status" data-vd-status>Loading…</p>
+    <p class="vd-status" data-vd-status role="status" aria-live="polite">Checking studio…</p>
+    <audio data-vd-audio controls hidden></audio>
+    <button type="button" class="btn btn-light" data-vd-device hidden>Use device voice instead</button>
+    <p class="vd-note">AI-generated sample. Phone conversations use OpenAI Realtime; ElevenLabs samples demonstrate delivery, not live bookings.</p>
   </div>
 </section>
 
@@ -1198,10 +1225,10 @@
       <p>Answer the phone, follow up fast, fill the calendar — open any card for install and checkout.</p>
     </div>
     <div class="agents-entry-grid">
-      <a class="agent-card featured" href="/agents/voice">
+      <a class="agent-card featured" href="/agents/voice" target="_blank" rel="noopener">
         <div class="agent-card-top">
           <span class="agent-card-num">01 · Voice</span>
-          <span class="agent-card-price">$497</span>
+          <span class="agent-card-price">Explore</span>
         </div>
         <h3>Voice</h3>
         <p>24/7 receptionist. Answers, qualifies, books, escalates — so after-hours never means missed revenue.</p>
@@ -1212,10 +1239,10 @@
         </div>
         <span class="agent-card-go">Open Voice <i aria-hidden="true">→</i></span>
       </a>
-      <a class="agent-card" href="/agents/sales">
+      <a class="agent-card" href="/agents/sales" target="_blank" rel="noopener">
         <div class="agent-card-top">
           <span class="agent-card-num">02 · Sales</span>
-          <span class="agent-card-price">$497</span>
+          <span class="agent-card-price">Explore</span>
         </div>
         <h3>Sales</h3>
         <p>Sub-1-minute lead follow-up. Qualify, next steps, and book while interest is still hot. CASL-aware.</p>
@@ -1226,10 +1253,10 @@
         </div>
         <span class="agent-card-go">Open Sales <i aria-hidden="true">→</i></span>
       </a>
-      <a class="agent-card" href="/agents/booking">
+      <a class="agent-card" href="/agents/booking" target="_blank" rel="noopener">
         <div class="agent-card-top">
           <span class="agent-card-num">03 · Booking</span>
-          <span class="agent-card-price">$497</span>
+          <span class="agent-card-price">Explore</span>
         </div>
         <h3>Booking</h3>
         <p>Schedule, confirm, and recover no-shows — a fuller calendar without the admin drag.</p>
@@ -1741,5 +1768,5 @@
   });
 })();
 </script>
-</body>
+<script src="/js/daily-field-note.js" defer></script>\n</body>
 </html>

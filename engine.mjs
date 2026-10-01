@@ -234,6 +234,7 @@ export function provisionClientAgent(lead) {
 export function submitIntake(intakeToken, body) {
   const lead = getLeadByIntakeToken(intakeToken);
   if (!lead) return { ok: false, error: 'Invalid intake link' };
+  if (lead.agency) return { ok: false, error: 'Managed projects use their private onboarding hub; agent provisioning requires a separately reviewed install.' };
   const intake = {
     submittedAt: new Date().toISOString(),
     businessName: body.businessName || lead.businessName,
@@ -438,6 +439,7 @@ export function listApprovedUnsent() {
 export function runAgentOnLead(leadId) {
   const lead = getLead(leadId);
   if (!lead) return { ok: false, error: 'Lead not found' };
+  if (lead.agency) return { ok: true, action: 'managed_scope_required', lead };
   if (lead.unsubscribed) return { ok: false, error: 'Unsubscribed' };
   if (lead.stage === 'new' || lead.stage === 'qualified') {
     const withProp = attachProposal(leadId);

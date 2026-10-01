@@ -1,0 +1,21 @@
+/api/voice/preview  /.netlify/functions/voice-preview  200
+/api/voice/voices   /.netlify/functions/voice-voices   200
+/api/voice/status   /.netlify/functions/voice-status   200
+/agents/voice       /agent-voice.html                  200
+/voice              /voice.html                        200
+
+/agents /agents.html 200
+
+/agents/sales /agent-sales.html 200
+
+/agents/booking /agent-booking.html 200
+
+/agents/service /agent-service.html 200
+
+/install /install-guide.html 200
+
+/why-agents /why-agents.html 200
+
+/api/* https://meridian-production-4996.up.railway.app/api/:splat 200!
+/meridian-voice-demo.html https://meridian-production-4996.up.railway.app/meridian-voice-demo.html 200!
+/meridian-voice-demo https://meridian-production-4996.up.railway.app/meridian-voice-demo.html 200!
