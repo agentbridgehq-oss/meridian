@@ -15,6 +15,17 @@ const { provisionManagedRuntime } = await import('../lib/managed-runtime.mjs');
 const routing = await import('../lib/inbound-routing.mjs');
 const ingress = await import('../lib/openai-realtime-ingress.mjs');
 
+// Usage metering is fail-safe: a call is only accepted for a deployment whose runtime
+// agent maps to a billing account with an active plan.
+async function activateBilling(deploymentId) {
+  const { getLead } = await import('../engine.mjs');
+  const billing = await import('../lib/usage-billing.mjs');
+  const agentId = getLead(core.getDeployment(deploymentId).projectId).managedRuntime.agentId;
+  const acc = billing.ensureBillingAccount({ agentId, email: `${agentId}@example.invalid` });
+  assert.equal(billing.activateSubscription(acc.id, 'pro').ok, true);
+  return acc;
+}
+
 let deploymentSequence = 0;
 
 function incoming(number) {
@@ -83,6 +94,7 @@ test('staging ingress resolves the Twilio DID and only accepts a prepared deploy
   assert.equal(plan.acceptBody.type, 'realtime');
   assert.equal(plan.acceptBody.model, 'gpt-realtime-2.1');
 
+  await activateBilling(deployment.id);
   let accepted = null;
   const result = await ingress.processVerifiedOpenAIRealtimeWebhook(incoming('+17055550130'), {
     environment: 'staging',

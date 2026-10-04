@@ -53,3 +53,26 @@ Webhook (`STRIPE_WEBHOOK_SECRET`): `checkout.session.completed`, `customer.subsc
 Retired env vars: `STRIPE_PRICE_{VOICE,SALES,BOOKING,STACK,AUTO,AUTO_VOICE,AUTO_STACK,AUTO_SALES,VOICE_SUB,VOICE_PRO}`,
 `STRIPE_AMOUNT_AUTO*`, `VOICE_SUB_*`, `VOICE_CENTS_PER_TURN`,
 `VOICE_MIN_MARGIN_MULTIPLE`, `AUTO_INSTALL_BONUS_TURNS`.
+
+## Live-channel metering (lib/usage-meter.mjs)
+
+Every live channel maps to the client's billing account and fails safe (no mapped account
+with an active plan / prepaid balance → no AI usage):
+
+| Channel | Mapping | Metering | At cap |
+|---------|---------|----------|--------|
+| OpenAI Realtime SIP | route → deployment → runtime agent (or `deployment.billingAccountId`) | Holds min(20, remaining) AI minutes before accept; settles rounded-up minutes on sideband close | Call declined before the AI answers (SIP `MERIDIAN_CAP_SIP_STATUS`, default 480). Mid-call: wrap-up notice 30 s before the allowance ends, then REFER to the verified human line or hang up |
+| Twilio `<Gather>` voice | agent id / `TWILIO_AGENT_MAP` | Hold on first webhook, checked every turn, settled on `<Dial>`, status callback, or stale-hold sweep | `<Say>` notice + `<Dial>` humanTransfer, else polite hang-up |
+| Twilio inbound SMS | agent id / `TWILIO_AGENT_MAP` | Inbound + reply segments (GSM-7/UCS-2), included then prepaid; replies trimmed to the balance | No AI reply; text forwarded to owner by email; one notice per customer number per period. STOP/START always answered |
+| Customer-facing outbound SMS | agent | `sendClientSms` → metered; refused at cap | Skipped (`billing.sms_cap_reached`) |
+
+Twilio console settings for each client number:
+- Voice status callback: `POST /api/twilio/voice/<agentId>/status` (settles minutes).
+- Voice fallback URL / Elastic SIP trunk disaster-recovery URL: `POST /api/twilio/voice/<agentId>/fallback` (no-AI TwiML).
+
+Alerts at 80% / 100% (minutes and SMS) are emailed / texted to the owner through `lib/notify.mjs`
+once per threshold per billing period (dedupe in `data/processed-events.json`).
+
+Stripe checkout processing is idempotent: Stripe event ids and checkout session ids are claimed
+atomically in `data/processed-events.json` before any plan activation, block credit or provisioning,
+so the webhook, its retries and the confirm page never double-apply a purchase.

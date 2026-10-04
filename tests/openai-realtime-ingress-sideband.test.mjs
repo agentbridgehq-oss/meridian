@@ -17,6 +17,17 @@ const routing = await import('../lib/inbound-routing.mjs');
 const ingress = await import('../lib/openai-realtime-ingress.mjs');
 const ledger = await import('../lib/realtime-call-ledger.mjs');
 
+// Usage metering is fail-safe: a call is only accepted for a deployment whose runtime
+// agent maps to a billing account with an active plan.
+async function activateBilling(deploymentId) {
+  const { getLead } = await import('../engine.mjs');
+  const billing = await import('../lib/usage-billing.mjs');
+  const agentId = getLead(core.getDeployment(deploymentId).projectId).managedRuntime.agentId;
+  const acc = billing.ensureBillingAccount({ agentId, email: `${agentId}@example.invalid` });
+  assert.equal(billing.activateSubscription(acc.id, 'pro').ok, true);
+  return acc;
+}
+
 function incoming(number, callId) {
   return {
     type: 'realtime.call.incoming',
@@ -54,6 +65,7 @@ test('required sideband failure hangs up the already accepted call and records f
   const number = '+17055550141';
   const callId = 'rtc_sideband_required_fail';
   const deployment = preparedDeployment(number);
+  await activateBilling(deployment.id);
   let acceptCount = 0;
   let attachCount = 0;
   let hangupCount = 0;
@@ -86,6 +98,7 @@ test('required sideband success leaves the accepted call under sideband control'
   const number = '+17055550142';
   const callId = 'rtc_sideband_required_ok';
   const deployment = preparedDeployment(number);
+  await activateBilling(deployment.id);
   let hangupCount = 0;
 
   const result = await ingress.processVerifiedOpenAIRealtimeWebhook(incoming(number, callId), {

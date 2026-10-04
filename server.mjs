@@ -9,6 +9,8 @@ import { renderServicePage } from './lib/agency-pages.mjs';
 import { registerOpenAIRealtimeWebhookRoute } from './lib/openai-webhook-route.mjs';
 import { registerXaiRealtimeWebhookRoute } from './lib/xai-webhook-route.mjs';
 import { registerTwilioRoutes } from './lib/twilio-routes.mjs';
+import { claimOnce, completeClaim, processOnce, releaseClaim } from './lib/processed-events.mjs';
+import { deliverUsageAlerts } from './lib/usage-alerts.mjs';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import path from 'path';
@@ -178,6 +180,7 @@ import {
   sendInteractionSummary,
   sendMissedCallTextBack,
   sendSms,
+  sendClientSms,
   sendOwnerEmail,
 } from './lib/notify.mjs';
 import {
@@ -421,12 +424,17 @@ async function runFullAutoInstall(session, lead) {
         { id: connection.id, leadId: lead.id, businessName: chatIntake.businessName },
         { email, leadId: lead.id },
       );
-      activateSubscription(acc.id, planId, {
-        amountCents: session.amount_total || 0,
-        stripeCustomerId: String(session.customer || ''),
-        stripeSubscriptionId: String(session.subscription || ''),
-        stripeSessionId: session.id,
-      });
+      // The checkout billing step usually activated this plan already (same session);
+      // only activate here if it did not, so revenue/ledger are not double counted.
+      const current = getBillingAccount(acc.id);
+      if (!(planIdFor(current?.plan) === planId && current?.subscriptionStatus === 'active')) {
+        activateSubscription(acc.id, planId, {
+          amountCents: session.amount_total || 0,
+          stripeCustomerId: String(session.customer || ''),
+          stripeSubscriptionId: String(session.subscription || ''),
+          stripeSessionId: session.id,
+        });
+      }
     }
   } catch (e) {
     console.error('[full-auto plan billing]', e.message);
@@ -576,6 +584,7 @@ async function runMeteredHostedTts(agent, text, { voiceId } = {}) {
     provider: result.mode || preferredHostedTts(),
     agentId: agent.id,
   });
+  deliverUsageAlerts(account.id).catch(() => {});
 
   // Optional: only if VOICE_ALLOW_OVERAGE=1 (off by default)
   if (
@@ -623,19 +632,18 @@ app.post('/api/stripe/webhook', express.raw({ type: 'application/json' }), async
   } catch (e) {
     return res.status(400).json({ error: `Webhook error: ${e.message}` });
   }
+  // Idempotency: Stripe retries / replays of the same event are acknowledged, not re-run.
+  const eventKey = event?.id ? `stripe_event:${event.id}` : '';
+  if (eventKey && !claimOnce(eventKey, { type: event.type }).claimed) {
+    return res.json({ received: true, duplicate: true });
+  }
+  let eventFailed = false;
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object;
     try {
-      const kind = session.metadata?.kind || '';
-      if (kind === 'voice_pack' || kind === 'voice_sub') {
-        await handleVoiceBillingCheckout(session);
-      } else if (kind === 'plan') {
-        await handleVoiceBillingCheckout(session);
-        await handlePaidCheckout(session);
-      } else {
-        await handlePaidCheckout(session);
-      }
+      await processCheckoutSession(session, 'webhook');
     } catch (e) {
+      eventFailed = true;
       console.error('[stripe webhook]', e.message);
     }
   }
@@ -660,17 +668,64 @@ app.post('/api/stripe/webhook', express.raw({ type: 'application/json' }), async
         }
       }
     } catch (e) {
+      eventFailed = true;
       console.error('[stripe sub]', e.message);
     }
+  }
+  if (eventKey) {
+    if (eventFailed) releaseClaim(eventKey, { error: 'handler_failed' });
+    else completeClaim(eventKey, { type: event.type });
   }
   res.json({ received: true });
 });
 
 /**
+ * One entry point for a completed Checkout Session, shared by the Stripe webhook and
+ * the /api/checkout/confirm page. Each side effect is keyed by the Stripe session id
+ * in the persistent processed-events ledger, so whichever path arrives second (or a
+ * replay) never activates a plan or credits a block twice.
+ */
+async function processCheckoutSession(session, source = 'webhook') {
+  const kind = session?.metadata?.kind || '';
+  let billing = null;
+  let paid = null;
+  if (kind === 'voice_pack' || kind === 'voice_sub' || kind === 'plan') {
+    billing = await handleVoiceBillingCheckout(session, { source });
+  }
+  if (kind !== 'voice_pack' && kind !== 'voice_sub') {
+    const canProvision = source === 'webhook' || session?.payment_status === 'paid';
+    if (canProvision) paid = await processPaidCheckoutOnce(session);
+  }
+  return { kind, billing, paid };
+}
+
+function summarizePaidResult(r) {
+  if (!r) return null;
+  return {
+    fullAuto: Boolean(r.fullAuto),
+    autoProvisioned: Boolean(r.autoProvisioned),
+    setupWizardUrl: r.setupWizardUrl || '',
+    guideUrl: r.guideUrl || '',
+    lead: r.lead?.intakeToken ? { intakeToken: r.lead.intakeToken } : null,
+  };
+}
+
+/** handlePaidCheckout (lead → money approval → provisioning) at most once per session. */
+async function processPaidCheckoutOnce(session) {
+  if (!session?.id) return null;
+  const once = await processOnce(`stripe_checkout_paid:${session.id}`, () => handlePaidCheckout(session), {
+    summarize: summarizePaidResult,
+    meta: { product: session.metadata?.product || '' },
+  });
+  return once.duplicate ? { ...(once.result || {}), duplicate: true, pending: once.pending } : once.result;
+}
+
+/**
  * Prepaid packs + Voice Premium subscriptions (usage billing).
  * Cash collected BEFORE turns — guaranteed positive unit economics when charged >> cost.
  */
-async function handleVoiceBillingCheckout(session) {
+async function handleVoiceBillingCheckout(session, { source = 'webhook' } = {}) {
+  if (!session?.id) return null; // never credit without a Stripe session id to dedupe on
   const email = (session.customer_details?.email || session.customer_email || '').toLowerCase();
   const kind = session.metadata?.kind;
   const agentId = session.metadata?.agentId || '';
@@ -696,6 +751,12 @@ async function handleVoiceBillingCheckout(session) {
     acc = getBillingAccount(acc.id);
   }
 
+  // Atomic dedupe: claim + credit run in the same tick (no await in between).
+  const creditKey = `stripe_checkout_billing:${session.id}`;
+  if (!claimOnce(creditKey, { kind, source }).claimed) {
+    return { account: getBillingAccount(acc.id), kind, duplicate: true };
+  }
+
   if (kind === 'voice_pack') {
     const blockId = resolveBlockId(packId) || 'minutes_100';
     const pack = TOPUP_PACKS[blockId];
@@ -704,6 +765,7 @@ async function handleVoiceBillingCheckout(session) {
       stripeSessionId: session.id,
       packId: blockId,
     });
+    completeClaim(creditKey, { accountId: acc.id, kind, blockId, source });
     const what = pack.turns ? `${pack.turns} AI minutes` : `${pack.smsSegments} SMS segments`;
     if (email) {
       await sendEmail(
@@ -734,6 +796,7 @@ async function handleVoiceBillingCheckout(session) {
       stripeCustomerId,
       stripeSubscriptionId: String(session.subscription || ''),
     });
+    completeClaim(creditKey, { accountId: acc.id, kind, plan, source });
     if (email && kind === 'voice_sub') {
       const p = SUBSCRIPTION_PLANS[plan];
       await sendEmail(
@@ -752,6 +815,7 @@ async function handleVoiceBillingCheckout(session) {
     return { account: getBillingAccount(acc.id), kind };
   }
 
+  completeClaim(creditKey, { accountId: acc.id, kind, ignored: true, source });
   return null;
 }
 
@@ -1676,6 +1740,7 @@ app.post('/api/v1/agents/:id/voice-turn', async (req, res) => {
         provider: turn.mode || preferredHostedTts(),
         agentId: agent.id,
       });
+      deliverUsageAlerts(account.id).catch(() => {});
     } else {
       // Brain replied but no audio — refund hold (no xAI spend should have happened)
       releaseReservedTurn(account.id, hold);
@@ -2537,7 +2602,7 @@ app.post('/api/v1/agents/:id/sms', async (req, res) => {
   const to = req.body?.to || req.body?.phone;
   const body = req.body?.body || req.body?.message;
   if (!to || !body) return res.status(400).json({ error: 'to and body required' });
-  const sms = await sendSms({ to, body });
+  const sms = await sendClientSms(agent, { to, body });
   res.status(sms.ok || sms.skipped ? 200 : 502).json({ ok: sms.ok || Boolean(sms.skipped), sms });
 });
 
@@ -2888,12 +2953,11 @@ app.get('/api/checkout/confirm', async (req, res) => {
     if (paid || session?.mode === 'subscription') {
       const kind = session.metadata?.kind || '';
       if (kind === 'voice_pack' || kind === 'voice_sub') {
-        await handleVoiceBillingCheckout(session);
+        await processCheckoutSession(session, 'confirm');
         return res.redirect(302, `/?voice_billed=1&kind=${encodeURIComponent(kind)}`);
       }
-      if (kind === 'plan') await handleVoiceBillingCheckout(session);
-      if (session.payment_status === 'paid') {
-        const result = await handlePaidCheckout(session);
+      if (session.payment_status === 'paid' || kind === 'plan') {
+        const result = (await processCheckoutSession(session, 'confirm')).paid;
         // Full auto → wizard first (minimal work path)
         if (result?.fullAuto && result.setupWizardUrl) {
           return res.redirect(302, result.setupWizardUrl.replace(BASE, '') || '/setup');
