@@ -202,3 +202,11 @@ Portfolio audit: Claudecraft paid checkout 404 and Stripe connector requires rea
 - Live Play called /api/voice/preview and got browser_handoff because ElevenLabs is not armed.
 - Added public studio samples for ara, eve, leo, and rex. Play uses the file immediately.
 - Device speech stays an explicit fallback. No ElevenLabs key stored.
+
+## 2026-10-04 — master protected
+
+- Kenny ordered `master` protected. No merge.
+- Ruleset `Protect master` id `24443088` is active on `refs/heads/master`: cannot delete the branch, cannot force-push, cannot push directly. A pull request can still merge with zero required reviews, so an explicit merge of PR #2 remains possible later.
+- No bypass actors. Admin token cannot bypass.
+- `meridian-agency-2-0` is not under this ruleset.
+- `master` still @ `05a6bbcd`.
