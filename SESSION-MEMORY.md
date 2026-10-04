@@ -2,6 +2,15 @@
 
 **Keep this chat/context permanent.** Resume with: “pull up Meridian”, “Meridian ads”, “live urls”, “know me”.
 
+## Latest checkpoint — 2026-10-04 16:05 UTC
+
+Read the newest entry in MERIDIAN-SESSION-SYNC.md before historical deployment truth below.
+Product `23fd69ed5b8aca4b751a4ff30406984215bab071` is deployed: Railway `e48f1e19-abe1-464b-a8bd-72095ae46eeb` SUCCESS; Netlify `6ac2780a8b3b09cc5e4a3484` ready. Ken authorized the launch-correction pass; master stays unmerged. Tests 213/213, production npm audit zero vulnerabilities. The current phone provider is xAI/Grok with Twilio SIP, not the old OpenAI baseline. Credentials are configured; actual call acceptance is still unverified.
+
+Shipped customer Setup help, persistent preparation checklist, corrected CAD plans and provider guides, working checkout/private delivery routing, no-store/no-referrer private pages, durable SMS STOP suppression, operator-only arbitrary SMS and explicit AI identity instructions. Browser confirmed published CAD plans and Setup help; three checkout routes redirect to Stripe without any purchase. No real call/calendar transaction or mobile acceptance was performed.
+
+Daily owner-only money/blocker brief is enabled for 03:30 America/Toronto starting 2026-10-05. It does not authorize spending, outreach, financial changes, master merges or unattended production deployments. Full customer launch is NOT approved: reception routing, real-call/fallback and calendar acceptance, package provisioning, complete disclosures, remaining SMS controls, legal/contact approval and owner commercial decisions remain gates. Demo +1 289-670-7853; main +1 647-490-3326 reported unrouted in Grok handoff. Next: complete authorized operator routing/disclosure/provisioning and collect actual acceptance evidence.
+
 ## Current deployment truth (read this first)
 
 As of 2026-09-30, PR #2 on `meridian-agency-2-0` is the live build track. Railway runtime and the Netlify front are deployed from the tested feature branch. `master` remains protected and unmerged.

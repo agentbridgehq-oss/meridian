@@ -1,5 +1,15 @@
 # Meridian status and handoff
 
+## Latest verified update — 2026-10-04 16:05 UTC
+
+Ken authorized the source-sync and launch-correction deployment. Product `23fd69ed5b8aca4b751a4ff30406984215bab071` is live on Railway (`e48f1e19-abe1-464b-a8bd-72095ae46eeb`, SUCCESS) and Netlify (`6ac2780a8b3b09cc5e4a3484`, ready). Tests 213/213, npm production audit zero vulnerabilities. The earlier six-failure statement is stale: fresh baseline was 198/201; repaired premium-studio mocks and new safety tests now pass.
+
+Public CAD pricing, current xAI guides, checkout/private setup routing, local Setup help, checklist and private-page cache/referrer protections are published. SMS STOP is durably enforced by sender/recipient; Advanced Opt-Out does not double-reply; corrupt suppression storage fails closed; arbitrary SMS requires operator plus tenant credentials and is rate limited. Outbound customer texts add business identification and STOP. AI identity instructions and Gather greeting were improved. Remaining geographic/abuse, full recording/processing disclosure and privacy/contract items below are still open, not silently signed off.
+
+Live checks: three CAD plan checkout routes return 303 to Stripe (no payment); setup/hub/install 200; invalid guide 404 with private/no-store and no-referrer; current voice API reports xAI configured, real-call verification null. Browser confirmed CAD plans and Setup help. No actual call, calendar booking, paid acceptance, or mobile visual verification was performed.
+
+**Full customer launch remains NO-GO.** Main-line routing/SMS callback, reception knowledge base, package provisioning, real-call/fallback/calendar acceptance and legal/contact/commercial decisions remain required. Daily owner brief is enabled at 03:30 America/Toronto, starting October 5; it reports money decisions and owner-only blockers, without spending, outreach or autonomous deployment. See latest MERIDIAN-SESSION-SYNC.md for exact next action. Historical snapshot follows.
+
 **Snapshot:** 2026-10-04, about 10:00 AM ET
 **Repo:** `agentbridgehq-oss/meridian`
 **Production branch:** `meridian-agency-2-0` (master is frozen)

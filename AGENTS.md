@@ -30,7 +30,11 @@ Before sending the final response for any Meridian task that changed files or ma
 
 Do not leave work only in chat or wait for the browser window to close. Closing or clearing a chat cannot trigger a later commit, so finish the GitHub handoff before the final response. A new chat must be able to reconstruct the full project state from GitHub alone. If nothing material changed, do not create an empty commit.
 
-## Current production truth — 2026-09-30
+## Current production truth — 2026-10-04
+
+Latest tested/deployed product: `23fd69ed5b8aca4b751a4ff30406984215bab071`; 213/213 tests. Railway deployment `e48f1e19-abe1-464b-a8bd-72095ae46eeb` SUCCESS; Netlify `6ac2780a8b3b09cc5e4a3484` ready. Current phone stack is xAI Grok Voice + Twilio SIP. Credentials configured does not prove acceptance: public `liveCallVerified:null`. Full customer launch remains blocked on routing, real-call/calendar acceptance, provisioning and legal/contact/disclosure gates. Read newest MERIDIAN-SESSION-SYNC.md entry; older credential/provider statements below are historical. Daily 03:30 Toronto owner brief is enabled; it does not grant spending/deploy/merge authority.
+
+## Historical production truth — 2026-09-30
 
 Latest tested product: `de957b2813eaabacc7ecad14c7295709ed481db1`, deployed on Railway and Netlify. Connection hub `/voice-connect.html`; public configuration endpoint `/api/voice/connections`; 109/109 tests. Importable n8n bridge now exists, but downstream calendar and real-call acceptance remain unverified. See docs/VOICE-CONNECTION-PIPELINE.md and the latest handoff entries.
 
@@ -45,6 +49,6 @@ Netlify https://meridian-open.netlify.app serves the premium front and proxies r
 - Restore push/PR auto CI on `Meridian Tests`
 - Commit secrets
 - Deploy by inventing a Railway token
-- Treat Retell/Vapi docs as the current voice stack (PR #2 is OpenAI Realtime + Twilio SIP)
+- Treat Retell/Vapi or old OpenAI docs as the current default voice stack (current provider is xAI Grok Voice + Twilio SIP; legacy is rollback)
 
 See [CLAUDE.md](./CLAUDE.md), [DECISION.md](./DECISION.md), [GO-LIVE.md](./GO-LIVE.md).

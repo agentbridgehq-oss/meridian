@@ -2,6 +2,24 @@
 
 GitHub is source of truth.
 
+## Latest verified checkpoint — 2026-10-04 16:05 UTC
+
+This entry supersedes older current-pointer and missing-credential statements below.
+
+- Ken authorized latest-source corrections and deployment, then requested a daily 03:30 America/Toronto brief for money decisions and owner-only actions. The brief is enabled, starting October 5. It is read-only reporting, not autonomous spending or blanket deployment authority.
+- Tested product: `23fd69ed5b8aca4b751a4ff30406984215bab071`, based on Grok head `211b33f`. Branch remains `meridian-agency-2-0`; PR #2 open; master untouched/unmerged.
+- Railway deployment `e48f1e19-abe1-464b-a8bd-72095ae46eeb` SUCCESS at that exact product SHA. Existing service, secrets and /data volume preserved. Source pinned to the tested product; no push auto-deployment enabled.
+- Netlify deployment `6ac2780a8b3b09cc5e4a3484` ready, uploaded from a clean Git archive of that product. Public front: https://meridian-open.netlify.app/.
+- Fixed stale public CAD/xAI content; checkout/private delivery proxies; private no-store/no-referrer headers; accessible assistance drawer with local Setup help; customer preparation checklist; current xAI connection hub; stale preview test mocks.
+- Added durable sender/recipient SMS STOP suppression, Advanced Opt-Out handling without duplicate confirmations, fail-closed storage behavior, outbound business identification/unsubscribe text, operator authorization and rate limiting on arbitrary SMS. Added never-claim-human and first-greeting AI instructions plus Gather AI identification. This is not a claim that all legal/disclosure gates are complete.
+- Validation: `npm test` 213/213 passed; `npm audit --omit=dev` zero vulnerabilities; changed JS syntax checks and `git diff --check` passed. Fresh original baseline was 198/201, not the historical six-failure claim.
+- Live HTTP: install, connection hub, setup and blank setup API 200; all three plan checkout routes 303 to checkout.stripe.com; invalid private guide 404 with no-store/no-referrer. Three unpaid checkout sessions were opened; no purchase or payment was made.
+- Browser: published CAD plans and Setup help drawer inspected; local help links present. No microphone conversation, real phone call, mobile visual acceptance or calendar transaction was performed.
+- Live voice status: xAI credentials configured, `liveCallVerified:null`. Configured is not accepted/live service.
+- Full customer launch remains NO-GO: main reception routing/SMS URL and knowledge-base receptionist, real-call/fallback acceptance, package provisioning and calendar acceptance, complete recording/processing disclosures, remaining SMS geographic/abuse controls, approved privacy/terms/DPA and dedicated monitored contact. Existing owner decisions on SLA, turnaround, guarantee and Rescue scope remain open.
+- Phone numbers from Grok's handoff: demo +1 289-670-7853; Toronto main +1 647-490-3326 (reported not routed). Neither was independently called in this session.
+- Exact next action: authorized Twilio/operator setup for the existing main line, finish disclosure and package provisioning, then record real inbound call/fallback/calendar acceptance. Do not advertise full autonomous customer launch or buy/send/charge/merge without the required owner approval.
+
 ## Current pointer (2026-10-04)
 
 - Working branch: `meridian-agency-2-0` @ `49f5a706`

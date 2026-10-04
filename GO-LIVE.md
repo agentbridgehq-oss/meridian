@@ -1,4 +1,12 @@
-# Meridian go-live — current checkpoint 2026-09-30
+# Meridian go-live — current checkpoint 2026-10-04
+
+**Customer launch: NO-GO pending acceptance. Website/backend corrections are deployed.**
+
+Tested product `23fd69ed5b8aca4b751a4ff30406984215bab071`: 213/213 tests; Railway `e48f1e19-abe1-464b-a8bd-72095ae46eeb` SUCCESS; Netlify `6ac2780a8b3b09cc5e4a3484` ready. Current xAI credentials are configured; `liveCallVerified:null`. Plan checkout routes reach Stripe; no payment or real call was executed. See latest MERIDIAN-SESSION-SYNC.md for verified evidence and remaining gates.
+
+Required before customer activation: main-line routing and SMS callback, completed AI/recording/processing disclosure, real inbound/fallback call, verified package provisioning and customer calendar actions, remaining SMS controls, approved privacy/terms/DPA and dedicated contact. Owner must settle SLA, turnaround, guarantee and Rescue scope. Daily 03:30 Toronto owner decision brief is enabled; full business operation is not yet autonomous.
+
+## Historical checkpoint — 2026-09-30
 
 Ken authorised runtime restoration. Railway project and service now exist.
 
