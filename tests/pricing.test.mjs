@@ -51,11 +51,13 @@ test('prepaid blocks: 100 min / $45 and 500 SMS / $35; overage derived from bloc
   assert.equal(pricing.OVERAGE.smsSegmentCents, 7);
 });
 
-test('usage policy: stop at cap, 80%/100% alerts, 20-min per-call cap, 1x overage ceiling, prepaid only', () => {
+test('usage policy: stop at cap (no card), PAYG metered overage (card), 80%/100% alerts, 20-min soft nudge, 60-min ceiling', () => {
   assert.equal(USAGE_POLICY.stopAtCap, true);
-  assert.equal(USAGE_POLICY.overagePrepaidOnly, true);
+  assert.equal(USAGE_POLICY.paygOverage, true);
+  assert.equal(USAGE_POLICY.legacyPostpaidInvoiceItems, false);
   assert.deepEqual([...USAGE_POLICY.alertThresholds], [0.8, 1.0]);
-  assert.equal(USAGE_POLICY.perCallAiMinuteCap, 20);
+  assert.equal(USAGE_POLICY.perCallSoftWrapMinutes, 20);
+  assert.equal(USAGE_POLICY.perCallAiMinuteCap, 60);
   assert.equal(USAGE_POLICY.overageCeilingMultiple, 1);
   assert.equal(billing.overageAllowed(), false);
 });
@@ -198,9 +200,10 @@ test('billing: prepaid blocks need an active plan and stop at the 1x overage cei
   assert.equal(billing.canPurchaseBlock(acc.id, 'sms_500').reason, 'overage_ceiling_reached'); // $180 + $35 > $199
 });
 
-test('per-call AI minute cap is 20', async () => {
+test('per-call AI minute ceiling is 60 (20 is only a soft nudge now)', async () => {
   const markup = await import('../lib/voice-minute-markup.mjs');
-  assert.equal(markup.billedAiMinutes(25 * 60), 20);
+  assert.equal(markup.billedAiMinutes(25 * 60), 25);
+  assert.equal(markup.billedAiMinutes(90 * 60), 60);
   assert.equal(markup.billedAiMinutes(61), 2);
 });
 

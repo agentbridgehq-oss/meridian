@@ -141,6 +141,9 @@ import {
   pricingSummaryText,
 } from './lib/pricing.mjs';
 import { buildPlanCheckoutSession, buildBlockCheckoutSession } from './lib/checkout-sessions.mjs';
+import { enablePaygFromCheckout, handlePaygStripeEvent, flushMeterOutbox, setPaygAlertCents, paygState } from './lib/payg-billing.mjs';
+import { maybeAlertAiCostRatio } from './lib/owner-alerts.mjs';
+import { meterDeps } from './lib/usage-meter.mjs';
 import { xaiTtsConfigured } from './lib/xai-tts.mjs';
 import { vendorPaygSnapshot } from './lib/vendor-payg.mjs';
 import {
@@ -211,6 +214,8 @@ const app = express();
 const portFlag = process.argv.indexOf('--port');
 const PORT = Number(process.env.PORT) || (portFlag >= 0 ? Number(process.argv[portFlag + 1]) : 0) || 8891;
 const stripe = process.env.STRIPE_SECRET_KEY ? new Stripe(process.env.STRIPE_SECRET_KEY) : null;
+// PAYG metered overage: usage meter flushes meter events to Stripe Billing Meters.
+meterDeps.stripe = stripe;
 
 // Security headers on every response. CSP allows the fonts + inline
 // style/script the current pages use (copy-button onclick, inline <style>
@@ -672,6 +677,13 @@ app.post('/api/stripe/webhook', express.raw({ type: 'application/json' }), async
       console.error('[stripe sub]', e.message);
     }
   }
+  // Pay-as-you-go: payment failed → voicemail for NEW calls (live calls finish); paid → restore.
+  try {
+    await handlePaygStripeEvent(event);
+  } catch (e) {
+    eventFailed = true;
+    console.error('[stripe payg]', e.message);
+  }
   if (eventKey) {
     if (eventFailed) releaseClaim(eventKey, { error: 'handler_failed' });
     else completeClaim(eventKey, { type: event.type });
@@ -797,6 +809,11 @@ async function handleVoiceBillingCheckout(session, { source = 'webhook' } = {}) 
       stripeSubscriptionId: String(session.subscription || ''),
     });
     completeClaim(creditKey, { accountId: acc.id, kind, plan, source });
+    let payg = null;
+    if (kind === 'plan' && stripe) {
+      payg = await enablePaygFromCheckout(session, { stripe, accountId: acc.id }).catch((e) => ({ ok: false, error: e.message }));
+      if (payg && !payg.ok) console.error('[payg enable]', acc.id, payg.reason || payg.error);
+    }
     if (email && kind === 'voice_sub') {
       const p = SUBSCRIPTION_PLANS[plan];
       await sendEmail(
@@ -804,7 +821,7 @@ async function handleVoiceBillingCheckout(session, { source = 'webhook' } = {}) 
         `${p.name} is active`,
         `Plan active: ${p.name} (CA$${(p.amount / 100).toFixed(0)}/mo, CAD)\n` +
           `Included this month: ${p.includedTurns} AI minutes, ${p.includedSmsSegments} SMS segments\n` +
-          `Usage stops at the cap. Extra usage is prepaid top-ups only (CA$45 per 100 min, CA$35 per 500 SMS).\n\n${BASE}`,
+          `Without pay-as-you-go, usage stops at the cap and extra usage is prepaid top-ups (CA$45 per 100 min, CA$35 per 500 SMS). With a card on file and pay-as-you-go, calls never stop: extra usage is CA$0.45/min and CA$0.07/SMS.\n\n${BASE}`,
       );
     }
     await dispatchWebhook('billing.voice_sub', {
@@ -812,7 +829,7 @@ async function handleVoiceBillingCheckout(session, { source = 'webhook' } = {}) 
       agentId: acc.agentId,
       plan,
     }).catch(() => {});
-    return { account: getBillingAccount(acc.id), kind };
+    return { account: getBillingAccount(acc.id), kind, payg };
   }
 
   completeClaim(creditKey, { accountId: acc.id, kind, ignored: true, source });
@@ -1833,6 +1850,7 @@ app.get('/api/v1/agents/:id/billing', (req, res) => {
       periodTurnsUsed: account.periodTurnsUsed,
       periodTurnsIncluded: account.periodTurnsIncluded,
       lifetimeTurns: account.lifetimeTurns,
+      payg: { ...paygState(account), periodPaygCents: account.periodPaygCents || 0, alertCents: account.payg?.alertCents ?? null },
     },
     canUsePremiumVoice: gate.ok,
     gate: gate.ok ? { mode: gate.mode, remaining: gate.remaining } : { reason: gate.reason, message: gate.message },
@@ -2833,7 +2851,7 @@ app.get('/api/pricing/voice', (_req, res) => {
     model: 'plan_caps_plus_prepaid_blocks',
     customerBilling: 'monthly_plan_included_usage_then_prepaid_blocks',
     guarantee:
-      'Customer pays Stripe first (CAD plan or prepaid top-up). Usage stops at the plan cap by default; extra usage is prepaid blocks only, limited to 1x the plan price per month. Alerts at 80% and 100%. Max 20 AI minutes per call.',
+      'Customer pays Stripe first (CAD plan or prepaid top-up). Card-on-file pay-as-you-go clients never stop at the cap: extra usage is metered to Stripe (CA$0.45/min, CA$0.07/SMS) and charged on the invoice or early at the billing threshold; failed payment routes new calls to voicemail. Without a card, usage stops at the plan cap and extra usage is prepaid blocks only (1x plan price/month). Alerts at 80% and 100% (informational for PAYG). Soft wrap-up nudge at 20 minutes; absolute 60-minute safety ceiling per call.',
     policy: cashFlowPolicy(),
     pricing: pricingSnapshot(),
     plans: SUBSCRIPTION_PLANS,
@@ -2859,6 +2877,18 @@ app.get('/api/ops/billing/roi', (req, res) => {
     recent: listUsage(40),
     vendorPayg: vendorPaygSnapshot(),
   });
+});
+
+/** Client-set PAYG spend alert (informational only; never stops calls). 0 = default (1x plan price). */
+app.post('/api/v1/agents/:id/billing/payg-alert', express.json(), (req, res) => {
+  const key = (req.get('Authorization') || '').replace(/^Bearer\s+/i, '');
+  const agent = verifyAgentKey(req.params.id, key);
+  if (!agent) return res.status(401).json({ error: 'Invalid credentials' });
+  const account = billingForAgent(agent);
+  const cents = Math.round(Number(req.body?.alertCents));
+  if (!Number.isFinite(cents) || cents < 0 || cents > 10_000_00) return res.status(400).json({ error: 'alertCents must be 0..1000000 (CAD cents)' });
+  const updated = setPaygAlertCents(account.id, cents);
+  res.json({ ok: true, alertCents: updated?.payg?.alertCents ?? cents });
 });
 
 /** Vendor PAYG spend (xAI + Claude + Groq) — ops only */
@@ -2926,7 +2956,8 @@ app.get('/checkout/:product', publicLimiter, async (req, res) => {
     const leadId = String(req.query.lead || '');
     const email = String(req.query.email || '').toLowerCase();
     const acc = ensureBillingAccount({ leadId: leadId || null, email });
-    const params = buildPlanCheckoutSession({ planKey: plan.id, base: BASE, leadId, billingAccountId: acc.id, email });
+    const payg = String(req.query.payg || '') === '1';
+    const params = buildPlanCheckoutSession({ planKey: plan.id, base: BASE, leadId, billingAccountId: acc.id, email, payg });
     params.metadata.requestedProduct = req.params.product;
     const session = await stripe.checkout.sessions.create(params);
     res.redirect(303, session.url);
@@ -3411,6 +3442,12 @@ app.get('*', (req, res) => {
 // OpenClaw daily
 if (process.env.MERIDIAN_OPENCLAW_AUTO !== '0') {
   setTimeout(() => runOpenClaw().catch((e) => console.error('[OpenClaw]', e.message)), 90000);
+  // PAYG: retry queued Stripe meter events + owner AI-cost-vs-revenue check (deduped monthly).
+  const paygTimer = setInterval(() => {
+    if (stripe) flushMeterOutbox({ stripe }).catch((e) => console.error('[MeterOutbox]', e.message));
+    maybeAlertAiCostRatio().catch((e) => console.error('[AiCostAlert]', e.message));
+  }, 5 * 60 * 1000);
+  paygTimer.unref?.();
   setInterval(() => runOpenClaw().catch((e) => console.error('[OpenClaw]', e.message)), 24 * 60 * 60 * 1000);
 }
 

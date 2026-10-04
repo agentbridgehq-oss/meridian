@@ -324,7 +324,8 @@ test('ingress provider xai: UUID call id, XAI key + brain.provider xai gates, xA
   assert.equal(acceptBody.session.voice, 'eve');
   assert.deepEqual(acceptBody.session.turn_detection, { type: 'server_vad' });
   assert.match(acceptBody.session.instructions, /Never invent prices/);
-  assert.equal(attachInput.limitSeconds, 20 * 60); // per-call cap still enforced
+  assert.equal(attachInput.limitSeconds, 60 * 60); // absolute safety ceiling still enforced
+  assert.equal(attachInput.nudgeSeconds, 20 * 60); // soft wrap-up nudge, never a hang-up
   assert.equal(typeof attachInput.onLimit, 'function');
   assert.equal(typeof attachInput.onClosed, 'function');
   assert.equal(ledger.getRealtimeCall(callId2).provider, 'xai-realtime');

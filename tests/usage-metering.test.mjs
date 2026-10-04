@@ -105,15 +105,16 @@ test('realtime: account without active plan or prepaid fails safe', async () => 
   assert.equal(calls.accept, 0);
 });
 
-test('realtime: active plan accepts with a 20-min per-call allowance and settles minutes on close', async () => {
+test('realtime: active plan accepts with a 60-min safety-ceiling allowance (+20-min soft nudge) and settles minutes on close', async () => {
   const { agentId } = voiceDeployment('+17055550203');
   const acc = account(agentId, 'rescue');
   const { options, calls } = rtOptions();
   const r = await ingress.processVerifiedOpenAIRealtimeWebhook(incoming('+17055550203', 'rtc_meter_ok'), options);
   assert.equal(r.ok, true);
   assert.equal(calls.accept, 1);
-  assert.equal(calls.attach[0].limitSeconds, 20 * 60);
-  assert.equal(counts(acc.id).heldMinutes, 20);
+  assert.equal(calls.attach[0].limitSeconds, 60 * 60);
+  assert.equal(calls.attach[0].nudgeSeconds, 20 * 60);
+  assert.equal(counts(acc.id).heldMinutes, 60);
   backdateHold(acc.id, 'rtc_meter_ok', 5 * 60 + 10); // 5m10s → 6 billed minutes
   await calls.attach[0].onClosed();
   await calls.attach[0].onClosed(); // idempotent
@@ -122,14 +123,18 @@ test('realtime: active plan accepts with a 20-min per-call allowance and settles
   assert.equal(st.heldMinutes, 0);
 });
 
-test('realtime: per-call cap — a 45-minute call bills at most 20 minutes', async () => {
+test('realtime: a 45-minute call is not cut (bills 45); a 75-minute call bills at most the 60-min ceiling', async () => {
   const { agentId } = voiceDeployment('+17055550204');
   const acc = account(agentId, 'pro');
   const { options, calls } = rtOptions();
   await ingress.processVerifiedOpenAIRealtimeWebhook(incoming('+17055550204', 'rtc_meter_long'), options);
-  backdateHold(acc.id, 'rtc_meter_long', 45 * 60);
+  backdateHold(acc.id, 'rtc_meter_long', 45 * 60 - 5);
   await calls.attach[0].onClosed();
-  assert.equal(counts(acc.id).minutesUsed, 20);
+  assert.equal(counts(acc.id).minutesUsed, 45);
+  await ingress.processVerifiedOpenAIRealtimeWebhook(incoming('+17055550204', 'rtc_meter_long2'), options);
+  backdateHold(acc.id, 'rtc_meter_long2', 75 * 60);
+  await calls.attach[1].onClosed();
+  assert.equal(counts(acc.id).minutesUsed, 105);
 });
 
 test('realtime: at cap the call is declined before the AI answers (stop at cap)', async () => {
@@ -249,7 +254,7 @@ test('twilio voice: unmapped agent gets no-AI TwiML; mapped gets <Gather>; at ca
     const acc = account(agent.id, 'rescue');
     r = await call(t['/api/twilio/voice/:agentId'], { params: { agentId: agent.id }, body: { CallSid: 'CA_ok' } });
     assert.match(r.body, /<Gather/);
-    assert.equal(counts(acc.id).heldMinutes, 20);
+    assert.equal(counts(acc.id).heldMinutes, 60);
 
     billing.updateBillingAccount(acc.id, { periodTurnsUsed: 200, voiceHolds: {} });
     r = await call(t['/api/twilio/voice/:agentId'], { params: { agentId: agent.id }, body: { CallSid: 'CA_cap' } });
@@ -259,22 +264,22 @@ test('twilio voice: unmapped agent gets no-AI TwiML; mapped gets <Gather>; at ca
   });
 });
 
-test('twilio voice: turn after the allowance is spent stops the AI and bills the 20-min cap; status callback settles', async () => {
+test('twilio voice: turn after the 60-min safety ceiling stops the AI and bills 60; status callback settles', async () => {
   await withSkippedSignature(async () => {
     const t = routes();
     const agent = twilioAgent();
     const acc = account(agent.id, 'pro');
     await call(t['/api/twilio/voice/:agentId'], { params: { agentId: agent.id }, body: { CallSid: 'CA_long' } });
-    backdateHold(acc.id, 'twilio:CA_long', 21 * 60);
+    backdateHold(acc.id, 'twilio:CA_long', 61 * 60);
     const r = await call(t['/api/twilio/voice/:agentId/turn'], { params: { agentId: agent.id }, body: { CallSid: 'CA_long', SpeechResult: 'still there?' } });
     assert.match(r.body, /<Hangup\/>/);
     assert.doesNotMatch(r.body, /<Gather/);
-    assert.equal(counts(acc.id).minutesUsed, 20);
+    assert.equal(counts(acc.id).minutesUsed, 60);
 
     await call(t['/api/twilio/voice/:agentId'], { params: { agentId: agent.id }, body: { CallSid: 'CA_short' } });
     const s = await call(t['/api/twilio/voice/:agentId/status'], { params: { agentId: agent.id }, body: { CallSid: 'CA_short', CallStatus: 'completed', CallDuration: '95' } });
     assert.equal(s.status, 204);
-    assert.equal(counts(acc.id).minutesUsed, 22);
+    assert.equal(counts(acc.id).minutesUsed, 62);
     assert.equal(counts(acc.id).heldMinutes, 0);
     const f = await call(t['/api/twilio/voice/:agentId/fallback'], { params: { agentId: agent.id }, body: {} });
     assert.match(f.body, /not available right now/);

@@ -17,8 +17,11 @@ test('customer CAD rate keeps the spread above worst-case vendor cost and Stripe
   assert.ok(quote.marginCad > 0.2);
 });
 
-test('AI minutes per call never exceed the 20-minute per-call cap', () => {
-  assert.equal(VOICE_RATE_CARD.perCallAiMinuteCap, 20);
-  assert.equal(billedAiMinutes(45 * 60), 20);
-  assert.equal(quoteVoiceMinutes(45 * 60).minutes, 20);
+test('AI minutes per call: 20-min soft wrap-up nudge, 60-min absolute safety ceiling', () => {
+  assert.equal(VOICE_RATE_CARD.perCallSoftWrapMinutes, 20);
+  assert.equal(VOICE_RATE_CARD.perCallAiMinuteCap, 60);
+  assert.equal(VOICE_RATE_CARD.paygCadPerMinute, 0.45);
+  assert.equal(billedAiMinutes(45 * 60), 45);
+  assert.equal(billedAiMinutes(75 * 60), 60);
+  assert.equal(quoteVoiceMinutes(75 * 60).minutes, 60);
 });
