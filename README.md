@@ -1,5 +1,7 @@
 # Meridian Agency
 
+AI agents: read docs/STATUS-AND-HANDOFF.md first.
+
 **Independent AI agency** — Voice, Sales, and Booking agents for local business.
 
 ## Placement (locked)

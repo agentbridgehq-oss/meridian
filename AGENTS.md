@@ -1,5 +1,7 @@
 # Meridian Agency — agent boot file
 
+AI agents: read docs/STATUS-AND-HANDOFF.md first.
+
 Read this before you answer. GitHub is source of truth. Chat history, cleared conversations, and temporary workspaces are not.
 
 ## Mandatory start (every session, every agent)
