@@ -32,7 +32,8 @@ test('complete pack writes greeting, customer clicks, and no Kenny in the loop',
   assert.equal(pack.role, 'receptionist');
   assert.match(pack.scripts.greeting, /North York HVAC/);
   assert.match(pack.scripts.transferRule, /\+14165550100/);
-  assert.equal(pack.commercial.setupUsd, 997);
+  assert.equal(pack.commercial.setupCad, 499);
+  assert.equal(pack.commercial.currency, 'CAD');
   assert.ok(pack.meridianDoesWithoutKenny.length >= 4);
   assert.ok(pack.stillCustomerClick.includes('Payment'));
 });
@@ -45,7 +46,8 @@ test('setup Q&A uses pack facts instead of inventing prices', () => {
     services: 'cleaning',
   });
   const price = answerSetupQuestion('how much per minute', pack);
-  assert.match(price, /0\.20/);
+  assert.match(price, /0\.45\/min/);
+  assert.match(price, /CAD/);
   const hours = answerSetupQuestion('what are the hours', pack);
   assert.match(hours, /Tue-Sat 10-6/);
 });

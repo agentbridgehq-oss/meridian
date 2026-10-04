@@ -103,7 +103,9 @@ import {
   ensureBillingAccount,
   getBillingByAgent,
   getBillingAccount,
-  creditPrepaidTurns,
+  creditPrepaidBlock,
+  canPurchaseBlock,
+  planIdFor,
   activateSubscription,
   canConsumeTurn,
   consumeTurn,
@@ -122,6 +124,21 @@ import {
   cancelSubscriptionLocal,
   updateBillingAccount,
 } from './lib/usage-billing.mjs';
+import {
+  CURRENCY,
+  PLANS,
+  PLAN_ORDER,
+  getPlan,
+  resolvePlanId,
+  getBlock,
+  resolveBlockId,
+  planCheckoutLineItems,
+  blockCheckoutLineItem,
+  publicPriceList,
+  stripePriceEnvStatus,
+  pricingSummaryText,
+} from './lib/pricing.mjs';
+import { buildPlanCheckoutSession, buildBlockCheckoutSession } from './lib/checkout-sessions.mjs';
 import { xaiTtsConfigured } from './lib/xai-tts.mjs';
 import { vendorPaygSnapshot } from './lib/vendor-payg.mjs';
 import {
@@ -245,81 +262,48 @@ const publicLimiter = rateLimit({ windowMs: 60_000, max: 30, standardHeaders: tr
 const chatLimiter = rateLimit({ windowMs: 60_000, max: 20, standardHeaders: true, legacyHeaders: false });
 const authedLimiter = rateLimit({ windowMs: 60_000, max: 60, standardHeaders: true, legacyHeaders: false });
 
-const PRODUCTS = {
-  voice: {
-    name: 'Meridian Voice Agent Kit',
-    amount: 49700,
-    description: '24/7 voice receptionist install kit (platform TTS). Add prepaid turns or Voice Premium for hosted neural speech.',
-    files: ['kits/voice/VOICE-AGENT-KIT.md'],
-  },
-  sales: {
-    name: 'Meridian Sales Agent Kit',
-    amount: 49700,
-    description: 'Instant lead follow-up install kit',
-    files: ['kits/sales/SALES-AGENT-KIT.md'],
-  },
-  booking: {
-    name: 'Meridian Booking Agent Kit',
-    amount: 49700,
-    description: 'Appointment scheduler install kit',
-    files: ['kits/booking/BOOKING-AGENT-KIT.md'],
-  },
-  stack: {
-    name: 'Meridian Full Stack',
-    amount: 99700,
-    description: 'Voice + Sales + Booking + agency playbook',
-    files: [
-      'kits/voice/VOICE-AGENT-KIT.md',
-      'kits/sales/SALES-AGENT-KIT.md',
-      'kits/booking/BOOKING-AGENT-KIT.md',
-      'kits/stack/FULL-STACK-PLAYBOOK.md',
-    ],
-  },
-  /** DFY full auto install — customer pays more, Meridian OpenClaw does the work */
-  auto: {
-    name: 'Meridian Full Auto Install',
-    amount: Number(process.env.STRIPE_AMOUNT_AUTO || 149700), // $1,497
-    description:
-      'Done-for-you: we provision your agent, run smoke tests, build widget/API/n8n/phone packs via OpenClaw, and hand you a short checklist. You only attach a phone number + paste the widget if needed.',
-    files: ['kits/voice/VOICE-AGENT-KIT.md'],
-    fullAuto: true,
-    primaryNeed: 'full',
-  },
-  auto_voice: {
-    name: 'Meridian Voice · Full Auto Install',
-    amount: Number(process.env.STRIPE_AMOUNT_AUTO_VOICE || 99700), // $997
-    description: 'Done-for-you Voice agent install — OpenClaw packs widget, API, phone configs. Minimal work on your side.',
-    files: ['kits/voice/VOICE-AGENT-KIT.md'],
-    fullAuto: true,
-    primaryNeed: 'voice',
-  },
-  auto_stack: {
-    name: 'Meridian Full Stack · Full Auto Install',
-    amount: Number(process.env.STRIPE_AMOUNT_AUTO_STACK || 249700), // $2,497
-    description:
-      'Done-for-you Voice + Sales + Booking install with OpenClaw autonomous packaging, priority ops, and setup wizard. Highest hands-off tier.',
-    files: [
-      'kits/voice/VOICE-AGENT-KIT.md',
-      'kits/sales/SALES-AGENT-KIT.md',
-      'kits/booking/BOOKING-AGENT-KIT.md',
-      'kits/stack/FULL-STACK-PLAYBOOK.md',
-    ],
-    fullAuto: true,
-    primaryNeed: 'full',
-  },
-  auto_sales: {
-    name: 'Meridian Sales · Full Auto Install',
-    amount: Number(process.env.STRIPE_AMOUNT_AUTO_SALES || 99700), // $997
-    description:
-      'Done-for-you Sales agent: lead ingest API, Claude follow-up drafts, scorecard, n8n recipe. You connect SMS/CRM to send (CASL).',
-    files: ['kits/sales/SALES-AGENT-KIT.md'],
-    fullAuto: true,
-    primaryNeed: 'sales',
-  },
+/**
+ * Checkout products = the approved CAD plans (lib/pricing.mjs is the only price source).
+ * Every plan is done-for-you, so paid checkout runs the Full Auto Install path.
+ * Legacy keys (voice, sales, booking, stack, auto, auto_voice, auto_stack, auto_sales)
+ * resolve to a plan through pricing.LEGACY_PLAN_ALIASES.
+ */
+const PLAN_KIT_FILES = {
+  rescue: ['kits/voice/VOICE-AGENT-KIT.md'],
+  pro: ['kits/voice/VOICE-AGENT-KIT.md', 'kits/booking/BOOKING-AGENT-KIT.md'],
+  growth: [
+    'kits/voice/VOICE-AGENT-KIT.md',
+    'kits/sales/SALES-AGENT-KIT.md',
+    'kits/booking/BOOKING-AGENT-KIT.md',
+    'kits/stack/FULL-STACK-PLAYBOOK.md',
+  ],
 };
+const PRODUCTS = Object.fromEntries(
+  PLAN_ORDER.map((id) => {
+    const plan = PLANS[id];
+    return [
+      id,
+      {
+        planId: id,
+        name: `Meridian ${plan.name}`,
+        amount: plan.monthlyCents,
+        setupAmount: plan.setupCents,
+        currency: CURRENCY,
+        description: plan.tagline,
+        files: PLAN_KIT_FILES[id],
+        fullAuto: true,
+        primaryNeed: plan.primaryNeed,
+      },
+    ];
+  }),
+);
+function productFor(key) {
+  const id = resolvePlanId(key);
+  return id ? PRODUCTS[id] : null;
+}
 
 function isFullAutoProduct(productKey) {
-  return Boolean(PRODUCTS[productKey]?.fullAuto);
+  return Boolean(productFor(productKey)?.fullAuto);
 }
 
 function customFieldsFromSession(session) {
@@ -345,7 +329,7 @@ function customFieldsFromSession(session) {
 async function runFullAutoInstall(session, lead) {
   const cf = customFieldsFromSession(session);
   const productKey = session.metadata?.product || 'auto';
-  const need = PRODUCTS[productKey]?.primaryNeed || session.metadata?.primaryNeed || 'full';
+  const need = productFor(productKey)?.primaryNeed || session.metadata?.primaryNeed || 'full';
   const email = (session.customer_details?.email || session.customer_email || lead.email || '').toLowerCase();
 
   const chatIntake = {
@@ -428,21 +412,24 @@ async function runFullAutoInstall(session, lead) {
     console.error('[full-auto process]', e.message);
   }
 
-  // Gift starter voice turns for paid full-auto (high perceived value)
+  // Attach the paid CAD plan (caps + included usage) to the new agent's billing account.
+  // No free bonus minutes: usage above the cap is prepaid blocks only.
   try {
-    if (connection?.id) {
+    const planId = resolvePlanId(productKey);
+    if (connection?.id && planId) {
       const acc = attachAgentBilling(
         { id: connection.id, leadId: lead.id, businessName: chatIntake.businessName },
         { email, leadId: lead.id },
       );
-      creditPrepaidTurns(acc.id, Number(process.env.AUTO_INSTALL_BONUS_TURNS || 50), {
-        amountCents: 0,
-        reason: 'full_auto_install_bonus',
+      activateSubscription(acc.id, planId, {
+        amountCents: session.amount_total || 0,
+        stripeCustomerId: String(session.customer || ''),
+        stripeSubscriptionId: String(session.subscription || ''),
         stripeSessionId: session.id,
       });
     }
   } catch (e) {
-    console.error('[full-auto bonus turns]', e.message);
+    console.error('[full-auto plan billing]', e.message);
   }
 
   const setupUrl = deliveryToken ? `${BASE}/setup/${deliveryToken}` : `${BASE}/setup`;
@@ -603,7 +590,7 @@ async function runMeteredHostedTts(agent, text, { voiceId } = {}) {
       .create({
         customer: settled.account.stripeCustomerId,
         amount: cents,
-        currency: 'usd',
+        currency: CURRENCY,
         description: `Meridian Voice overage turn · agent ${agent.id}`,
         metadata: {
           brand: 'meridian',
@@ -642,6 +629,9 @@ app.post('/api/stripe/webhook', express.raw({ type: 'application/json' }), async
       const kind = session.metadata?.kind || '';
       if (kind === 'voice_pack' || kind === 'voice_sub') {
         await handleVoiceBillingCheckout(session);
+      } else if (kind === 'plan') {
+        await handleVoiceBillingCheckout(session);
+        await handlePaidCheckout(session);
       } else {
         await handlePaidCheckout(session);
       }
@@ -662,7 +652,7 @@ app.post('/api/stripe/webhook', express.raw({ type: 'application/json' }), async
       if (accountId && event.type === 'customer.subscription.updated') {
         const status = sub.status;
         if (status === 'active' || status === 'trialing') {
-          const plan = sub.metadata?.plan || 'voice_monthly';
+          const plan = planIdFor(sub.metadata?.plan) || 'rescue';
           activateSubscription(accountId, plan, {
             stripeCustomerId: String(sub.customer || ''),
             stripeSubscriptionId: sub.id,
@@ -686,7 +676,7 @@ async function handleVoiceBillingCheckout(session) {
   const agentId = session.metadata?.agentId || '';
   const leadId = session.metadata?.leadId || '';
   const packId = session.metadata?.packId || '';
-  const planId = session.metadata?.plan || 'voice_monthly';
+  const planId = planIdFor(session.metadata?.plan) || 'rescue';
   const billingAccountId = session.metadata?.billingAccountId || '';
 
   let acc = billingAccountId ? getBillingAccount(billingAccountId) : null;
@@ -707,49 +697,51 @@ async function handleVoiceBillingCheckout(session) {
   }
 
   if (kind === 'voice_pack') {
-    const pack = TOPUP_PACKS[packId] || TOPUP_PACKS.starter;
-    creditPrepaidTurns(acc.id, pack.turns, {
+    const blockId = resolveBlockId(packId) || 'minutes_100';
+    const pack = TOPUP_PACKS[blockId];
+    creditPrepaidBlock(acc.id, blockId, {
       amountCents: session.amount_total || pack.amount,
       stripeSessionId: session.id,
-      packId: packId || 'starter',
+      packId: blockId,
     });
+    const what = pack.turns ? `${pack.turns} AI minutes` : `${pack.smsSegments} SMS segments`;
     if (email) {
       await sendEmail(
         email,
-        `+${pack.turns} Meridian voice turns ready`,
-        `Your pay-as-you-go top-up is live.\n\n` +
-          `Turns added: ${pack.turns}\n` +
-          `Use them on your Meridian Voice agent (hosted neural speech).\n` +
-          `Billing account: ${acc.id}\n\n` +
-          `Meridian only bills what you use — top up again anytime:\n` +
-          `${BASE}/checkout/voice-pack/starter\n\n${BASE}`,
+        `+${what} added to your Meridian plan`,
+        `Your prepaid top-up is live.\n\n` +
+          `Added: ${what} (CA$${(pack.amount / 100).toFixed(0)}, CAD)\n` +
+          `Used after your monthly plan cap. Billing account: ${acc.id}\n\n` +
+          `Top-ups are prepaid only and limited to 1x your plan price per month unless you approve more in writing.\n\n${BASE}`,
       );
     }
     await dispatchWebhook('billing.voice_pack', {
       accountId: acc.id,
       agentId: acc.agentId,
+      blockId,
       turns: pack.turns,
+      smsSegments: pack.smsSegments,
       amount: session.amount_total,
+      currency: CURRENCY,
     }).catch(() => {});
     return { account: getBillingAccount(acc.id), kind: 'voice_pack' };
   }
 
-  if (kind === 'voice_sub') {
-    const plan = SUBSCRIPTION_PLANS[planId] ? planId : 'voice_monthly';
+  if (kind === 'voice_sub' || kind === 'plan') {
+    const plan = planId;
     activateSubscription(acc.id, plan, {
       amountCents: session.amount_total || SUBSCRIPTION_PLANS[plan].amount,
       stripeCustomerId,
       stripeSubscriptionId: String(session.subscription || ''),
     });
-    if (email) {
+    if (email && kind === 'voice_sub') {
       const p = SUBSCRIPTION_PLANS[plan];
       await sendEmail(
         email,
-        'Meridian Voice Premium is active',
-        `Subscription active: ${p.name}\n` +
-          `Included turns this month: ${p.includedTurns}\n` +
-          `Overage: $${((p.overageCents || customerCentsPerTurn()) / 100).toFixed(2)} per turn (billed as you go)\n\n` +
-          `Your margin-safe usage meter is live — you only pay for what the agent speaks.\n\n${BASE}`,
+        `${p.name} is active`,
+        `Plan active: ${p.name} (CA$${(p.amount / 100).toFixed(0)}/mo, CAD)\n` +
+          `Included this month: ${p.includedTurns} AI minutes, ${p.includedSmsSegments} SMS segments\n` +
+          `Usage stops at the cap. Extra usage is prepaid top-ups only (CA$45 per 100 min, CA$35 per 500 SMS).\n\n${BASE}`,
       );
     }
     await dispatchWebhook('billing.voice_sub', {
@@ -757,7 +749,7 @@ async function handleVoiceBillingCheckout(session) {
       agentId: acc.agentId,
       plan,
     }).catch(() => {});
-    return { account: getBillingAccount(acc.id), kind: 'voice_sub' };
+    return { account: getBillingAccount(acc.id), kind };
   }
 
   return null;
@@ -770,12 +762,7 @@ async function handlePaidCheckout(session) {
   const productKey = session.metadata?.product || '';
   let lead = leadId ? getLead(leadId) : null;
   if (!lead && email) {
-    const need =
-      productKey === 'stack' || productKey === 'auto' || productKey === 'auto_stack'
-        ? 'full'
-        : productKey === 'auto_voice'
-          ? 'voice'
-          : productKey || 'full';
+    const need = productFor(productKey)?.primaryNeed || productKey || 'full';
     lead =
       listLeads().find((l) => l.email === email) ||
       upsertLead({
@@ -864,7 +851,7 @@ async function handlePaidCheckout(session) {
     await sendEmail(
       fresh.email,
       'Payment received — finish your Meridian setup (5 minutes)',
-      `Thanks — payment confirmed.\n\nComplete this short intake and your agent goes live TODAY, smoke-tested and verified:\n${intakeUrl}\n\nYou'll get a connect guide with your API key, a one-line website widget, and phone-AI configs.\n\nPrefer hands-off next time? Full Auto Install: ${BASE}/checkout/auto\n\nMeridian Agency\n${BASE}`,
+      `Thanks — payment confirmed.\n\nComplete this short intake and your agent goes live TODAY, smoke-tested and verified:\n${intakeUrl}\n\nYou'll get a connect guide with your API key, a one-line website widget, and phone-AI configs.\n\nPlans (CAD): ${BASE}/api/pricing\n\nMeridian Agency\n${BASE}`,
     );
   }
   return { lead: fresh, guideUrl: null, autoProvisioned: false };
@@ -1137,9 +1124,10 @@ railway up --detach -m "update"
 - xAI TTS configured: **${xaiTtsConfigured()}**
 - Metered premium audio: request \`{ "audio": true }\` on speak / voice-turn
 - Empty balance → HTTP **402** (no unpaid TTS)
-- Customer ~$${px.customerUsdPerTurn}/turn · cost est ~$${px.costUsdPerTurnEst} · margin ~$${px.marginUsdPerTurn}/turn
-- Packs: ${BASE}/checkout/voice-pack/starter | growth | scale
-- Subs: ${BASE}/checkout/voice-sub ($197/mo) · ${BASE}/checkout/voice-pro ($497/mo)
+- ${pricingSummaryText()}
+- Overage CA$${px.customerCadPerMinute}/min (prepaid blocks only) · worst-case cost ~CA$${px.costCadPerMinuteWorst}/min · margin ~CA$${px.marginCadPerMinuteWorst}/min
+- Plans: ${BASE}/checkout/rescue | pro | growth · Top-ups: ${BASE}/checkout/voice-pack/minutes_100 | sms_500
+- Price list: ${BASE}/api/pricing (source of truth: \`lib/pricing.mjs\`)
 - Full docs in repo: \`USAGE-BILLING.md\`
 
 ## Agents
@@ -1147,7 +1135,7 @@ railway up --detach -m "update"
 1. Voice — 24/7 receptionist  
 2. Sales — lead follow-up  
 3. Booking — calendar / no-shows  
-Install order: Booking → Sales → Voice. Kits: /checkout/voice|sales|booking|stack
+Install order: Booking → Sales → Voice. Plans (CAD): /checkout/rescue|pro|growth
 
 ## Customer install guide (seamless)
 
@@ -1167,7 +1155,7 @@ OpenClaw autonomous install from wizard step 7 · n8n workflow download included
 
 ## Stripe / env names (no secrets)
 
-\`STRIPE_SECRET_KEY\`, \`XAI_API_KEY\`, \`RESEND_API_KEY\`, \`OPS_TOKEN\`, \`PUBLIC_BASE_URL\`, \`DATA_DIR\`, \`VOICE_CENTS_PER_TURN\`, \`VOICE_PROVIDER\`
+\`STRIPE_SECRET_KEY\`, \`XAI_API_KEY\`, \`RESEND_API_KEY\`, \`OPS_TOKEN\`, \`PUBLIC_BASE_URL\`, \`DATA_DIR\`, \`STRIPE_PRICE_*\` (CAD price IDs, optional; see lib/pricing.mjs), \`VOICE_PROVIDER\`
 
 ## Other Ken live apps
 
@@ -1374,10 +1362,9 @@ app.get('/api/guide-status', (_req, res) => {
       voices: '/api/voice/voices',
     },
     deploy: {
-      checkoutVoice: `${BASE}/checkout/voice`,
-      checkoutSales: `${BASE}/checkout/sales`,
-      checkoutBooking: `${BASE}/checkout/booking`,
-      checkoutStack: `${BASE}/checkout/stack`,
+      checkoutRescue: `${BASE}/checkout/rescue`,
+      checkoutPro: `${BASE}/checkout/pro`,
+      checkoutGrowth: `${BASE}/checkout/growth`,
       setup: `${BASE}/setup`,
     },
   });
@@ -1458,9 +1445,9 @@ app.post('/api/voice/preview-agent', publicLimiter, rejectObviousBots, async (re
         pitch:
           'Hear how Meridian Voice handles a real inbound call. Then try a live test line as the customer.',
         cta: {
-          voice: '/checkout/voice',
-          sales: '/checkout/sales',
-          stack: '/checkout/stack',
+          rescue: '/checkout/rescue',
+          pro: '/checkout/pro',
+          growth: '/checkout/growth',
         },
       });
     }
@@ -1786,11 +1773,9 @@ app.get('/api/v1/agents/:id/billing', (req, res) => {
     gate: gate.ok ? { mode: gate.mode, remaining: gate.remaining } : { reason: gate.reason, message: gate.message },
     pricing: pricingSnapshot(),
     checkout: {
-      packStarter: `${BASE}/checkout/voice-pack/starter?agentId=${agent.id}`,
-      packGrowth: `${BASE}/checkout/voice-pack/growth?agentId=${agent.id}`,
-      packScale: `${BASE}/checkout/voice-pack/scale?agentId=${agent.id}`,
-      sub: `${BASE}/checkout/voice-sub?agentId=${agent.id}`,
-      pro: `${BASE}/checkout/voice-pro?agentId=${agent.id}`,
+      minutes100: `${BASE}/checkout/voice-pack/minutes_100?agentId=${agent.id}`,
+      sms500: `${BASE}/checkout/voice-pack/sms_500?agentId=${agent.id}`,
+      plans: Object.fromEntries(PLAN_ORDER.map((id) => [id, `${BASE}/checkout/${id}`])),
     },
   });
 });
@@ -1838,7 +1823,7 @@ app.post('/api/funnel', publicLimiter, rejectObviousBots, async (req, res) => {
   });
   if (process.env.RESEND_API_KEY) {
     const p = result.lead?.proposal;
-    const text = `Thanks for Meridian interest.\n\n${p?.summary || ''}\nAgents: ${(p?.agents || []).join(', ')}\nSetup ~$${p?.setupUsd} · Monthly ~$${p?.monthlyUsd}\n\nNext: confirm investment (money decision), then complete intake:\n${intakeUrl}\n\nKits: ${BASE}/#agents\n\nReply STOP to unsubscribe.`;
+    const text = `Thanks for Meridian interest.\n\n${p?.summary || ''}\nAgents: ${(p?.agents || []).join(', ')}\nPlan: ${p?.planName || '—'} · Setup CA$${p?.setupCad ?? '—'} · Monthly CA$${p?.monthlyCad ?? '—'} (CAD)\n\nNext: confirm investment (money decision), then complete intake:\n${intakeUrl}\n\nPlans: ${BASE}/api/pricing\n\nReply STOP to unsubscribe.`;
     await sendEmail(email, 'Your Meridian proposal + next steps', text, `<pre style="font-family:system-ui;white-space:pre-wrap">${text}</pre>`);
   }
   res.json({
@@ -2772,30 +2757,28 @@ app.get('/api/v1/agents/:id/sales/recipe', (req, res) => {
 });
 
 // ── Public pricing (no secrets) ─────────────────────────────────────────────
+app.get('/api/pricing', (_req, res) => {
+  res.json({ ok: true, source: 'lib/pricing.mjs', ...publicPriceList() });
+});
+
 app.get('/api/pricing/voice', (_req, res) => {
   res.json({
     ok: true,
-    model: 'pay_as_you_go',
-    customerBilling: 'prepaid_packs_or_included_sub_turns',
-    vendorBilling: {
-      xai: 'pay_as_you_go_per_tts',
-      anthropic: 'pay_as_you_go_per_token',
-      groq: 'pay_as_you_go_per_token',
-    },
+    currency: 'CAD',
+    model: 'plan_caps_plus_prepaid_blocks',
+    customerBilling: 'monthly_plan_included_usage_then_prepaid_blocks',
     guarantee:
-      'Customer pays Stripe first (pack or monthly included). Meridian reserves a turn, then calls xAI, then commits. TTS failure refunds the hold. Free site previews never use XAI_API_KEY. Postpaid overage off unless VOICE_ALLOW_OVERAGE=1. Claude + Groq + xAI are all usage-based (PAYG) on the vendor side.',
+      'Customer pays Stripe first (CAD plan or prepaid top-up). Usage stops at the plan cap by default; extra usage is prepaid blocks only, limited to 1x the plan price per month. Alerts at 80% and 100%. Max 20 AI minutes per call.',
     policy: cashFlowPolicy(),
     pricing: pricingSnapshot(),
+    plans: SUBSCRIPTION_PLANS,
     packs: TOPUP_PACKS,
-    subscriptions: SUBSCRIPTION_PLANS,
     checkout: {
-      packStarter: `${BASE}/checkout/voice-pack/starter`,
-      packGrowth: `${BASE}/checkout/voice-pack/growth`,
-      packScale: `${BASE}/checkout/voice-pack/scale`,
-      voiceSub: `${BASE}/checkout/voice-sub`,
-      voicePro: `${BASE}/checkout/voice-pro`,
-      kit: `${BASE}/checkout/voice`,
+      ...Object.fromEntries(PLAN_ORDER.map((id) => [id, `${BASE}/checkout/${id}`])),
+      minutes100: `${BASE}/checkout/voice-pack/minutes_100`,
+      sms500: `${BASE}/checkout/voice-pack/sms_500`,
     },
+    stripePriceEnv: stripePriceEnvStatus(),
     voice: voiceStatus(),
     defaultPremiumVoice: process.env.XAI_TTS_VOICE || 'ara',
   });
@@ -2824,54 +2807,28 @@ app.get('/api/ops/billing/accounts', (req, res) => {
   res.json({ ok: true, accounts: listBillingAccounts() });
 });
 
-/** Pay-as-you-go top-up packs — cash first, turns second */
-app.get('/checkout/voice-pack/:packId', async (req, res) => {
-  const pack = TOPUP_PACKS[req.params.packId];
-  if (!pack) return res.status(404).send('Unknown pack. Use starter | growth | scale');
+/**
+ * Prepaid top-up blocks (CAD) — cash first, usage second.
+ * Only for accounts with an active plan, and limited to the monthly overage ceiling (1x plan price).
+ * Legacy pack ids (starter | growth | scale) resolve to the 100-minute block.
+ */
+app.get('/checkout/voice-pack/:packId', publicLimiter, async (req, res) => {
+  const block = getBlock(req.params.packId);
+  if (!block) return res.status(404).send('Unknown top-up. Use minutes_100 | sms_500');
+  const agentId = String(req.query.agentId || '');
+  const leadId = String(req.query.lead || '');
+  const email = String(req.query.email || '').toLowerCase();
+  const acc = (agentId && getBillingByAgent(agentId)) || null;
+  if (!acc) return res.status(409).send('Top-ups attach to an active Meridian plan. Open this link from your agent dashboard (agentId required).');
+  const allowed = canPurchaseBlock(acc.id, block.id);
+  if (!allowed.ok) return res.status(409).send(allowed.message || allowed.reason);
   if (!stripe) {
-    return res
-      .status(503)
-      .send(
-        `Stripe not configured. Pack ${pack.name}: $${(pack.amount / 100).toFixed(0)} for ${pack.turns} turns.`,
-      );
+    return res.status(503).send(`Stripe not configured. ${block.name}: CA$${(block.amountCents / 100).toFixed(0)} (CAD, prepaid).`);
   }
   try {
-    const agentId = String(req.query.agentId || '');
-    const leadId = String(req.query.lead || '');
-    const email = String(req.query.email || '').toLowerCase();
-    let acc = agentId ? getBillingByAgent(agentId) : null;
-    if (!acc) {
-      acc = ensureBillingAccount({ agentId: agentId || null, leadId: leadId || null, email });
-    }
-    const session = await stripe.checkout.sessions.create({
-      mode: 'payment',
-      customer_creation: 'always',
-      allow_promotion_codes: true,
-      line_items: [
-        {
-          price_data: {
-            currency: 'usd',
-            unit_amount: pack.amount,
-            product_data: {
-              name: pack.name,
-              description: `${pack.description} · ~$${(pack.amount / pack.turns / 100).toFixed(2)}/turn · Meridian premium voice`,
-            },
-          },
-          quantity: 1,
-        },
-      ],
-      metadata: {
-        brand: 'meridian',
-        kind: 'voice_pack',
-        packId: req.params.packId,
-        agentId,
-        leadId,
-        billingAccountId: acc.id,
-        turns: String(pack.turns),
-      },
-      success_url: `${BASE}/api/checkout/confirm?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${BASE}/#voice-usage`,
-    });
+    const params = buildBlockCheckoutSession({ blockKey: block.id, base: BASE, agentId, leadId, billingAccountId: acc.id });
+    if (email) params.customer_email = email;
+    const session = await stripe.checkout.sessions.create(params);
     res.redirect(303, session.url);
   } catch (e) {
     console.error(e);
@@ -2879,156 +2836,34 @@ app.get('/checkout/voice-pack/:packId', async (req, res) => {
   }
 });
 
-/** Monthly Voice Premium / Pro — high MRR vs your xAI cost */
-app.get('/checkout/voice-sub', async (req, res) => {
-  return startVoiceSubscriptionCheckout(req, res, 'voice_monthly');
-});
-app.get('/checkout/voice-pro', async (req, res) => {
-  return startVoiceSubscriptionCheckout(req, res, 'voice_pro');
+/** Legacy subscription URLs → approved CAD plans (voice-sub → rescue, voice-pro → pro). */
+app.get(['/checkout/voice-sub', '/checkout/voice-pro'], (req, res) => {
+  const planId = resolvePlanId(req.path.split('/').pop());
+  const qs = new URLSearchParams(req.query).toString();
+  res.redirect(302, `/checkout/${planId}${qs ? `?${qs}` : ''}`);
 });
 
-async function startVoiceSubscriptionCheckout(req, res, planId) {
-  const plan = SUBSCRIPTION_PLANS[planId];
-  if (!plan) return res.status(404).send('Unknown plan');
-  if (!stripe) {
-    return res
-      .status(503)
-      .send(
-        `Stripe not configured. ${plan.name}: $${(plan.amount / 100).toFixed(0)}/mo · ${plan.includedTurns} turns included.`,
-      );
-  }
-  try {
-    const agentId = String(req.query.agentId || '');
-    const leadId = String(req.query.lead || '');
-    const email = String(req.query.email || '').toLowerCase();
-    let acc = agentId ? getBillingByAgent(agentId) : null;
-    if (!acc) {
-      acc = ensureBillingAccount({ agentId: agentId || null, leadId: leadId || null, email });
-    }
-    const priceEnv =
-      planId === 'voice_pro'
-        ? process.env.STRIPE_PRICE_VOICE_PRO
-        : process.env.STRIPE_PRICE_VOICE_SUB;
-    const lineItem = priceEnv
-      ? { price: priceEnv, quantity: 1 }
-      : {
-          price_data: {
-            currency: 'usd',
-            unit_amount: plan.amount,
-            recurring: { interval: 'month' },
-            product_data: {
-              name: plan.name,
-              description: `${plan.includedTurns} hosted voice turns/mo · overage $${((plan.overageCents || 55) / 100).toFixed(2)}/turn`,
-            },
-          },
-          quantity: 1,
-        };
-    const session = await stripe.checkout.sessions.create({
-      mode: 'subscription',
-      customer_creation: 'always',
-      allow_promotion_codes: true,
-      line_items: [lineItem],
-      subscription_data: {
-        metadata: {
-          brand: 'meridian',
-          plan: planId,
-          billingAccountId: acc.id,
-          agentId,
-        },
-      },
-      metadata: {
-        brand: 'meridian',
-        kind: 'voice_sub',
-        plan: planId,
-        agentId,
-        leadId,
-        billingAccountId: acc.id,
-      },
-      success_url: `${BASE}/api/checkout/confirm?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${BASE}/#voice-usage`,
-    });
-    res.redirect(303, session.url);
-  } catch (e) {
-    console.error(e);
-    res.status(500).send('Checkout error');
-  }
-}
-
-// Stripe kit checkout (one-time products) + Full Auto Install
+/** Plan checkout (CAD subscription + one-time setup). Legacy kit/install keys alias to a plan. */
 app.get('/checkout/:product', publicLimiter, async (req, res) => {
-  // voice-pack and voice-sub handled above
-  if (req.params.product === 'voice-pack' || req.params.product === 'voice-sub' || req.params.product === 'voice-pro') {
-    return res.status(404).send('Use /checkout/voice-pack/:id or /checkout/voice-sub');
-  }
-  const product = PRODUCTS[req.params.product];
-  if (!product) return res.status(404).send('Unknown product');
+  if (req.params.product === 'voice-pack') return res.status(404).send('Use /checkout/voice-pack/:blockId');
+  const plan = getPlan(req.params.product);
+  if (!plan) return res.status(404).send('Unknown plan. Use rescue | pro | growth');
   if (!stripe) {
-    return res.status(503).send(`Stripe not configured. Set STRIPE_SECRET_KEY. Product: ${product.name} $${(product.amount / 100).toFixed(0)}`);
+    return res
+      .status(503)
+      .send(
+        `Stripe not configured. ${plan.name}: CA$${plan.monthlyCents / 100}/mo` +
+          (plan.setupCents ? ` + CA$${plan.setupCents / 100} setup` : ' ($0 setup)') +
+          ` (CAD).`,
+      );
   }
   try {
-    const priceEnv = {
-      voice: process.env.STRIPE_PRICE_VOICE,
-      sales: process.env.STRIPE_PRICE_SALES,
-      booking: process.env.STRIPE_PRICE_BOOKING,
-      stack: process.env.STRIPE_PRICE_STACK,
-      auto: process.env.STRIPE_PRICE_AUTO,
-      auto_voice: process.env.STRIPE_PRICE_AUTO_VOICE,
-      auto_stack: process.env.STRIPE_PRICE_AUTO_STACK,
-      auto_sales: process.env.STRIPE_PRICE_AUTO_SALES,
-    }[req.params.product];
-    const lineItem = priceEnv
-      ? { price: priceEnv, quantity: 1 }
-      : {
-          price_data: {
-            currency: 'usd',
-            unit_amount: product.amount,
-            product_data: { name: product.name, description: product.description },
-          },
-          quantity: 1,
-        };
-
-    const fullAuto = Boolean(product.fullAuto);
-    const sessionParams = {
-      mode: 'payment',
-      customer_creation: 'always',
-      allow_promotion_codes: true,
-      line_items: [lineItem],
-      metadata: {
-        product: req.params.product,
-        brand: 'meridian',
-        leadId: String(req.query.lead || ''),
-        fullAuto: fullAuto ? '1' : '0',
-        primaryNeed: product.primaryNeed || '',
-      },
-      success_url: `${BASE}/api/checkout/confirm?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: fullAuto ? `${BASE}/#full-auto` : `${BASE}/#agents`,
-    };
-
-    // Stripe Checkout allows max 3 custom_fields — keep under limit or checkout crashes
-    if (fullAuto) {
-      sessionParams.custom_fields = [
-        {
-          key: 'business_name',
-          label: { type: 'custom', custom: 'Business name' },
-          type: 'text',
-          optional: false,
-        },
-        {
-          key: 'hours',
-          label: { type: 'custom', custom: 'Business hours (e.g. Mon-Fri 9-5)' },
-          type: 'text',
-          optional: false,
-        },
-        {
-          key: 'services',
-          label: { type: 'custom', custom: 'Main services + phone (short)' },
-          type: 'text',
-          optional: false,
-        },
-      ];
-    }
-
-    const session = await stripe.checkout.sessions.create(sessionParams);
+    const leadId = String(req.query.lead || '');
+    const email = String(req.query.email || '').toLowerCase();
+    const acc = ensureBillingAccount({ leadId: leadId || null, email });
+    const params = buildPlanCheckoutSession({ planKey: plan.id, base: BASE, leadId, billingAccountId: acc.id, email });
+    params.metadata.requestedProduct = req.params.product;
+    const session = await stripe.checkout.sessions.create(params);
     res.redirect(303, session.url);
   } catch (e) {
     console.error(e);
@@ -3056,6 +2891,7 @@ app.get('/api/checkout/confirm', async (req, res) => {
         await handleVoiceBillingCheckout(session);
         return res.redirect(302, `/?voice_billed=1&kind=${encodeURIComponent(kind)}`);
       }
+      if (kind === 'plan') await handleVoiceBillingCheckout(session);
       if (session.payment_status === 'paid') {
         const result = await handlePaidCheckout(session);
         // Full auto → wizard first (minimal work path)
@@ -3564,6 +3400,6 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log(`  Voice: ${vs.mode} · xAI TTS: ${xaiTtsConfigured() ? 'on' : 'off'}`);
   console.log(`  AI brain (${aiProvider()}): ${brainStatus().mode === 'llm' ? `${brainStatus().provider} ${brainStatus().model}` : 'OFF (regex fallback)'}`);
   console.log(
-    `  Usage billing: $${px.customerUsdPerTurn}/turn customer · ~$${px.costUsdPerTurnEst} cost est · margin $${px.marginUsdPerTurn}/turn\n`,
+    `  Pricing (CAD): rescue/pro/growth · overage CA$${px.customerCadPerMinute}/min prepaid · worst-case cost CA$${px.costCadPerMinuteWorst}/min\n`,
   );
 });

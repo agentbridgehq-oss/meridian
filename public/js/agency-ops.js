@@ -33,7 +33,7 @@
               const label = node('label', title), input = node('input', undefined, 'field'); input.name = name; input.type = 'number'; input.min = '0'; input.step = '0.01'; input.required = true; label.append(input); form.append(label);
             }
             const currencyLabel = node('label','Currency'), currency = node('select', undefined, 'field'); currency.name = 'currency';
-            ['CAD','USD'].forEach(c => { const option = node('option',c); option.value=c; currency.append(option); }); currencyLabel.append(currency); form.append(currencyLabel);
+            ['CAD'].forEach(c => { const option = node('option',c); option.value=c; currency.append(option); }); currencyLabel.append(currency); form.append(currencyLabel);
             const scopeLabel = node('label','Final scope, provider costs, support coverage and timing'), scope = node('textarea', undefined, 'field'); scope.name='scopeNotes'; scope.required=true; scope.minLength=12; scope.maxLength=4000; scopeLabel.append(scope); form.append(scopeLabel);
           }
           const button = node('button', `Record completion → ${next}`, 'btn primary'), message = node('p', '', 'status'); message.setAttribute('role','status'); form.append(button, message);

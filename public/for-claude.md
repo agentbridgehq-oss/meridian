@@ -56,8 +56,9 @@ Install order: Booking → Sales → Voice.
 - Metered billing: prepaid packs + subscription (see `USAGE-BILLING.md`)  
 - Empty balance → **402** · no unpaid xAI calls · charge only after successful audio  
 
-Checkout packs: `/checkout/voice-pack/starter|growth|scale`  
-Subs: `/checkout/voice-sub` ($197/mo) · `/checkout/voice-pro` ($497/mo)
+Pricing source of truth: `lib/pricing.mjs` (CAD) · live list `GET /api/pricing`  
+Plans: `/checkout/rescue` (CA$199/mo, $0 setup) · `/checkout/pro` (CA$499/mo + CA$499 setup) · `/checkout/growth` (CA$999/mo + CA$999 setup)  
+Prepaid blocks (active plan required): `/checkout/voice-pack/minutes_100?agentId=` (CA$45) · `/checkout/voice-pack/sms_500?agentId=` (CA$35)
 
 ## Hard policies
 

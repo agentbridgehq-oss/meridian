@@ -427,13 +427,13 @@
     <div class="mdn-panel" data-panel="deploy">
       <div class="mdn-feat-body">
         <h3>Deploy an agent</h3>
-        <p>Same path as a guided install call — pick a kit, pay, get a connect guide. Or start setup in chat.</p>
+        <p>Same path as a guided install call — pick a plan (CAD), pay, get a connect guide. Or start setup in chat.</p>
         <div class="mdn-feat-card">
           <strong>Voice Agent</strong>
           24/7 phone answering for local business. OpenAI Realtime voice · Twilio SIP phone routing · Meridian controls and tools.
           <div>
             <button type="button" data-deploy-chat="I want the Voice Agent — start my setup">Start in chat</button>
-            <a class="btnish light" href="/checkout/voice">Checkout $497</a>
+            <a class="btnish light" href="/checkout/rescue">Missed-Call Rescue · CA$199/mo</a>
           </div>
         </div>
         <div class="mdn-feat-card">
@@ -441,7 +441,7 @@
           Instant lead follow-up so hot leads don’t go cold.
           <div>
             <button type="button" data-deploy-chat="I want the Sales Agent — start setup">Start in chat</button>
-            <a class="btnish light" href="/checkout/sales">Checkout $497</a>
+            <a class="btnish light" href="/checkout/pro">Front Desk Pro · CA$499/mo</a>
           </div>
         </div>
         <div class="mdn-feat-card">
@@ -449,15 +449,15 @@
           Calendar filling + no-show recovery.
           <div>
             <button type="button" data-deploy-chat="I want the Booking Agent — start setup">Start in chat</button>
-            <a class="btnish light" href="/checkout/booking">Checkout $497</a>
+            <a class="btnish light" href="/checkout/pro">Front Desk Pro · CA$499/mo</a>
           </div>
         </div>
         <div class="mdn-feat-card">
-          <strong>Full stack</strong>
-          Voice + Sales + Booking together.
+          <strong>Front Desk Growth</strong>
+          Voice + Booking + Service + Sales follow-up together.
           <div>
             <button type="button" data-deploy-chat="I want the full stack — start setup">Start in chat</button>
-            <a class="btnish light" href="/checkout/stack">Checkout $997</a>
+            <a class="btnish light" href="/checkout/growth">Front Desk Growth · CA$999/mo</a>
           </div>
         </div>
         <div class="mdn-feat-card">

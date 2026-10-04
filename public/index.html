@@ -1271,92 +1271,65 @@
   </section>
 
   <section class="section" id="pricing">
-    <div class="stack" id="voice-usage" style="margin-bottom:28px">
+    <!-- Prices mirror lib/pricing.mjs (single source of truth); live list at /api/pricing -->
+    <div id="voice-usage"></div><div id="full-auto"></div><div id="stack"></div>
+    <div class="stack" id="plan-rescue" style="margin-bottom:28px">
       <div>
-        <div class="live-label" style="color:#A1A1AA">Usage billing · cash first</div>
-        <h2>Premium voice — customer pays first</h2>
-        <p>
-          Hosted neural speech runs only after the customer prepays. Meridian holds a turn, then spends on speech,
-          then commits. If audio fails, the turn is refunded. Free site demos never spend your speech budget.
-        </p>
+        <div class="live-label" style="color:#A1A1AA">Entry · land offer</div>
+        <h2>Missed-Call Rescue</h2>
         <ul class="stack-list">
-          <li><strong>Pay-as-you-go packs</strong> — Stripe cash first, turns second</li>
-          <li><strong>Voice Premium $197/mo</strong> — 300 turns included (prepaid monthly)</li>
-          <li><strong>Voice Pro $497/mo</strong> — 1,200 turns included; then top up a pack</li>
-          <li>No unpaid overage by default · Retell/Vapi text path stays free at Meridian</li>
+          <li>Missed-call text-back + after-hours AI voice</li>
+          <li>200 AI minutes · 300 SMS segments · 1 number</li>
+          <li>Weekly summary</li>
         </ul>
-        <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:8px">
-          <a class="btn btn-dark" href="/checkout/voice-pack/starter">100 turns · $49</a>
-          <a class="btn btn-light" href="/checkout/voice-pack/growth">500 turns · $199</a>
-          <a class="btn btn-light" href="/checkout/voice-pack/scale">2,000 turns · $697</a>
-        </div>
-        <p class="fine">About $0.35–$0.49 per turn to the customer · your provider cost is a small fraction</p>
+        <a class="btn btn-dark btn-lg" href="/checkout/rescue">Start Missed-Call Rescue</a>
+        <p class="fine">Prices in CAD, before HST · Secure Stripe · month-to-month</p>
       </div>
       <div class="stack-side">
-        <div class="big">$197</div>
-        <div class="sub">/mo Voice Premium · 300 hosted turns</div>
-        <a class="btn btn-dark" href="/checkout/voice-sub" style="width:100%;margin-bottom:10px">Start subscription</a>
-        <a class="btn btn-light" href="/checkout/voice-pro" style="width:100%">Pro $497/mo · 1,200 turns</a>
-        <p class="fine" style="margin-top:16px">When included turns run out, buy a pack — pay first, speak second.</p>
+        <div class="big">$199</div>
+        <div class="sub">/mo CAD · $0 setup</div>
+        <a class="btn btn-dark" href="/checkout/rescue" style="width:100%">Checkout with Stripe</a>
       </div>
     </div>
-
-    <div class="stack" id="full-auto" style="margin-bottom:28px;background:linear-gradient(145deg,#0C0C0B 0%,#1a1a18 100%);color:#F5F5F4">
+    <div class="stack" id="plan-pro" style="margin-bottom:28px">
       <div>
-        <div class="live-label" style="color:#A1A1AA">Pay more · do almost nothing</div>
-        <h2 style="color:#fff">Full Auto Install</h2>
-        <p style="color:#A1A1AA">
-          You pay a higher one-time fee. Meridian provisions your agent, smoke-tests it, builds widget + API + n8n + phone packs with OpenClaw,
-          and drops you into a short wizard. <strong style="color:#fff">Your work:</strong> attach a phone number in Retell/Vapi and paste the widget if you want it on the site.
-        </p>
-        <ul class="stack-list" style="color:#D4D4D4">
-          <li>Agent built + verified the moment you pay</li>
-          <li>Checkout collects hours &amp; services — no long forms after</li>
-          <li>OpenClaw priority pack + setup wizard pre-filled</li>
-          <li>Starter premium voice turns included</li>
-          <li>Only carrier step stays with you (phone number ownership)</li>
-        </ul>
-        <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:8px">
-          <a class="btn btn-dark" href="/checkout/auto_voice" style="background:#fff;color:#0C0C0B">Voice Auto · $997</a>
-          <a class="btn btn-light" href="/checkout/auto" style="border-color:#444;color:#fff;background:transparent">Full Auto · $1,497</a>
-          <a class="btn btn-light" href="/checkout/auto_stack" style="border-color:#444;color:#fff;background:transparent">Stack Auto · $2,497</a>
-          <a class="btn btn-light" href="/checkout/auto_sales" style="border-color:#444;color:#fff;background:transparent">Sales Auto · $997</a>
-        </div>
-        <p class="fine" style="color:#71717A;margin-top:12px">Secure Stripe · Instant provision · Wizard at /setup after pay</p>
-      </div>
-      <div class="stack-side" style="background:rgba(255,255,255,0.04);border-color:rgba(255,255,255,0.1)">
-        <div class="big" style="color:#fff">$1,497</div>
-        <div class="sub" style="color:#A1A1AA">Full Auto · most businesses</div>
-        <a class="btn btn-dark" href="/checkout/auto" style="width:100%;background:#fff;color:#0C0C0B;margin-bottom:10px">Pay for Full Auto</a>
-        <a class="btn btn-light" href="/setup" style="width:100%;border-color:#444;color:#fff;background:transparent">Preview setup wizard</a>
-        <p class="fine" style="margin-top:16px;color:#71717A">DIY kits from $497 if you prefer to install yourself.</p>
-      </div>
-    </div>
-
-    <div class="stack" id="stack">
-      <div>
-        <div class="live-label" style="color:#A1A1AA">Recommended</div>
-        <h2>Meridian Full Stack</h2>
-        <p>
-          All three agent kits plus the agency playbook: retail pricing, 14-day delivery sprint,
-          niche focus, and the funnel to get clients.
-        </p>
+        <div class="live-label" style="color:#A1A1AA">Most popular</div>
+        <h2>Front Desk Pro</h2>
         <ul class="stack-list">
-          <li>Voice + Sales + Booking kits</li>
-          <li>Suggested client pricing ($797–$3,497 setups)</li>
-          <li>Order of install (booking → sales → voice)</li>
-          <li>Compliance notes for SMS / consent</li>
+          <li>24/7 voice receptionist + SMS + booking on a verified calendar</li>
+          <li>600 AI minutes · 800 SMS segments · 1 number · 150 warm transfers</li>
+          <li>EN/FR · monthly report</li>
         </ul>
-        <a class="btn btn-dark btn-lg" href="/checkout/stack">Get Full Stack — $997</a>
-        <p class="fine">Secure Stripe · Instant kit access · Meridian standalone product</p>
+        <a class="btn btn-dark btn-lg" href="/checkout/pro">Start Front Desk Pro</a>
+        <p class="fine">Prices in CAD, before HST · Secure Stripe · month-to-month</p>
       </div>
       <div class="stack-side">
-        <div class="big">$997</div>
-        <div class="sub">One-time · all three agents + playbook</div>
-        <a class="btn btn-dark" href="/checkout/stack" style="width:100%">Checkout with Stripe</a>
-        <p class="fine" style="margin-top:16px">Prefer singles? Each agent is $497.</p>
+        <div class="big">$499</div>
+        <div class="sub">/mo CAD · + $499 one-time setup</div>
+        <a class="btn btn-dark" href="/checkout/pro" style="width:100%">Checkout with Stripe</a>
       </div>
     </div>
+    <div class="stack" id="plan-growth" style="margin-bottom:28px">
+      <div>
+        <div class="live-label" style="color:#A1A1AA">Multi-truck / multi-location</div>
+        <h2>Front Desk Growth</h2>
+        <ul class="stack-list">
+          <li>Voice + Booking + Service + Sales follow-up (CASL)</li>
+          <li>1,200 AI minutes · 2,000 SMS segments · 2 numbers · 400 warm transfers</li>
+          <li>CRM / job-software integration · monthly optimisation call</li>
+        </ul>
+        <a class="btn btn-dark btn-lg" href="/checkout/growth">Start Front Desk Growth</a>
+        <p class="fine">Prices in CAD, before HST · Secure Stripe · month-to-month</p>
+      </div>
+      <div class="stack-side">
+        <div class="big">$999</div>
+        <div class="sub">/mo CAD · + $999 one-time setup</div>
+        <a class="btn btn-dark" href="/checkout/growth" style="width:100%">Checkout with Stripe</a>
+      </div>
+    </div>
+    <p class="fine">Usage stops at your plan cap by default (calls forward to you, with a missed-call text). Alerts at 80% and 100%.
+      Extra usage is prepaid top-ups only — CA$45 per 100 AI minutes, CA$35 per 500 SMS segments — up to 1x your plan price per month.
+      Max 20 AI minutes per call.</p>
   </section>
 
   <section class="section" id="method">
@@ -1716,8 +1689,8 @@
         '<strong>Proposal ready.</strong> ' +
         (p.summary || '') +
         '<br>Agents: ' + (p.agents || []).join(', ') +
-        ' · Setup ~$' + (p.setupUsd || '—') +
-        ' · Monthly ~$' + (p.monthlyUsd || '—') +
+        ' · ' + (p.planName || 'Plan') + ': CA$' + (p.monthlyCad ?? '—') + '/mo' +
+        ' · Setup CA$' + (p.setupCad ?? '—') +
         '<br><br><a href="' + (data.intakeUrl || '#') + '">Open intake form →</a>';
       result.classList.add('show');
       form.reset();

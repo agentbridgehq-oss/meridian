@@ -123,7 +123,7 @@ ${JSON.stringify(outreachReport, null, 2)}
 
 ## CTAs
 - Site: ${BASE}
-- Stack: ${BASE}/checkout/stack
+- Plans (CAD): ${BASE}/api/pricing
 - Why agents: ${BASE}/why-agents
 - Deploy API: POST ${BASE}/api/ops/deploy-agent (OPS_TOKEN)
 
@@ -160,7 +160,7 @@ ${
   awaitingMoney.length
     ? awaitingMoney
         .slice(0, 15)
-        .map((l) => `- ${l.businessName || l.email} · ${l.email} · lead ${l.id} · setup ~$${l.proposal?.setupUsd || '—'}`)
+        .map((l) => `- ${l.businessName || l.email} · ${l.email} · lead ${l.id} · ${l.proposal?.planName || 'plan —'} · setup CA$${l.proposal?.setupCad ?? '—'}`)
         .join('\n')
     : '- None'
 }
@@ -173,7 +173,7 @@ ${actions.map((a) => `- ${a.email}: ${a.action || a.error}`).join('\n') || '- No
 - Leads die in 5 minutes. Sales agent replies in one.
 - No-shows empty calendars. Booking agent confirms twice.
 - Article: ${BASE}/why-agents
-- Stack checkout: ${BASE}/checkout/stack
+- Plan checkout: ${BASE}/checkout/pro
 
 ## Needs your outreach decision (CASL human only)
 - Review drafts: GET /api/outreach or npm run openclaw:outreach -- --list

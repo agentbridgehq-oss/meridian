@@ -753,12 +753,12 @@ Authorization: Bearer ${escapeHtml(key)}
       return `
         <div class="block-body">
           <div class="callout good">
-            <b>Want almost zero work? Pay for Full Auto Install</b>
-            <p>Higher one-time fee → we provision, pack, and priority-queue OpenClaw. You only attach a phone number + paste the widget.</p>
+            <b>Want almost zero work? Pick a done-for-you plan</b>
+            <p>We provision, pack, and priority-queue OpenClaw. You only attach a phone number + paste the widget.</p>
             <p style="margin-top:10px">
-              <a class="btn dark" href="/checkout/auto">Full Auto · $1,497</a>
-              <a class="btn light" href="/checkout/auto_voice">Voice Auto · $997</a>
-              <a class="btn light" href="/#full-auto">Compare tiers</a>
+              <a class="btn dark" href="/checkout/growth">Front Desk Growth · CA$999/mo + CA$999 setup</a>
+              <a class="btn light" href="/checkout/pro">Front Desk Pro · CA$499/mo + CA$499 setup</a>
+              <a class="btn light" href="/#pricing">Compare plans</a>
             </p>
           </div>
           <p class="lead"><strong>Or run free OpenClaw packaging now</strong> (included): packages widget, API, n8n, and phone configs, emails you, and notifies ops. Phone number attach in Retell/Vapi still requires your account.</p>

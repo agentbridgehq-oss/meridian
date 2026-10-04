@@ -1,154 +1,55 @@
-# Meridian Voice — usage billing (cash first · never reverse)
+# Meridian — pricing & usage billing (CAD · cash first)
 
-**Model:** customer pays **first** (prepaid packs or monthly included turns).  
-Meridian **reserves** a turn, **then** calls xAI, **then** commits.  
-If TTS fails → turn is **refunded** to the customer.  
-You never run xAI against unpaid balance.
+**Single source of truth:** `lib/pricing.mjs`. Every price, cap, block, alert threshold and
+Stripe line item in the app is derived from it (server PRODUCTS, proposals, voice rate card,
+usage billing, per-minute markup, public `/api/pricing`). Do not hard-code prices elsewhere.
 
-**Default: no postpaid overage** (`VOICE_ALLOW_OVERAGE=0`). Included sub turns are prepaid monthly cash. When used up → buy a pack (pay first).
+All amounts are **CAD, before HST**. Stripe currency is `cad`.
 
-Your list prices stay **far above** estimated xAI cost so unit economics stay profitable.
+## Plans (month-to-month)
 
----
+| Plan | Monthly | Setup | AI minutes | SMS segments | Numbers | Warm transfers |
+|------|---------|-------|-----------:|-------------:|--------:|---------------:|
+| Missed-Call Rescue (`rescue`) | $199 | $0 | 200 | 300 | 1 | 0 |
+| Front Desk Pro (`pro`) | $499 | $499 | 600 | 800 | 1 | 150 |
+| Front Desk Growth (`growth`) | $999 | $999 | 1,200 | 2,000 | 2 | 400 |
 
-## How you never “owe X before you got paid”
+Checkout: `/checkout/rescue`, `/checkout/pro`, `/checkout/growth` (subscription mode; setup fee
+is a one-time line item on the first invoice). Legacy routes (`/checkout/voice`, `/checkout/stack`,
+`/checkout/auto*`, `/checkout/voice-sub`, `/checkout/voice-pro`) resolve to these plans.
 
-| Step | Who pays | When |
-|------|----------|------|
-| 1. Pack / Voice Premium | **Customer → you** (Stripe) | **Before** any neural TTS |
-| 2. `reserveTurn` | Internal hold | Balance must exist |
-| 3. xAI TTS | **You → xAI** | Only after hold succeeds |
-| 4. Commit / release | Ledger | Success keeps debit; fail refunds hold |
-| Free site “Play sample” | Nobody / demo TTS | **Never** uses `XAI_API_KEY` |
+## Usage policy
 
-If balance is empty → **402 payment_required** → **no xAI call**.
+- **Stop at cap** by default — calls forward to the owner with a missed-call text; nothing is billed silently.
+- Alerts at **80%** and **100%** of included usage (ledger `usage_alert` events).
+- **20 AI minutes max per call** (`USAGE_POLICY.perCallAiMinuteCap`).
+- Extra usage is **prepaid blocks only**, and blocks bought in a period may not exceed
+  **1× the plan's monthly price** (overage ceiling).
 
----
+| Block | Price | Checkout |
+|-------|-------|----------|
+| 100 AI minutes (`minutes_100`) | $45 | `/checkout/voice-pack/minutes_100?agentId=…` |
+| 500 SMS segments (`sms_500`) | $35 | `/checkout/voice-pack/sms_500?agentId=…` |
 
-## Customer products
+Blocks require an active plan. Legacy pack IDs (`starter`, `growth`, `scale`) map to `minutes_100`.
 
-### 1) Pay-as-you-go packs (cash first)
+## Unit economics
 
-| Pack | Turns | Price | ≈ $/turn |
-|------|-------|-------|----------|
-| Starter | 100 | **$49** | $0.49 |
-| Growth | 500 | **$199** | $0.40 |
-| Scale | 2,000 | **$697** | $0.35 |
+`worstCaseMonthlyCostCents(plan)` assumes every included unit is used at worst-case vendor
+cost (stress FX), plus hosting and Stripe fees. Tests assert worst-case cost < price for every
+plan and block. See `GET /api/pricing/voice` for the live snapshot.
 
-Checkout:
-- `/checkout/voice-pack/starter`
-- `/checkout/voice-pack/growth`
-- `/checkout/voice-pack/scale`
+## Stripe
 
-Optional: `?agentId=agent_xxx` to credit the right account.
+Optional Price IDs (CAD) — when unset, checkout uses inline CAD `price_data` from `lib/pricing.mjs`:
 
-### 2) Subscriptions (high MRR)
+`STRIPE_PRICE_RESCUE_MONTHLY`, `STRIPE_PRICE_PRO_MONTHLY`, `STRIPE_PRICE_PRO_SETUP`,
+`STRIPE_PRICE_GROWTH_MONTHLY`, `STRIPE_PRICE_GROWTH_SETUP`, `STRIPE_PRICE_BLOCK_MINUTES_100`,
+`STRIPE_PRICE_BLOCK_SMS_500`.
 
-| Plan | Monthly | Included | Overage |
-|------|---------|----------|---------|
-| Voice Premium | **$197** | 300 turns | $0.55/turn |
-| Voice Pro | **$497** | 1,200 turns | $0.45/turn |
+Webhook (`STRIPE_WEBHOOK_SECRET`): `checkout.session.completed`, `customer.subscription.updated`,
+`customer.subscription.deleted`.
 
-Checkout:
-- `/checkout/voice-sub`
-- `/checkout/voice-pro`
-
-Overage creates Stripe **invoice items** on the customer (billed with their next invoice).
-
-### 3) One-time Voice Kit (existing)
-
-`/checkout/voice` — **$497** install kit (platform phone path). Hosted xAI still needs pack or sub.
-
----
-
-## API (metered)
-
-```http
-POST /api/v1/agents/:id/speak
-Authorization: Bearer mdn_…
-{ "text": "Thanks for calling…", "audio": true }
-```
-
-```http
-POST /api/v1/agents/:id/voice-turn
-Authorization: Bearer mdn_…
-{ "transcript": "What are your hours?", "audio": true }
-```
-
-- Without `audio: true` → text/`say` only, **no Meridian TTS fee** (Retell/Vapi speak it).
-- With `audio: true` → **reserveTurn** → xAI TTS → **commit** (or **release** if TTS fails).
-- **Voice picker** (free demo audio only): `GET /api/voice/voices` · `POST /api/voice/preview` — **does not call xAI**, does not debit packs.
-- Platform path (`audio` omitted/false): Retell/Vapi speak text — **$0 Meridian TTS**, no xAI.
-
-```http
-GET /api/v1/agents/:id/billing
-GET /api/pricing/voice
-```
-
-Ops ROI (your eyes only):
-
-```http
-GET /api/ops/billing/roi
-X-Meridian-Token: $OPS_TOKEN
-```
-
----
-
-## Railway env
-
-```bash
-STRIPE_SECRET_KEY=sk_live_…          # required for real charges
-XAI_API_KEY=xai-…                    # server-only TTS (never in browser)
-VOICE_PROVIDER=xai                   # optional; auto if key present
-XAI_TTS_VOICE=ara                    # premium human default (warm receptionist)
-XAI_TTS_RETRIES=3
-XAI_TTS_FALLBACK_VOICES=ara,eve,carina,luna,orion,rex,sal
-# Brain PAYG
-ANTHROPIC_API_KEY=sk-ant-…           # Claude primary
-GROQ_API_KEY=gsk_…                   # fast failover when Claude fails
-GROQ_MODEL=llama-3.3-70b-versatile
-# Optional margin knobs (cents)
-VOICE_CENTS_PER_TURN=55              # customer list per turn
-VOICE_COST_CENTS_PER_TURN=4          # your cost estimate for ROI
-VOICE_ALLOW_OVERAGE=0                # keep 0 so you never fund unpaid overage
-VOICE_SUB_MONTHLY_CENTS=19700
-VOICE_SUB_INCLUDED_TURNS=300
-# Optional fixed Stripe Price IDs
-STRIPE_PRICE_VOICE_SUB=price_…
-STRIPE_PRICE_VOICE_PRO=price_…
-STRIPE_WEBHOOK_SECRET=whsec_…        # recommended
-```
-
-Webhook must receive at least:
-- `checkout.session.completed`
-- `customer.subscription.updated` / `deleted`
-
-Point Stripe webhook to: `https://<meridian>/api/stripe/webhook`
-
----
-
-## Data files (volume `/data`)
-
-- `billing-accounts.json` — prepaid balances, plans, Stripe IDs, lifetime revenue/cost
-- `usage-ledger.json` — per-turn audit trail
-
----
-
-## Operator rules
-
-1. Never put `XAI_API_KEY` in the browser or customer kits.  
-2. Prefer **prepaid packs** for pure pay-as-you-go (zero risk of free speech).  
-3. Keep `VOICE_CENTS_PER_TURN` ≥ **5×** `VOICE_COST_CENTS_PER_TURN`.  
-4. Watch ROI: `GET /api/ops/billing/roi`.  
-5. Cap your own xAI auto top-up so a bug cannot drain you.
-
----
-
-## What “guaranteed high ROI” means here
-
-- **No free premium TTS** — empty balance = hard stop.  
-- **Cash-first packs** — customer money hits Stripe before turns exist.  
-- **Subs** — monthly fee covers a block of turns at high ARPU; overage still marked up.  
-- **Charge after success** — failed xAI responses do not debit the customer (and you don’t get paid for air — but you also don’t invent fake usage).
-
-Tune dollars in env; do not lower customer price below cost multiple without a deliberate decision.
+Retired env vars: `STRIPE_PRICE_{VOICE,SALES,BOOKING,STACK,AUTO,AUTO_VOICE,AUTO_STACK,AUTO_SALES,VOICE_SUB,VOICE_PRO}`,
+`STRIPE_AMOUNT_AUTO*`, `VOICE_SUB_*`, `VOICE_CENTS_PER_TURN`,
+`VOICE_MIN_MARGIN_MULTIPLE`, `AUTO_INSTALL_BONUS_TURNS`.

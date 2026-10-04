@@ -27,9 +27,13 @@ test('playbooks train receptionist booking and service without inventing facts',
 test('voice trio proposals carry the locked rate card', () => {
   assert.ok(services.service);
   const proposal = draftProposal({ service: 'voice', businessName: 'Acme HVAC', tier: 'growth' });
-  assert.equal(proposal.voiceTrio.setupUsd, VOICE_TRIO.receptionist.setupUsd);
-  assert.equal(proposal.voiceTrio.usageUsdPerMinute, 0.2);
-  assert.match(proposal.commercialTerms, /997/);
+  assert.equal(proposal.voiceTrio.setupCad, VOICE_TRIO.receptionist.setupCad);
+  assert.equal(proposal.voiceTrio.currency, 'CAD');
+  assert.equal(proposal.voiceTrio.planId, 'pro');
+  assert.equal(proposal.voiceTrio.monthlyCad, 499);
+  assert.equal(proposal.voiceTrio.overageCadPerMinute, 0.45);
+  assert.match(proposal.commercialTerms, /Front Desk Pro: CAD \$499\/mo \+ \$499 setup/);
+  assert.equal(/USD|\$19\b|0\.20/.test(proposal.commercialTerms), false);
 });
 
 test('Realtime instructions include the receptionist playbook', () => {
