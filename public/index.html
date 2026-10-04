@@ -1330,6 +1330,7 @@
     <p class="fine">Usage stops at your plan cap by default (calls forward to you, with a missed-call text). Alerts at 80% and 100%.
       Extra usage is prepaid top-ups only — CA$45 per 100 AI minutes, CA$35 per 500 SMS segments — up to 1x your plan price per month.
       Max 20 AI minutes per call.</p>
+    <p class="fine">Already a client? <a href="https://billing.stripe.com/p/login/cNi9AVbYVazXd481dw7ok00" data-portal-link style="color:inherit;text-decoration:underline">Manage billing</a> — update your card, download invoices or change your plan in the secure Stripe portal.</p>
   </section>
 
   <section class="section" id="method">
@@ -1436,6 +1437,7 @@
     <a href="/install">Install guide</a> ·
     <a href="/setup">Setup</a> ·
     <a href="/dashboard">Dashboard</a> ·
+    <a href="https://billing.stripe.com/p/login/cNi9AVbYVazXd481dw7ok00" data-portal-link>Manage billing</a> ·
     <a href="/status">Status</a> ·
     <a href="/security">Security</a> ·
     <a href="/#proposal">Proposal</a> ·
@@ -1648,12 +1650,20 @@
   })();
 
   const params = new URLSearchParams(location.search);
-  const bought = params.get('purchased');
+  const bought = params.get('purchased') || params.get('voice_billed');
   if (bought) {
     const t = document.getElementById('toast');
-    t.textContent = 'Purchase received: ' + bought + '. Check email for kit access.';
+    const portal = document.querySelector('[data-portal-link]');
+    t.textContent = 'Purchase received. Check your email for next steps. ';
+    if (portal) {
+      const a = document.createElement('a');
+      a.href = portal.href;
+      a.textContent = 'Manage billing';
+      a.style.cssText = 'color:#fff;text-decoration:underline;font-weight:600';
+      t.appendChild(a);
+    }
     t.classList.add('show');
-    setTimeout(() => t.classList.remove('show'), 6000);
+    setTimeout(() => t.classList.remove('show'), 12000);
   }
 
   const form = document.getElementById('funnel-form');

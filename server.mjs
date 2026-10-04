@@ -11,6 +11,7 @@ import { registerXaiRealtimeWebhookRoute } from './lib/xai-webhook-route.mjs';
 import { registerTwilioRoutes } from './lib/twilio-routes.mjs';
 import { claimOnce, completeClaim, processOnce, releaseClaim } from './lib/processed-events.mjs';
 import { deliverUsageAlerts } from './lib/usage-alerts.mjs';
+import { manageBillingLine, withCustomerPortalUrl } from './lib/customer-portal.mjs';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import path from 'path';
@@ -788,7 +789,7 @@ async function handleVoiceBillingCheckout(session, { source = 'webhook' } = {}) 
         `Your prepaid top-up is live.\n\n` +
           `Added: ${what} (CA$${(pack.amount / 100).toFixed(0)}, CAD)\n` +
           `Used after your monthly plan cap. Billing account: ${acc.id}\n\n` +
-          `Top-ups are prepaid only and limited to 1x your plan price per month unless you approve more in writing.\n\n${BASE}`,
+          `Top-ups are prepaid only and limited to 1x your plan price per month unless you approve more in writing.\n\n${manageBillingLine()}\n\n${BASE}`,
       );
     }
     await dispatchWebhook('billing.voice_pack', {
@@ -823,7 +824,7 @@ async function handleVoiceBillingCheckout(session, { source = 'webhook' } = {}) 
         `${p.name} is active`,
         `Plan active: ${p.name} (CA$${(p.amount / 100).toFixed(0)}/mo, CAD)\n` +
           `Included this month: ${p.includedTurns} AI minutes, ${p.includedSmsSegments} SMS segments\n` +
-          `Without pay-as-you-go, usage stops at the cap and extra usage is prepaid top-ups (CA$45 per 100 min, CA$35 per 500 SMS). With a card on file and pay-as-you-go, calls never stop: extra usage is CA$0.45/min and CA$0.07/SMS.\n\n${BASE}`,
+          `Without pay-as-you-go, usage stops at the cap and extra usage is prepaid top-ups (CA$45 per 100 min, CA$35 per 500 SMS). With a card on file and pay-as-you-go, calls never stop: extra usage is CA$0.45/min and CA$0.07/SMS.\n\n${manageBillingLine()}\n\n${BASE}`,
       );
     }
     await dispatchWebhook('billing.voice_sub', {
@@ -915,7 +916,7 @@ async function handlePaidCheckout(session) {
               `Setup wizard (Next through each block):\n${BASE}/setup/${delivery.deliveryToken}\n\n` +
               `Connect guide:\n${delivery.guideUrl}\n\n` +
               `Want us to do almost everything? Upgrade path was Full Auto Install at checkout.\n\n` +
-              `Verified: ${delivery.ok ? 'YES — smoke tests passed' : 'pending — Meridian ops will follow up'}\n\nMeridian Agency\n${BASE}`,
+              `Verified: ${delivery.ok ? 'YES — smoke tests passed' : 'pending — Meridian ops will follow up'}\n\n${manageBillingLine()}\n\nMeridian Agency\n${BASE}`,
           );
         }
         return {
@@ -934,7 +935,7 @@ async function handlePaidCheckout(session) {
     await sendEmail(
       fresh.email,
       'Payment received — finish your Meridian setup (5 minutes)',
-      `Thanks — payment confirmed.\n\nComplete this short intake and your agent goes live TODAY, smoke-tested and verified:\n${intakeUrl}\n\nYou'll get a connect guide with your API key, a one-line website widget, and phone-AI configs.\n\nPlans (CAD): ${BASE}/api/pricing\n\nMeridian Agency\n${BASE}`,
+      `Thanks — payment confirmed.\n\nComplete this short intake and your agent goes live TODAY, smoke-tested and verified:\n${intakeUrl}\n\nYou'll get a connect guide with your API key, a one-line website widget, and phone-AI configs.\n\nPlans (CAD): ${BASE}/api/pricing\n${manageBillingLine()}\n\nMeridian Agency\n${BASE}`,
     );
   }
   return { lead: fresh, guideUrl: null, autoProvisioned: false };
@@ -3042,9 +3043,7 @@ app.get('/kits/:which/:file', (req, res) => {
 });
 
 // SPA-style intake URLs: /intake/:token
-app.get('/intake/:token', (_req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'intake.html'));
-});
+app.get('/intake/:token', (_req, res) => sendPortalHtml(res, 'intake.html'));
 app.get('/ops', (_req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'ops.html'));
 });
@@ -3095,9 +3094,7 @@ app.get(['/status', '/system-status'], (_req, res) => {
 app.get(['/security', '/trust'], (_req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'security.html'));
 });
-app.get(['/dashboard', '/app', '/portal'], (_req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
-});
+app.get(['/dashboard', '/app', '/portal'], (_req, res) => sendPortalHtml(res, 'dashboard.html'));
 app.get(['/blog', '/insights'], (_req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'blog.html'));
 });
@@ -3445,13 +3442,21 @@ app.get('/go/:service', (req, res) => {
   res.type('html').send(page);
 });
 
+// Pages carrying the "Manage billing" link: serve with MERIDIAN_CUSTOMER_PORTAL_URL applied.
+function sendPortalHtml(res, file) {
+  res.type('html').send(withCustomerPortalUrl(fs.readFileSync(path.join(__dirname, 'public', file), 'utf8')));
+}
+app.get(['/', '/index.html', '/index'], (_req, res) => sendPortalHtml(res, 'index.html'));
+app.get(['/intake.html', '/intake'], (_req, res) => sendPortalHtml(res, 'intake.html'));
+app.get(['/dashboard.html'], (_req, res) => sendPortalHtml(res, 'dashboard.html'));
+
 app.use(express.static(path.join(__dirname, 'public'), { extensions: ['html'] }));
 
 app.get('*', (req, res) => {
   if (req.path.startsWith('/api/') || req.path.startsWith('/checkout/')) {
     return res.status(404).json({ error: 'Not found' });
   }
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  sendPortalHtml(res, 'index.html');
 });
 
 // OpenClaw daily
