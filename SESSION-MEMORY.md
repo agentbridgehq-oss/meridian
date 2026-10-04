@@ -2,6 +2,10 @@
 
 **Keep this chat/context permanent.** Resume with: “pull up Meridian”, “Meridian ads”, “live urls”, “know me”.
 
+## Owner update — 2026-10-04
+
+Ken confirms he previously spoke with Meridian reception in a successful demo call and requests all remaining routing/launch work. Treat it as owner-reported call success, not as zero evidence; exact number/time and main-line routing remain unconfirmed. Twilio plugin search returned no integration and current tools lack number/trunk control. Pause for authorization to use Twilio Console, inspect existing +1 647-490-3326 main and preserve +1 289-670-7853 demo. Do not export provider secrets as an access workaround. Existing legal/contact, provisioning and calendar acceptance gates are not resolved by a successful demo conversation.
+
 ## Latest checkpoint — 2026-10-04 16:05 UTC
 
 Read the newest entry in MERIDIAN-SESSION-SYNC.md before historical deployment truth below.

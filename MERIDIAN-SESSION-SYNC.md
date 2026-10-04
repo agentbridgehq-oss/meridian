@@ -2,6 +2,12 @@
 
 GitHub is source of truth.
 
+## Owner call confirmation and routing request — 2026-10-04
+
+Ken reports that he already called Meridian reception and spoke with it successfully for a demo. Record this as an owner-reported successful demo conversation; do not describe it as an independently inspected call ledger, calendar booking, or proof that the separate main number is routed. The exact called number/time has not been supplied. Ken explicitly requests completion of remaining routing and launch work.
+
+Available connected tools can manage GitHub, Railway and Netlify but do not expose Twilio number/trunk controls. A Plugin Management search for Twilio returned no plugin. No Twilio/xAI secrets were extracted or repurposed to work around access. Next required authorization: use the owner's Twilio Console to inspect the existing main +1 647-490-3326 and preserve demo +1 289-670-7853; complete normal secure sign-in if needed. Confirm which number Ken tested before changing any existing working route. Do not claim that routing was completed or that legal/business launch decisions were settled.
+
 ## Latest verified checkpoint — 2026-10-04 16:05 UTC
 
 This entry supersedes older current-pointer and missing-credential statements below.
