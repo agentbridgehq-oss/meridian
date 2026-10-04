@@ -59,12 +59,27 @@
     }
     list?.querySelectorAll('button').forEach(b => { const active = b.dataset.voice === selected; b.classList.toggle('active', active); b.setAttribute('aria-pressed', String(active)); });
   }
+  const studio = { ara:'/audio/ara.mp3', eve:'/audio/eve.mp3', leo:'/audio/leo.mp3', rex:'/audio/rex.mp3' };
   async function playSample() {
     stopAll(); const run = generation;
     const sample = (text?.value || roles[role].text).trim().slice(0,220);
     if (!sample) return setStatus('Enter a short sample first.');
     if (play) play.disabled = true;
     if (device) device.hidden = true;
+    const local = studio[selected] || studio[roles[role].voice];
+    if (local && audio) {
+      audio.src = local; audio.hidden = false;
+      try {
+        await audio.play();
+        if (run !== generation) return;
+        root.classList.add('is-speaking');
+        setStatus('Playing ' + selected + ' · studio voice · ' + role);
+        if (play) play.disabled = false;
+        return;
+      } catch {
+        setStatus('Tap Play once more to start the studio voice.');
+      }
+    }
     setStatus('Preparing studio audio…');
     const controller = new AbortController(); request = controller;
     const timeout = setTimeout(() => controller.abort(),30000);
@@ -76,12 +91,12 @@
       const source = data.audioBase64 ? `data:${data.contentType || 'audio/mpeg'};base64,${data.audioBase64}` : data.audioUrl;
       if (!source || !audio) throw new Error('studio_unavailable');
       audio.src = source; audio.hidden = false;
-      try { await audio.play(); } catch { setStatus('Studio audio ready. Tap the audio player to listen.'); return; }
+      await audio.play();
       root.classList.add('is-speaking');
-      setStatus('Playing ' + selected + ' · AI-generated studio sample · ' + role);
+      setStatus('Playing ' + selected + ' · studio voice · ' + role);
     } catch {
       if (run !== generation) return;
-      setStatus('Studio audio is unavailable. Connect ElevenLabs to hear the premium sample.');
+      setStatus('Studio sample did not start. Press Play again.');
       if (device) device.hidden = false;
     } finally {
       clearTimeout(timeout);

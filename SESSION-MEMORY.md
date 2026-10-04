@@ -195,3 +195,10 @@ Portfolio audit: Claudecraft paid checkout 404 and Stripe connector requires rea
 - Working drafts saved under `docs/packs/`: business plan, product architecture, code register, investor memorandum, investor risks, what-is-what.
 - Repo was public with no branch protection and no rulesets on `master` or `meridian-agency-2-0`. Protection for `master` is the follow-up in this same save.
 - No staging call. No secrets committed.
+
+
+## 2026-10-03 — play starts a studio sample
+
+- Live Play called /api/voice/preview and got browser_handoff because ElevenLabs is not armed.
+- Added public studio samples for ara, eve, leo, and rex. Play uses the file immediately.
+- Device speech stays an explicit fallback. No ElevenLabs key stored.
