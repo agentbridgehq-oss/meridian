@@ -2,10 +2,10 @@
 
 GitHub is source of truth.
 
-## Current pointer (2026-09-30)
+## Current pointer (2026-10-04)
 
-- Working branch: `meridian-agency-2-0`
-- Protected: `master` @ `05a6bbcd`
+- Working branch: `meridian-agency-2-0` @ `49f5a706`
+- `master` @ `05a6bbcd`. Ruleset `Protect master` (24443088) is active: no deletion, no force-push, pull request required, zero required reviews, no bypass. Direct push is blocked, including for the admin token.
 - PR #2 open, mergeable=clean. Do not merge.
 - Public UI: https://meridian-open.netlify.app/
 - Railway runtime: https://meridian-production-4996.up.railway.app
@@ -186,4 +186,12 @@ Portfolio audit: Claudecraft paid checkout 404 and Stripe connector requires rea
 - Wrote `docs/FRONT.md`, `docs/packs/*.pdf`, and set customer minute to $0.35 in `lib/voice-minute-markup.mjs`.
 - Public UI unchanged: https://meridian-open.netlify.app/
 - Master was not protected against push or deletion. No rulesets. Do not merge.
+- Next: one staging call in the ledger before any customer invoice.
+
+## 2026-10-04 — master ruleset active
+
+- Kenny ordered protection of `master` only. Working branch `meridian-agency-2-0` stays writable.
+- Created repository ruleset `Protect master` id `24443088`, enforcement active, target `refs/heads/master`.
+- Rules verified on `master`: deletion blocked, non-fast-forward blocked, pull request required with zero approving reviews. No status checks. `current_user_can_bypass` is never. No bypass actors.
+- PR #2 was not merged. `master` SHA remains `05a6bbcd`.
 - Next: one staging call in the ledger before any customer invoice.
