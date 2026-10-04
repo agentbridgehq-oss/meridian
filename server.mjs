@@ -7,6 +7,7 @@ import express from 'express';
 import { registerAgencyRoutes } from './lib/agency-routes.mjs';
 import { renderServicePage } from './lib/agency-pages.mjs';
 import { registerOpenAIRealtimeWebhookRoute } from './lib/openai-webhook-route.mjs';
+import { registerTwilioRoutes } from './lib/twilio-routes.mjs';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import path from 'path';
@@ -876,6 +877,12 @@ registerOpenAIRealtimeWebhookRoute(app, {
 
 app.use(express.json({ limit: '2mb' }));
 app.use(express.urlencoded({ extended: true }));
+
+// Twilio inbound SMS + Gather voice webhooks (form-encoded POSTs).
+// Must sit after urlencoded (signature check needs the parsed params) and
+// before express.static / the '*' 404 fallback, otherwise every Twilio
+// webhook returns 404. Auth = X-Twilio-Signature + optional TWILIO_WEBHOOK_TOKEN.
+registerTwilioRoutes(app, { BASE });
 
 function timingSafeStrEqual(a, b) {
   const bufA = Buffer.from(String(a || ''));
