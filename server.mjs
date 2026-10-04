@@ -7,6 +7,7 @@ import express from 'express';
 import { registerAgencyRoutes } from './lib/agency-routes.mjs';
 import { renderServicePage } from './lib/agency-pages.mjs';
 import { registerOpenAIRealtimeWebhookRoute } from './lib/openai-webhook-route.mjs';
+import { registerXaiRealtimeWebhookRoute } from './lib/xai-webhook-route.mjs';
 import { registerTwilioRoutes } from './lib/twilio-routes.mjs';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
@@ -40,6 +41,7 @@ import {
 import { runAutopilot, lastAutopilotReport } from './lib/autopilot.mjs';
 import { platformConfigs } from './lib/deploy-agent.mjs';
 import { smartAgentChat, brainStatus, buildSystemPrompt } from './lib/agent-brain.mjs';
+import { aiProvider } from './lib/ai-provider.mjs';
 import {
   claudeAgentStatus,
   claudeConfigured,
@@ -874,6 +876,12 @@ registerOpenAIRealtimeWebhookRoute(app, {
   environment: process.env.MERIDIAN_VOICE_ENVIRONMENT || 'staging',
   requireSideband: true,
 });
+// xAI Grok Voice SIP webhook (default AI provider). Same raw-body requirement.
+// The OpenAI route above stays mounted for rollback (MERIDIAN_AI_PROVIDER=legacy).
+registerXaiRealtimeWebhookRoute(app, {
+  environment: process.env.MERIDIAN_VOICE_ENVIRONMENT || 'staging',
+  requireSideband: true,
+});
 
 app.use(express.json({ limit: '2mb' }));
 app.use(express.urlencoded({ extended: true }));
@@ -1109,7 +1117,7 @@ railway up --detach -m "update"
 
 ## Claude Agent API (brain)
 
-- Status: **${claudeConfigured() ? 'LIVE' : 'OFF — set ANTHROPIC_API_KEY'}**
+- Status: **${brainStatus().mode === 'llm' ? `LIVE (${brainStatus().provider})` : `OFF — set ${aiProvider() === 'xai' ? 'XAI_API_KEY' : 'ANTHROPIC_API_KEY'}`}**
 - Model: ${brainStatus().model || 'n/a'}
 - Public status: ${BASE}/api/brain/status
 - Client turn: \`POST /api/v1/agents/:id/agent\` (alias \`/claude\`) with Bearer mdn_…
@@ -1316,7 +1324,7 @@ app.post('/api/guide-chat', chatLimiter, rejectObviousBots, async (req, res) => 
           });
         }
       }
-      if (claudeConfigured()) {
+      if (aiProvider() === 'legacy' && claudeConfigured()) {
         const claude = await callClaudeGuide({
           message,
           history,
@@ -3554,7 +3562,7 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log(`  Resend: ${process.env.RESEND_API_KEY ? 'on' : 'off'}`);
   console.log(`  Webhook: ${process.env.MERIDIAN_WEBHOOK_URL ? 'on' : 'off'}`);
   console.log(`  Voice: ${vs.mode} · xAI TTS: ${xaiTtsConfigured() ? 'on' : 'off'}`);
-  console.log(`  Claude Agent API: ${claudeConfigured() ? brainStatus().model : 'OFF (set ANTHROPIC_API_KEY)'}`);
+  console.log(`  AI brain (${aiProvider()}): ${brainStatus().mode === 'llm' ? `${brainStatus().provider} ${brainStatus().model}` : 'OFF (regex fallback)'}`);
   console.log(
     `  Usage billing: $${px.customerUsdPerTurn}/turn customer · ~$${px.costUsdPerTurnEst} cost est · margin $${px.marginUsdPerTurn}/turn\n`,
   );

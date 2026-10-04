@@ -71,7 +71,7 @@ const out = {
   humanRemaining: [
     'Open Railway project meridian and confirm a running service exists',
     'Attach a public domain and set PUBLIC_BASE_URL to that exact origin',
-    'Set OPENAI_API_KEY, OPENAI_WEBHOOK_SECRET, OPS_TOKEN, DATA_DIR=/data',
+    'Set XAI_API_KEY, XAI_WEBHOOK_SECRET, OPS_TOKEN, DATA_DIR=/data (rollback: MERIDIAN_AI_PROVIDER=legacy + OPENAI_API_KEY, OPENAI_WEBHOOK_SECRET)',
     'Add GitHub secret RAILWAY_TOKEN so Actions can redeploy without chat credentials',
     'Configure one Twilio staging DID only after /healthz returns 200',
   ],

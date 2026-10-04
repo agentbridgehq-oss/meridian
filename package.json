@@ -16,7 +16,7 @@
     "onboard": "node scripts/onboard.mjs",
     "core:readiness": "node scripts/core-readiness.mjs",
     "go-live": "node scripts/go-live.mjs",
-    "test:agency": "node --test tests/*.test.mjs"
+    "test:agency": "node --import ./tests/setup/no-live-ai.mjs --test tests/*.test.mjs"
   },
   "engines": {
     "node": ">=22"
