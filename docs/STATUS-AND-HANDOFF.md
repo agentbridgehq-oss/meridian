@@ -37,6 +37,7 @@ Billing restoration is represented by commits `a404e6d..8994c57`, with the custo
 
 - CAD pricing, caps/metering, idempotent checkout, and 80%/100% usage alerts.
 - Pay-as-you-go uses Stripe meters; 20-minute wrap-up and 60-minute cap.
+- If the base payment fails, new calls go to voicemail; live calls finish.
 - Missed-Call Rescue: **$199/mo**.
 - Front Desk Pro: **$499/mo + $499 setup**.
 - Growth: **$999/mo + $999 setup**.
