@@ -178,3 +178,12 @@ Fresh production GET /api/voice/connections returned HTTP 200, browser available
 Next: provision dedicated provider credentials through secure account setup, configure Twilio number/SIP routing and signed webhook, then verify real microphone/inbound calls, interruption, calendar availability/book/reschedule/cancel, human transfer and failure recovery. Do not advertise unrestricted secretary capabilities or permanent availability without validated scope and operations.
 
 Portfolio audit: Claudecraft paid checkout 404 and Stripe connector requires reauthentication; AgentBridge health/config 404; SaberClaw API health responds with HTML. Three Claudecraft free downloads returned 200. Separate recovery PRs: ClaudeCraft #5, agentbridge-final #6, operator-growth-engine #7. Growth Engine public release remains authorized but incomplete; GiantBite held for final adjustments. No sales, public visibility changes or agent activation claimed.
+
+
+## 2026-10-03 — save packs and front map
+
+- Head before this save: `89e6df70`.
+- Wrote `docs/FRONT.md`, `docs/packs/*.pdf`, and set customer minute to $0.35 in `lib/voice-minute-markup.mjs`.
+- Public UI unchanged: https://meridian-open.netlify.app/
+- Master was not protected against push or deletion. No rulesets. Do not merge.
+- Next: one staging call in the ledger before any customer invoice.

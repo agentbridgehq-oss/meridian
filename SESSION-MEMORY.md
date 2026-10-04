@@ -184,3 +184,14 @@ Fresh production GET /api/voice/connections returned HTTP 200, browser available
 Next: provision dedicated provider credentials through secure account setup, configure Twilio number/SIP routing and signed webhook, then verify real microphone/inbound calls, interruption, calendar availability/book/reschedule/cancel, human transfer and failure recovery. Do not advertise unrestricted secretary capabilities or permanent availability without validated scope and operations.
 
 Portfolio audit: Claudecraft paid checkout 404 and Stripe connector requires reauthentication; AgentBridge health/config 404; SaberClaw API health responds with HTML. Three Claudecraft free downloads returned 200. Separate recovery PRs: ClaudeCraft #5, agentbridge-final #6, operator-growth-engine #7. Growth Engine public release remains authorized but incomplete; GiantBite held for final adjustments. No sales, public visibility changes or agent activation claimed.
+
+
+## 2026-10-03 — packs, owner rate, front map
+
+- Kenny asked GitHub to stay the source of truth, and asked that the open front and pages stay in the project.
+- Public front remains https://meridian-open.netlify.app/. Probed 200 on home, agents, four agent pages, letter, why-agents, voice, privacy, terms.
+- Page map written to `docs/FRONT.md`. Design files remain in `public/`. No homepage rebuild. No `/agency` publish. No merge.
+- Owner minute rate locked at $0.35. `lib/voice-minute-markup.mjs` updated from the prior $0.24 commit. Included minutes stay 200. Line stays $19.
+- Working drafts saved under `docs/packs/`: business plan, product architecture, code register, investor memorandum, investor risks, what-is-what.
+- Repo was public with no branch protection and no rulesets on `master` or `meridian-agency-2-0`. Protection for `master` is the follow-up in this same save.
+- No staging call. No secrets committed.
