@@ -143,6 +143,8 @@ import {
 import { buildPlanCheckoutSession, buildBlockCheckoutSession } from './lib/checkout-sessions.mjs';
 import { enablePaygFromCheckout, handlePaygStripeEvent, flushMeterOutbox, setPaygAlertCents, paygState } from './lib/payg-billing.mjs';
 import { maybeAlertAiCostRatio } from './lib/owner-alerts.mjs';
+import { ensureInternalPlan, seedInternalAgentsFromEnv } from './lib/internal-plans.mjs';
+import { billingGateCheck } from './lib/billing-gate-check.mjs';
 import { meterDeps } from './lib/usage-meter.mjs';
 import { xaiTtsConfigured } from './lib/xai-tts.mjs';
 import { vendorPaygSnapshot } from './lib/vendor-payg.mjs';
@@ -2897,6 +2899,19 @@ app.get('/api/ops/billing/vendor-payg', (req, res) => {
   res.json({ ok: true, ...vendorPaygSnapshot() });
 });
 
+/** Ops: idempotently give an internal/demo agent a CA$0 plan (caps still enforced). */
+app.post('/api/ops/billing/internal-plan', express.json(), (req, res) => {
+  if (!admin(req)) return res.status(401).json({ error: 'Unauthorized' });
+  const r = ensureInternalPlan({ agentId: String(req.body?.agentId || ''), plan: req.body?.plan || undefined, reason: req.body?.reason || 'internal demo agent' });
+  res.status(r.ok ? 200 : 400).json(r);
+});
+
+/** Ops (read-only): would a call to this number reach the AI? No provider calls, no holds. */
+app.get('/api/ops/billing/gate-check', (req, res) => {
+  if (!admin(req)) return res.status(401).json({ error: 'Unauthorized' });
+  res.json(billingGateCheck({ number: String(req.query.number || ''), provider: req.query.provider === 'openai' ? 'openai' : 'xai' }));
+});
+
 app.get('/api/ops/billing/accounts', (req, res) => {
   if (!admin(req)) return res.status(401).json({ error: 'Unauthorized' });
   res.json({ ok: true, accounts: listBillingAccounts() });
@@ -3488,6 +3503,9 @@ if (process.env.MERIDIAN_ARTICLES === '1') {
   setTimeout(runArticles, Number(process.env.MERIDIAN_ARTICLE_START_MS || 15 * 60 * 1000));
   setInterval(runArticles, articlePollMs);
 }
+
+// Internal/demo agents (MERIDIAN_INTERNAL_AGENT_IDS) get their CA$0 plan before the first call.
+seedInternalAgentsFromEnv();
 
 app.listen(PORT, '0.0.0.0', () => {
   const vs = voiceStatus();
