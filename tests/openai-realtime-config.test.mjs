@@ -58,6 +58,8 @@ test('voice instructions are grounded in approved business facts and fail closed
   assert.match(result.acceptBody.instructions, /Never invent prices/);
   assert.match(result.acceptBody.instructions, /Only use tools that are present in this session/);
   assert.match(result.acceptBody.instructions, /Never claim an operational action succeeded until/);
+  assert.match(result.acceptBody.instructions, /first spoken greeting must clearly say that you are an AI assistant/);
+  assert.match(result.acceptBody.instructions, /Never claim to be human/);
 });
 
 test('Realtime advertises only executable tools and hides unimplemented booking/CRM actions', () => {

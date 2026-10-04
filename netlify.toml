@@ -72,6 +72,30 @@
   to = "/why-agents.html"
   status = 200
 
+# Checkout and private delivery routes are server-owned, not static pages.
+[[redirects]]
+  from = "/checkout/*"
+  to = "https://meridian-production-4996.up.railway.app/checkout/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/setup/*"
+  to = "https://meridian-production-4996.up.railway.app/setup/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/guide/*"
+  to = "https://meridian-production-4996.up.railway.app/guide/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/voice-connect"
+  to = "/voice-connect.html"
+  status = 200
+
 # Same-origin gateway: Netlify is the front; Railway owns the runtime.
 [[redirects]]
   from = "/api/*"

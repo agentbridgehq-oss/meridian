@@ -265,7 +265,7 @@
     <div class="callout">
       <div class="label">The short version</div>
       <p>Voice answers. Sales follows up. Booking fills the calendar.</p>
-      <p>Meridian is the install system: intake, prompts, go-live checklists, and an API that connects your stack — with platform phone AI (Retell / Vapi / Bland), not hype.</p>
+      <p>Meridian is the install system: intake, prompts, go-live checklists, and an API that connects your stack. The current phone path is Twilio SIP with xAI Grok Voice, backed by Meridian’s server-owned tools and launch checks.</p>
     </div>
 
     <h2>Why “just hire front desk” isn’t the full answer</h2>
@@ -324,7 +324,7 @@
         <li><strong>Proposal</strong> — Meridian generates a one-page scope: which agents, setup vs monthly range, next step.</li>
         <li><strong>Intake</strong> — Hours, services, FAQs, booking rules, human transfer. This is the source of truth for the agent brain.</li>
         <li><strong>Provision</strong> — You get an agent API key (<code style="color:#E4E4E7">mdn_…</code>) and endpoints for chat, voice-turn, and events.</li>
-        <li><strong>Phone / chat platform</strong> — Retell, Vapi, or Bland speaks with a native voice. Each caller turn can hit Meridian’s <strong>voice-turn</strong> API; the platform speaks the <code style="color:#E4E4E7">reply</code>.</li>
+        <li><strong>Phone runtime</strong> — Twilio SIP carries the call to xAI Grok Voice. Meridian executes approved business tools on the server; phone routing and an actual test call must pass before activation.</li>
         <li><strong>Webhooks + email</strong> — Optional dual delivery to your CRM, n8n, or Make. Ops stays approve-only for cold outreach.</li>
       </ol>
     </div>

@@ -312,8 +312,11 @@
   const history = [];
   let guideState = {};
   let researchMode = false;
-  let preferredVoice = localStorage.getItem('mdn_voice') || 'eve';
+  const readPreference = (key) => { try { return localStorage.getItem(key); } catch { return null; } };
+  const writePreference = (key, value) => { try { localStorage.setItem(key, value); } catch {} };
+  let preferredVoice = ['eve','ara','leo','rex','luna','carina','orion'].includes(readPreference('mdn_voice')) ? readPreference('mdn_voice') : 'eve';
   let audioEl = null;
+  let sending = false, returnFocus = null;
 
   function el(tag, cls, html) {
     const n = document.createElement(tag);
@@ -389,6 +392,8 @@
   const drawer = el('div', 'mdn-chat-drawer');
   drawer.setAttribute('role', 'dialog');
   drawer.setAttribute('aria-label', 'Meridian AI guide');
+  drawer.setAttribute('aria-modal', 'true');
+  drawer.inert = true;
 
   drawer.innerHTML = `
     <div class="mdn-chat-head">
@@ -405,6 +410,7 @@
     </div>
     <div class="mdn-feat-tabs" role="tablist">
       <button type="button" data-tab="chat" class="active">Chat</button>
+      <button type="button" data-tab="setup">Setup help</button>
       <button type="button" data-tab="deploy">Deploy</button>
       <button type="button" data-tab="voice">Voice</button>
       <button type="button" data-tab="research">Research</button>
@@ -424,13 +430,23 @@
         </div>
       </form>
     </div>
+    <div class="mdn-panel" data-panel="setup">
+      <div class="mdn-feat-body">
+        <h3>What do you need help with?</h3>
+        <p>Start here. These steps work without an AI connection. Never paste passwords, API keys or private delivery links into chat.</p>
+        <div class="mdn-feat-card"><strong>Choose the right service</strong><p>Compare Receptionist, Booking, Service and Sales by the job you need done.</p><a class="btnish light" href="/agents">Explore agents</a><a class="btnish light" href="/#pricing">Compare CAD plans</a></div>
+        <div class="mdn-feat-card"><strong>Connect your business</strong><p>Prepare hours, services, booking rules and a human fallback. Use your private delivery link after provisioning.</p><a class="btnish light" href="/install">Customer setup guide</a><a class="btnish light" href="/setup">Preview setup steps</a></div>
+        <div class="mdn-feat-card"><strong>Verify before going live</strong><p>Check the connection hub, test real calls and confirm calendar actions. A green credential check is not launch approval.</p><a class="btnish light" href="/voice-connect">Check connections</a></div>
+        <div class="mdn-feat-card"><strong>Already a client?</strong><p>Use the dashboard for your account. Billing changes happen only in Stripe’s secure portal.</p><a class="btnish light" href="/dashboard">Open dashboard</a><a class="btnish light" href="https://billing.stripe.com/p/login/cNi9AVbYVazXd481dw7ok00">Manage billing</a></div>
+      </div>
+    </div>
     <div class="mdn-panel" data-panel="deploy">
       <div class="mdn-feat-body">
         <h3>Deploy an agent</h3>
         <p>Same path as a guided install call — pick a plan (CAD), pay, get a connect guide. Or start setup in chat.</p>
         <div class="mdn-feat-card">
           <strong>Voice Agent</strong>
-          24/7 phone answering for local business. OpenAI Realtime voice · Twilio SIP phone routing · Meridian controls and tools.
+          Phone answering for local business. xAI Grok Voice · Twilio SIP routing · verified Meridian controls and tools.
           <div>
             <button type="button" data-deploy-chat="I want the Voice Agent — start my setup">Start in chat</button>
             <a class="btnish light" href="/checkout/rescue">Missed-Call Rescue · CA$199/mo</a>
@@ -469,8 +485,8 @@
     </div>
     <div class="mdn-panel" data-panel="voice">
       <div class="mdn-feat-body">
-        <h3>xAI voice quality</h3>
-        <p>Hear Meridian’s premium neural voices (hosted xAI TTS). Free short samples — not billed as usage packs.</p>
+        <h3>Hear a voice sample</h3>
+        <p>Recorded website samples preview delivery. Optional hosted speech depends on the configured endpoint; the current phone provider is xAI Grok Voice.</p>
         <div class="mdn-feat-card">
           <strong>Live demo on homepage</strong>
           Scroll to the voice studio — pick a voice and play a receptionist sample.
@@ -478,7 +494,7 @@
         </div>
         <div class="mdn-feat-card">
           <strong>Speak chat replies</strong>
-          On any AI answer, tap <em>Hear</em> to play it in your preferred voice (${preferredVoice}).
+          On an AI answer, tap <em>Hear</em> to request optional speech in your preferred voice (${preferredVoice}). Availability is separate from the phone service.
           <div>
             <label style="font-size:0.8rem;color:#6B6A66">Preferred voice
               <select id="mdn-voice-select" style="display:block;margin-top:6px;width:100%;padding:8px;border-radius:10px;border:1px solid rgba(255,255,255,0.14)">
@@ -495,7 +511,7 @@
         </div>
         <div class="mdn-feat-card">
           <strong>Phone agents</strong>
-          Production phone uses OpenAI Realtime with Twilio SIP. xAI remains an optional hosted-speech path for legacy endpoints and demos.
+          Current phone runtime uses xAI Grok Voice with Twilio SIP. The OpenAI browser lab is a separate legacy demonstration. Neither sample audio nor configured credentials proves customer launch.
         </div>
       </div>
     </div>
@@ -520,10 +536,13 @@
 
   // Assist popup
   const assist = el('div', 'mdn-assist');
+  assist.hidden = true;
+  assist.setAttribute('role', 'region');
+  assist.setAttribute('aria-label', 'Setup assistance');
   assist.innerHTML = `
     <button type="button" class="x" aria-label="Dismiss">×</button>
-    <h4>Need a hand?</h4>
-    <p>I’m Meridian AI — I can explain agents, research your niche, demo xAI voice, or start a deploy.</p>
+    <h4>Do you need assistance?</h4>
+    <p>I’m Meridian’s AI guide. I can help you choose an agent, understand setup, or find your next step.</p>
     <div class="mdn-assist-row">
       <button type="button" class="yes">Yes, help me</button>
       <button type="button" class="no">Not now</button>
@@ -541,13 +560,16 @@
     voiceSelect.value = preferredVoice;
     voiceSelect.addEventListener('change', () => {
       preferredVoice = voiceSelect.value;
-      localStorage.setItem('mdn_voice', preferredVoice);
+      writePreference('mdn_voice', preferredVoice);
     });
   }
 
   function setTab(name) {
     drawer.querySelectorAll('.mdn-feat-tabs button').forEach((b) => {
       b.classList.toggle('active', b.dataset.tab === name);
+      b.setAttribute('role', 'tab');
+      b.setAttribute('aria-selected', String(b.dataset.tab === name));
+      b.tabIndex = b.dataset.tab === name ? 0 : -1;
     });
     drawer.querySelectorAll('.mdn-panel').forEach((p) => {
       p.classList.toggle('active', p.dataset.panel === name);
@@ -579,19 +601,25 @@
   });
 
   function open(tab) {
+    if (!drawer.classList.contains('open')) returnFocus = document.activeElement;
+    drawer.inert = false;
     drawer.classList.add('open');
     backdrop.classList.add('open');
     openBar.classList.add('hidden');
     openBarFade.classList.add('hidden');
     assist.classList.remove('show');
+    assist.hidden = true;
     if (tab) setTab(tab);
     if (tab === 'chat' || !tab) input.focus();
+    else drawer.querySelector(`[data-tab="${tab}"]`)?.focus();
   }
   function close() {
     drawer.classList.remove('open');
     backdrop.classList.remove('open');
     openBar.classList.remove('hidden');
     openBarFade.classList.remove('hidden');
+    drawer.inert = true;
+    if (returnFocus?.isConnected) returnFocus.focus();
   }
 
   window.MeridianGuide = { open, close, send: (t) => { open('chat'); send(t); } };
@@ -626,28 +654,37 @@
   backdrop.addEventListener('click', close);
   drawer.querySelector('.mdn-chat-close').addEventListener('click', close);
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') close();
+    if (!drawer.classList.contains('open')) return;
+    if (e.key === 'Escape') { e.preventDefault(); close(); }
+    if (e.key === 'Tab') {
+      const focusable = [...drawer.querySelectorAll('button, a[href], textarea, select')].filter(n => n.offsetParent !== null && !n.disabled && n.tabIndex >= 0);
+      const first = focusable[0], last = focusable[focusable.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last?.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first?.focus(); }
+    }
   });
 
+  let assistSeen = false;
+  try { assistSeen = sessionStorage.getItem('mdn_assist_seen_v2') === '1'; } catch {}
+  const dismissAssist = () => {
+    assistSeen = true;
+    try { sessionStorage.setItem('mdn_assist_seen_v2', '1'); } catch {}
+    assist.classList.remove('show'); assist.hidden = true;
+  };
   assist.querySelector('.yes').addEventListener('click', () => {
-    localStorage.setItem('mdn_assist_seen', '1');
-    open('chat');
+    dismissAssist();
+    open('setup');
   });
-  assist.querySelector('.no').addEventListener('click', () => {
-    localStorage.setItem('mdn_assist_seen', '1');
-    assist.classList.remove('show');
-  });
-  assist.querySelector('.x').addEventListener('click', () => {
-    localStorage.setItem('mdn_assist_seen', '1');
-    assist.classList.remove('show');
-  });
+  assist.querySelector('.no').addEventListener('click', dismissAssist);
+  assist.querySelector('.x').addEventListener('click', dismissAssist);
 
-  // Show assist after scroll ~40% or 12s once per session/day
-  if (!localStorage.getItem('mdn_assist_seen')) {
+  // Non-modal, once per session. Never interrupt private delivery or payment.
+  if (!assistSeen && !/^\/(setup|guide|checkout|intake|dashboard)(\/|\.|$)/.test(location.pathname)) {
     let shown = false;
     const maybeShow = () => {
-      if (shown) return;
+      if (shown || assistSeen || drawer.classList.contains('open') || document.hidden || /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement?.tagName || '')) return;
       shown = true;
+      assist.hidden = false;
       assist.classList.add('show');
     };
     const onScroll = () => {
@@ -689,7 +726,7 @@
       const hear = document.createElement('button');
       hear.type = 'button';
       hear.className = 'mdn-speak';
-      hear.textContent = 'Hear (xAI)';
+      hear.textContent = 'Hear reply';
       hear.addEventListener('click', () => speakText(text));
       metaRow.appendChild(hear);
       b.appendChild(metaRow);
@@ -753,8 +790,17 @@
 
   addBubble(
     'ai',
-    'Hi — I’m Meridian AI. I can guide Voice, Sales & Booking, search the web for niche answers, start an agent deploy, or play xAI voice samples. What do you need?',
+    'Hi — I’m Meridian’s AI guide. I can explain agents and setup. Use Setup help for direct instructions, or ask a question. Never send passwords, API keys or private delivery links here.',
   );
+  setTab('chat');
+  drawer.querySelector('.mdn-feat-tabs').addEventListener('keydown', e => {
+    const tabs = [...drawer.querySelectorAll('[data-tab]')];
+    const index = tabs.indexOf(document.activeElement);
+    if (index < 0 || !['ArrowRight','ArrowLeft','Home','End'].includes(e.key)) return;
+    e.preventDefault();
+    const next = e.key === 'Home' ? 0 : e.key === 'End' ? tabs.length - 1 : (index + (e.key === 'ArrowRight' ? 1 : -1) + tabs.length) % tabs.length;
+    setTab(tabs[next].dataset.tab); tabs[next].focus();
+  });
   history.push({
     role: 'assistant',
     content:
@@ -780,6 +826,9 @@
     const wrap = el('div', 'mdn-actions');
     actions.forEach((a) => {
       if (a.href) {
+        let url;
+        try { url = new URL(a.href, location.origin); } catch { return; }
+        if (!['http:', 'https:'].includes(url.protocol)) return;
         const link = document.createElement('a');
         link.href = a.href;
         link.textContent = (a.label || 'Open') + ' ↗';
@@ -816,7 +865,8 @@
 
   async function send(text) {
     const t = String(text || '').trim();
-    if (!t) return;
+    if (!t || sending) return;
+    sending = true;
     addBubble('user', t);
     history.push({ role: 'user', content: t });
     input.value = '';
@@ -826,6 +876,7 @@
       const res = await fetch('/api/guide-chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        signal: AbortSignal.timeout(35000),
         body: JSON.stringify({
           message: t,
           history: history.slice(-12),
@@ -835,15 +886,17 @@
         }),
       });
       const data = await res.json();
+      if (!res.ok) throw new Error('guide_unavailable');
       const reply = data.reply || data.error || 'Something went wrong — try again.';
       if (data.state && typeof data.state === 'object') guideState = data.state;
       addBubble('ai', reply, { brain: data.brain, webSearch: data.webSearch });
       history.push({ role: 'assistant', content: reply });
       renderActions(data.actions);
     } catch {
-      addBubble('ai', 'Network error. Check your connection and try again.');
+      addBubble('ai', 'The AI guide could not reply. Use Setup help for the customer guide and connection checks, or try again. Never send secret keys in chat.');
     } finally {
       sendBtn.disabled = false;
+      sending = false;
       input.focus();
       syncDrawerSend();
     }

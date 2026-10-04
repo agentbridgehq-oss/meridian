@@ -16,6 +16,11 @@
 
 /why-agents /why-agents.html 200
 
+/voice-connect /voice-connect.html 200
+/checkout/* https://meridian-production-4996.up.railway.app/checkout/:splat 200!
+/setup/* https://meridian-production-4996.up.railway.app/setup/:splat 200!
+/guide/* https://meridian-production-4996.up.railway.app/guide/:splat 200!
+
 /api/* https://meridian-production-4996.up.railway.app/api/:splat 200!
 /meridian-voice-demo.html https://meridian-production-4996.up.railway.app/meridian-voice-demo.html 200!
 /meridian-voice-demo https://meridian-production-4996.up.railway.app/meridian-voice-demo.html 200!

@@ -268,6 +268,17 @@ app.use((_req, res, next) => {
   next();
 });
 
+// Bearer-link delivery must not be cached by browsers/CDNs or leak via referrers.
+// Set this upstream: Netlify proxy responses do not inherit static-site headers.
+app.use((req, res, next) => {
+  if (/^\/(?:guide|setup|checkout)(?:\/|$)/.test(req.path) || /^\/api\/setup(?:\/|$)/.test(req.path)) {
+    res.setHeader('Cache-Control', 'private, no-store');
+    res.setHeader('Referrer-Policy', 'no-referrer');
+    res.setHeader('X-Robots-Tag', 'noindex, nofollow');
+  }
+  next();
+});
+
 // Public-endpoint rate limits — mitigates scraping/abuse without a login wall.
 const publicLimiter = rateLimit({ windowMs: 60_000, max: 30, standardHeaders: true, legacyHeaders: false });
 const chatLimiter = rateLimit({ windowMs: 60_000, max: 20, standardHeaders: true, legacyHeaders: false });
@@ -1176,7 +1187,7 @@ Public base: ${BASE}
 - **Same Claude Code project:** open Claude from that folder · memory \`C:\\\\Users\\\\hunte\\\\.claude\\\\projects\\\\C--Users-hunte-github-clones-meridian\\\\memory\\\\\`
 - **Pull in Claude Code:** \`pull meridian\` or \`/pull-last-session meridian\`
 - **Deploy target:** Railway project \`meridian\` · volume \`/data\`
-- **Production status:** down until the Railway service is recreated and \`/healthz\` passes
+- **Runtime status:** this server is responding. Verify deployed \`/healthz\`, provider configuration and real-call acceptance separately before claiming launch readiness.
 - **GitHub org:** agentbridgehq-oss
 
 ## Deploy command
@@ -1194,7 +1205,7 @@ railway up --detach -m "update"
 - Client turn: \`POST /api/v1/agents/:id/agent\` (alias \`/claude\`) with Bearer mdn_…
 - Chat: \`POST /api/v1/agents/:id/chat\` · Voice brain: \`POST .../voice-turn\`
 - Ops usage: \`GET /api/ops/claude/usage\` + OPS_TOKEN
-- Env: \`ANTHROPIC_API_KEY\`, optional \`MERIDIAN_LLM_MODEL\`
+- Current provider: xAI — \`XAI_API_KEY\`, optional \`XAI_TEXT_MODEL\`. Anthropic is an optional legacy rollback, not the current default.
 
 ## Contained OpenClaw (hard cage)
 
@@ -1209,7 +1220,7 @@ railway up --detach -m "update"
 - Metered premium audio: request \`{ "audio": true }\` on speak / voice-turn
 - Empty balance → HTTP **402** (no unpaid TTS)
 - ${pricingSummaryText()}
-- Overage CA$${px.customerCadPerMinute}/min (prepaid blocks only) · worst-case cost ~CA$${px.costCadPerMinuteWorst}/min · margin ~CA$${px.marginCadPerMinuteWorst}/min
+- Overage CA$${px.customerCadPerMinute}/min with approved card-on-file PAYG; otherwise prepaid blocks only. Calls retain the 20-minute wrap-up reminder and absolute 60-minute safety ceiling.
 - Plans: ${BASE}/checkout/rescue | pro | growth · Top-ups: ${BASE}/checkout/voice-pack/minutes_100 | sms_500
 - Price list: ${BASE}/api/pricing (source of truth: \`lib/pricing.mjs\`)
 - Full docs in repo: \`USAGE-BILLING.md\`
@@ -1276,7 +1287,7 @@ app.get('/api/handoff', (_req, res) => {
       desktop: 'OPEN-MERIDIAN-CLAUDE.bat',
     },
     deploy: 'cd C:\\Users\\hunte\\github-clones\\meridian; railway up --detach',
-    railway: { project: 'meridian', dataDir: '/data', productionStatus: 'down', alwaysOn: false },
+    railway: { project: 'meridian', dataDir: '/data', productionStatus: 'responding', launchReadiness: 'requires_private_acceptance' },
     voice: vs,
     claudeAgent: claudeAgentStatus(),
     brain: brainStatus(),
@@ -2616,7 +2627,9 @@ app.post('/api/v1/agents/:id/missed-call', async (req, res) => {
 });
 
 /** Send arbitrary SMS (owner tooling) — Twilio must be configured */
-app.post('/api/v1/agents/:id/sms', async (req, res) => {
+app.post('/api/v1/agents/:id/sms', authedLimiter, async (req, res) => {
+  // Operator approval plus tenant authentication; a leaked widget key cannot send arbitrary texts.
+  if (!admin(req)) return res.status(401).json({ error: 'Operator authorization required' });
   const key = (req.get('Authorization') || '').replace(/^Bearer\s+/i, '');
   const agent = verifyAgentKey(req.params.id, key);
   if (!agent) return res.status(401).json({ error: 'Invalid credentials' });

@@ -78,6 +78,23 @@ test('GET /api/twilio/status is mounted and never leaks the webhook token', asyn
   assert.equal(text.includes(authToken), false);
 });
 
+test('private delivery, setup and checkout responses prohibit caching and referrer leakage', async () => {
+  for (const route of ['/guide/not-a-real-token','/setup/not-a-real-token','/api/setup/blank','/checkout/not-a-plan']) {
+    const response = await fetch(base + route, { redirect: 'manual' });
+    assert.equal(response.headers.get('cache-control'), 'private, no-store', route);
+    assert.equal(response.headers.get('referrer-policy'), 'no-referrer', route);
+    assert.equal(response.headers.get('x-robots-tag'), 'noindex, nofollow', route);
+  }
+});
+test('an ordinary agent credential cannot authorize arbitrary SMS sends', async () => {
+  const response = await fetch(base + '/api/v1/agents/agent_missing/sms', {
+    method: 'POST', headers: {'Content-Type':'application/json', Authorization:'Bearer widget_key'},
+    body: JSON.stringify({to:'+12895550102',body:'do not send'}),
+  });
+  assert.equal(response.status, 401);
+  assert.equal((await response.json()).error, 'Operator authorization required');
+});
+
 test('signed inbound SMS returns TwiML <Message> instead of 404', async () => {
   const path = `/api/twilio/sms/agent_missing?token=${webhookToken}`;
   const r = await twilioPost(path, { From: '+15555550100', To: '+15555550199', Body: 'Hi' });
@@ -99,6 +116,7 @@ test('signed inbound voice returns <Gather> with a same-host turn callback', asy
   assert.match(r.type, /xml/);
   assert.match(r.text, /<Gather input="speech dtmf" action="\/api\/twilio\/voice\/agent_missing\/turn\?token=/);
   assert.match(r.text, /<Say voice="Polly\.Joanna">/);
+  assert.match(r.text, /You are speaking with an AI assistant/);
   assert.equal(r.text.includes('localhost:8891'), false);
 });
 

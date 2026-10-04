@@ -6,24 +6,30 @@ import { buildVoiceDemoSessionConfig } from '../lib/voice-demo-routes.mjs';
 import { previewVoice } from '../lib/voice-pipeline.mjs';
 
 const source = readFileSync(new URL('../public/js/voice-demo.js',import.meta.url),'utf8');
-function browserHarness() {
+function browserHarness({ recordedSamples = false } = {}) {
   const listeners = new Map(); let deviceCalls = 0, audioCalls = 0;
   const element = () => ({ hidden:true,disabled:false,textContent:'',value:'Hello from Meridian.',addEventListener(name,fn){listeners.set(this.name+':'+name,fn);},removeAttribute(){},load(){},pause(){},querySelectorAll(){return [];} });
   const selectors = {};
   for (const name of ['status','voices','text','play','stop','device','audio']) { selectors[`[data-vd-${name}]`] = element(); selectors[`[data-vd-${name}]`].name = name; }
-  selectors['[data-vd-audio]'].play = async () => { audioCalls++; };
+  selectors['[data-vd-audio]'].play = async () => {
+    if (!recordedSamples && selectors['[data-vd-audio]'].src?.startsWith('/audio/')) throw new Error('recorded sample unavailable');
+    audioCalls++;
+  };
   const root = { dataset:{vdRole:'receptionist'},querySelector:s=>selectors[s],querySelectorAll:()=>[],classList:{add(){},remove(){}} };
   let resolvePreview;
+  let previewStarted;
+  const ready = new Promise(resolve => { previewStarted = resolve; });
   const context = { document:{getElementById:()=>root}, window:{speechSynthesis:{cancel(){},speak(){deviceCalls++;}},addEventListener(){}},AbortController,setTimeout,clearTimeout,
-    fetch:async (url) => url.includes('voices') ? {ok:true,json:async()=>({voices:[]})} : await new Promise(resolve=>{resolvePreview=resolve;}) };
+    fetch:async (url) => url.includes('voices') ? {ok:true,json:async()=>({voices:[]})} : await new Promise(resolve=>{resolvePreview=resolve;previewStarted();}) };
   // Keep catalog building out of this harness; no DOM is needed for playback behavior.
   selectors['[data-vd-voices]'] = null;
   vm.runInNewContext(source,context);
-  return { listeners,selectors,resolve(data){resolvePreview({ok:true,json:async()=>data});},get deviceCalls(){return deviceCalls;},get audioCalls(){return audioCalls;} };
+  return { ready,listeners,selectors,resolve(data){resolvePreview({ok:true,json:async()=>data});},get deviceCalls(){return deviceCalls;},get audioCalls(){return audioCalls;} };
 }
 
 test('studio waits for premium audio without silently speaking the device voice',async()=>{
   const h = browserHarness(); const pending = h.listeners.get('play:click')();
+  await h.ready;
   assert.equal(h.deviceCalls,0); assert.equal(h.audioCalls,0);
   h.resolve({ok:true,mode:'elevenlabs',audioBase64:'YXVkaW8=',contentType:'audio/mpeg'}); await pending;
   assert.equal(h.audioCalls,1);assert.equal(h.deviceCalls,0);
@@ -31,14 +37,23 @@ test('studio waits for premium audio without silently speaking the device voice'
 
 test('stopping a pending preview prevents late audio playback',async()=>{
   const h = browserHarness(); const pending = h.listeners.get('play:click')();
+  await h.ready;
   h.listeners.get('stop:click')();h.resolve({ok:true,mode:'elevenlabs',audioBase64:'YXVkaW8='});await pending;
   assert.equal(h.audioCalls,0);assert.equal(h.selectors['[data-vd-play]'].disabled,false);
 });
 
 test('unconfigured premium audio exposes an explicit fallback and never autoplays it',async()=>{
   const h = browserHarness();const pending=h.listeners.get('play:click')();
+  await h.ready;
   h.resolve({ok:true,useBrowser:true,mode:'browser_handoff'});await pending;
   assert.equal(h.deviceCalls,0);assert.equal(h.audioCalls,0);assert.equal(h.selectors['[data-vd-device]'].hidden,false);
+});
+
+test('recorded samples play without a hosted provider request or device speech',async()=>{
+  const h=browserHarness({recordedSamples:true});
+  await h.listeners.get('play:click')();
+  assert.equal(h.audioCalls,1);assert.equal(h.deviceCalls,0);
+  assert.equal(h.selectors['[data-vd-audio]'].src,'/audio/ara.mp3');
 });
 
 test('role selection stays server-owned and demo actions remain disabled',()=>{
