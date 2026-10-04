@@ -39,6 +39,14 @@ Blocks require an active plan. Legacy pack IDs (`starter`, `growth`, `scale`) ma
 cost (stress FX), plus hosting and Stripe fees. Tests assert worst-case cost < price for every
 plan and block. See `GET /api/pricing/voice` for the live snapshot.
 
+Active cost profile: **`xai`** (2026-10-04 — all AI on xAI). Worst-case AI minute =
+Twilio SIP 0.0045 + recording 0.0025 + storage 0.0015 + xAI STT buffer 0.0033 +
+xAI Grok Voice $0.08 × 2 (audio billed both directions, worst reading) + $0.004 text input
+= **US$0.1758 → CA$0.2637/min at FX 1.50**. SMS segment worst = Twilio 0.0083 + carrier 0.0087
++ failed 0.001 + grok-4.3 reply 0.013 = US$0.031. Worst-case monthly COGS (5-client hosting split):
+Rescue **$99.17**, Pro **$267.96**, Growth **$551.28** (all CAD). The previous OpenAI/Claude
+profile (`openai_legacy`, used on rollback) stays in `COST_PROFILES` and is also asserted profitable.
+
 ## Stripe
 
 Optional Price IDs (CAD) — when unset, checkout uses inline CAD `price_data` from `lib/pricing.mjs`:

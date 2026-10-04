@@ -68,10 +68,14 @@ test('worst-case cost never exceeds price — every plan, every block, every uni
       assert.ok(wc.marginCents > 0);
     }
   }
-  // Matches the approved proposal (default 5-client hosting split), CAD cents.
-  assert.equal(Math.round(pricing.worstCaseMonthlyCostCents('rescue').total), 10919);
-  assert.equal(Math.round(pricing.worstCaseMonthlyCostCents('pro').total), 29849);
-  assert.equal(Math.round(pricing.worstCaseMonthlyCostCents('growth').total), 61053);
+  // Matches the proposal §8 (xAI, default 5-client hosting split), CAD cents.
+  assert.equal(Math.round(pricing.worstCaseMonthlyCostCents('rescue').total), 9917);
+  assert.equal(Math.round(pricing.worstCaseMonthlyCostCents('pro').total), 26796);
+  assert.equal(Math.round(pricing.worstCaseMonthlyCostCents('growth').total), 55128);
+  // Rollback profile still equals the originally approved proposal numbers.
+  assert.equal(Math.round(pricing.worstCaseMonthlyCostCents('rescue', { profile: 'openai_legacy' }).total), 10919);
+  assert.equal(Math.round(pricing.worstCaseMonthlyCostCents('pro', { profile: 'openai_legacy' }).total), 29849);
+  assert.equal(Math.round(pricing.worstCaseMonthlyCostCents('growth', { profile: 'openai_legacy' }).total), 61053);
   for (const id of Object.keys(BLOCKS)) assert.ok(pricing.worstCaseBlockMarginCents(id).marginCents > 0, id);
   // Per-unit overage rates beat worst-case unit cost + Stripe %.
   const u = pricing.WORST_CASE_UNIT_COST_CENTS;
@@ -233,4 +237,39 @@ test('server: /api/pricing is CAD and plan checkout without Stripe returns 503 w
   assert.match(legacy.headers.get('location'), /\/checkout\/rescue/);
   const pack = await fetch(base + '/checkout/voice-pack/minutes_100', { redirect: 'manual' });
   assert.ok([409, 503].includes(pack.status));
+});
+
+test('xAI cost model uses documented xAI + Twilio prices at FX 1.50 and no plan/block loses money (xAI and rollback)', () => {
+  const X = pricing.VENDOR_PRICES_USD.xai;
+  assert.equal(X.voiceS2sPerMin, 0.08);
+  assert.equal(X.voiceTextInputEach, 0.004);
+  assert.deepEqual({ ...X.textGrok43PerMTok }, { input: 1.25, cachedInput: 0.2, output: 2.5 });
+  assert.equal(pricing.COST_MODEL.provider, 'xai');
+  assert.equal(pricing.COST_MODEL.fxUsdToCadWorst, 1.5);
+  // Worst case bills S2S audio both directions: 0.0045 + 0.0025 + 0.0015 + 0.2/60 + 2*0.08 + 0.004
+  assert.ok(Math.abs(pricing.COST_MODEL.perAiMinuteUsdWorst - 0.175833) < 1e-5);
+  assert.ok(Math.abs(pricing.WORST_CASE_UNIT_COST_CENTS.aiMinute - 26.375) < 1e-3);
+  assert.ok(Math.abs(pricing.COST_MODEL.perSmsSegmentUsdWorst - 0.031) < 1e-9);
+  assert.ok(pricing.COST_MODEL.perAiMinuteUsdExpected < pricing.COST_MODEL.perAiMinuteUsdWorst);
+  // xAI is cheaper per minute than the old OpenAI worst case, so no cap change is needed.
+  assert.ok(pricing.COST_PROFILES.xai.perAiMinuteUsdWorst < pricing.COST_PROFILES.openai_legacy.perAiMinuteUsdWorst);
+  for (const profile of ['xai', 'openai_legacy']) {
+    for (const id of pricing.PLAN_ORDER) {
+      for (const clients of [1, 5, 50]) {
+        const wc = pricing.worstCaseMonthlyCostCents(id, { clients, profile });
+        assert.ok(wc.marginCents > 0, `${profile} ${id} clients=${clients} margin ${wc.marginCents}`);
+      }
+      const blocks = Math.floor(PLANS[id].monthlyCents / BLOCKS.minutes_100.amountCents);
+      const ceiling = pricing.worstCaseMonthlyCostCents(id, { clients: 1, profile }).marginCents
+        + blocks * pricing.worstCaseBlockMarginCents('minutes_100', { profile }).marginCents;
+      assert.ok(ceiling > 0, `${profile} ${id} at overage ceiling`);
+    }
+    for (const id of Object.keys(BLOCKS)) assert.ok(pricing.worstCaseBlockMarginCents(id, { profile }).marginCents > 0, `${profile} ${id}`);
+    const u = pricing.worstCaseUnitCostCents(profile);
+    assert.ok(pricing.OVERAGE.minuteCents - u.aiMinute - pricing.stripeFeeCentsWorst(pricing.OVERAGE.minuteCents, { fixed: false }) > 0, profile);
+    assert.ok(pricing.OVERAGE.smsSegmentCents - u.smsSegment - pricing.stripeFeeCentsWorst(pricing.OVERAGE.smsSegmentCents, { fixed: false }) > 0, profile);
+  }
+  // Approved prices and caps unchanged.
+  assert.deepEqual(pricing.PLAN_ORDER.map(id => PLANS[id].monthlyCents), [19900, 49900, 99900]);
+  assert.deepEqual(pricing.PLAN_ORDER.map(id => PLANS[id].caps.aiMinutes), [200, 600, 1200]);
 });

@@ -217,8 +217,11 @@ test('xAI accept joins wss://api.x.ai/v1/realtime?call_id=… with Bearer key, s
 
     // session.updated arrives BEFORE the sideband attaches — must not be lost.
     ws.server({ type: 'session.updated', session: {} });
+    let closedWith = null;
+    const timers = { setTimeout: (fn, ms) => ({ fn, ms }), clearTimeout: () => {} };
     const sb = await adapter.connectXaiRealtimeSideband({
-      callId, deploymentId: 'dep_fake',
+      callId, deploymentId: 'dep_fake', limitSeconds: 120, timers,
+      onClosed: info => { closedWith = info; },
       controllerFactory: () => ({ markConnected() {}, markActive() {}, markEnded() {}, handleServerEvent: async () => ({ clientEvents: [] }) }),
     });
     assert.equal(sb.ok, true);
@@ -227,6 +230,7 @@ test('xAI accept joins wss://api.x.ai/v1/realtime?call_id=… with Bearer key, s
     ws.close();
     await new Promise(r => setTimeout(r, 5));
     assert.equal(sb.closed, true);
+    assert.equal(closedWith.callId, callId);
     assert.equal(adapter._xaiConnectionsForTest().has(callId), false);
   });
   await withEnv({ XAI_API_KEY: FAKE_KEY }, async () => {
@@ -294,10 +298,17 @@ function activate(deploymentId, plan = 'rescue') {
   return acc;
 }
 
-test('ingress provider xai: UUID call id, XAI key + brain.provider xai gates, xAI session body', async () => {
+test('ingress provider xai: UUID call id, XAI key + brain.provider xai gates, xAI session body, billing meter + call limit', async () => {
   const number = '+17055550161';
+  const callId = '55555555-2222-3333-4444-555555555555';
   const deployment = xaiDeployment(number);
-  assert.ok(deployment.id);
+
+  // OpenAI-provider brain blocker when the deployment is still on openai.
+  const unpaid = await ingress.processVerifiedRealtimeWebhook(xaiIncoming(number, callId), { provider: 'xai', providerConfigured: true, environment: 'staging', rejectCall: async () => {} });
+  assert.equal(unpaid.ok, false, JSON.stringify(unpaid)); // no billing account yet → fail safe
+  assert.equal(unpaid.billing?.code !== undefined, true, JSON.stringify(unpaid).slice(0, 1500));
+
+  activate(deployment.id, 'rescue');
   const callId2 = '66666666-2222-3333-4444-555555555555';
   let acceptBody = null, attachInput = null;
   const result = await ingress.processVerifiedRealtimeWebhook(xaiIncoming(number, callId2), {
@@ -313,7 +324,9 @@ test('ingress provider xai: UUID call id, XAI key + brain.provider xai gates, xA
   assert.equal(acceptBody.session.voice, 'eve');
   assert.deepEqual(acceptBody.session.turn_detection, { type: 'server_vad' });
   assert.match(acceptBody.session.instructions, /Never invent prices/);
-  assert.equal(attachInput.callId, callId2);
+  assert.equal(attachInput.limitSeconds, 20 * 60); // per-call cap still enforced
+  assert.equal(typeof attachInput.onLimit, 'function');
+  assert.equal(typeof attachInput.onClosed, 'function');
   assert.equal(ledger.getRealtimeCall(callId2).provider, 'xai-realtime');
 
   // Missing XAI key / wrong brain provider are blockers.
@@ -323,6 +336,26 @@ test('ingress provider xai: UUID call id, XAI key + brain.provider xai gates, xA
   assert.ok(asOpenAI.blockers.includes('integration.brain.provider.openai'));
   const badId = ingress.planRealtimeIncoming(xaiIncoming(number, 'bad id!'), { provider: 'xai', providerConfigured: true });
   assert.equal(badId.ok, false);
+  await attachInput.onClosed();
+});
+
+test('ingress provider xai at cap: AI never engaged; declined call is referred to the verified team line (no xAI reject API)', async () => {
+  const number = '+17055550162';
+  const deployment = xaiDeployment(number, { transfer: true });
+  activate(deployment.id, 'rescue');
+  const rejects = [];
+  let accepted = false;
+  const result = await ingress.processVerifiedRealtimeWebhook(xaiIncoming(number, '88888888-2222-3333-4444-555555555555'), {
+    provider: 'xai', providerConfigured: true, environment: 'staging',
+    usageMeter: { beginCall: () => ({ ok: false, code: 'billing.voice_cap_reached' }), endCall: () => null, releaseCall: () => {} },
+    acceptCall: async () => { accepted = true; },
+    rejectCall: async input => { rejects.push(input); },
+  });
+  assert.equal(result.status, 402);
+  assert.equal(accepted, false);
+  assert.equal(rejects.length, 1);
+  assert.equal(rejects[0].statusCode, 480);
+  assert.equal(rejects[0].transferUri, 'tel:+17055550999');
 });
 
 /* ---------------- HTTP route end to end (signed webhook, mocked provider) ---------------- */
