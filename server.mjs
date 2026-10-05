@@ -99,6 +99,7 @@ import {
 } from './lib/customer-setup.mjs';
 import { checkFormBot, rejectObviousBots, silentBotOk } from './lib/bot-protection.mjs';
 import { createPrivacyRequest, listPrivacyRequests } from './lib/privacy-dsr.mjs';
+import { createContactRequest, listContactRequests } from './lib/contact-intake.mjs';
 import {
   TOPUP_PACKS,
   SUBSCRIPTION_PLANS,
@@ -1346,6 +1347,19 @@ app.post('/api/privacy/request', publicLimiter, rejectObviousBots, async (req, r
 app.get('/api/ops/privacy/requests', (req, res) => {
   if (!admin(req)) return res.status(401).json({ error: 'Unauthorized' });
   res.json({ ok: true, requests: listPrivacyRequests(200) });
+});
+
+app.post('/api/contact', publicLimiter, rejectObviousBots, (req, res) => {
+  const bot = checkFormBot(req.body || {});
+  if (!bot.ok) return silentBotOk(res);
+  const result = createContactRequest(req.body || {});
+  if (!result.ok) return res.status(400).json(result);
+  res.json(result);
+});
+
+app.get('/api/ops/contact/requests', (req, res) => {
+  if (!admin(req)) return res.status(401).json({ error: 'Unauthorized' });
+  res.json({ ok: true, requests: listContactRequests(200) });
 });
 
 app.post('/api/guide-chat', chatLimiter, rejectObviousBots, async (req, res) => {

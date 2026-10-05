@@ -1,4 +1,8 @@
-# Meridian go-live — current checkpoint 2026-10-04
+# Meridian go-live — current checkpoint 2026-10-05
+
+**Customer launch: NO-GO.** The disclosure and SMS compliance copy is in `meridian-agency-2-0` and covered by `npm test` (220/220) plus `node scripts/launch-acceptance.mjs`. It is not on Railway or Netlify until Kenny approves a redeploy. A live phone call, SMS STOP/START/HELP, human transfer, and a real calendar booking are still unproven. Privacy/terms/contact in source are drafts, not an approved legal sign-off.
+
+## Previous checkpoint — 2026-10-04
 
 **Customer launch: NO-GO pending acceptance. Website/backend corrections are deployed.**
 

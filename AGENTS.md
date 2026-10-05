@@ -30,7 +30,11 @@ Before sending the final response for any Meridian task that changed files or ma
 
 Do not leave work only in chat or wait for the browser window to close. Closing or clearing a chat cannot trigger a later commit, so finish the GitHub handoff before the final response. A new chat must be able to reconstruct the full project state from GitHub alone. If nothing material changed, do not create an empty commit.
 
-## Current production truth — 2026-10-04
+## Current production truth — 2026-10-05
+
+Launch code for disclosure, SMS compliance, and draft legal/contact pages is on `meridian-agency-2-0` after the 2026-10-05 01:30 UTC pass (`npm test` 220/220) and is **not deployed**. PR #2 was merged earlier the same day; do not treat that merge as this pass, and do not merge again unless Kenny says so. Production health is reachable and degraded; `live` phone acceptance is still unproven. Read the newest MERIDIAN-SESSION-SYNC.md entry before the historical block below.
+
+## Historical production pointer — 2026-10-04
 
 Latest tested/deployed product: `23fd69ed5b8aca4b751a4ff30406984215bab071`; 213/213 tests. Railway deployment `e48f1e19-abe1-464b-a8bd-72095ae46eeb` SUCCESS; Netlify `6ac2780a8b3b09cc5e4a3484` ready. Current phone stack is xAI Grok Voice + Twilio SIP. Credentials configured does not prove acceptance: public `liveCallVerified:null`. Full customer launch remains blocked on routing, real-call/calendar acceptance, provisioning and legal/contact/disclosure gates. Read newest MERIDIAN-SESSION-SYNC.md entry; older credential/provider statements below are historical. Daily 03:30 Toronto owner brief is enabled; it does not grant spending/deploy/merge authority.
 

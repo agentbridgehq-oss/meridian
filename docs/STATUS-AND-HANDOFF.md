@@ -1,6 +1,10 @@
 # Meridian status and handoff
 
-## Latest verified update — 2026-10-04 16:05 UTC
+## Latest verified update — 2026-10-05 01:30 UTC
+
+Source on `meridian-agency-2-0` now has the fixed AI/recording first utterance, SMS STOP/START/HELP lines, business-name plus STOP on customer texts, Canada/US-only AI texts, and draft privacy, terms, and contact pages. `npm test` 220/220. This is not deployed. Production health is 200 and degraded; Twilio reports configured with an empty agent map; new legal copy is not on the live URLs yet. Customer launch remains NO-GO. See MERIDIAN-SESSION-SYNC.md.
+
+## Previous verified update — 2026-10-04 16:05 UTC
 
 Ken authorized the source-sync and launch-correction deployment. Product `23fd69ed5b8aca4b751a4ff30406984215bab071` is live on Railway (`e48f1e19-abe1-464b-a8bd-72095ae46eeb`, SUCCESS) and Netlify (`6ac2780a8b3b09cc5e4a3484`, ready). Tests 213/213, npm production audit zero vulnerabilities. The earlier six-failure statement is stale: fresh baseline was 198/201; repaired premium-studio mocks and new safety tests now pass.
 

@@ -116,7 +116,8 @@ test('signed inbound voice returns <Gather> with a same-host turn callback', asy
   assert.match(r.type, /xml/);
   assert.match(r.text, /<Gather input="speech dtmf" action="\/api\/twilio\/voice\/agent_missing\/turn\?token=/);
   assert.match(r.text, /<Say voice="Polly\.Joanna">/);
-  assert.match(r.text, /You are speaking with an AI assistant/);
+  assert.match(r.text, /AI assistant/);
+  assert.match(r.text, /This call may be recorded for quality, training, and customer support/);
   assert.equal(r.text.includes('localhost:8891'), false);
 });
 

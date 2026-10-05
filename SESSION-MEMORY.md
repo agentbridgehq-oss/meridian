@@ -2,6 +2,10 @@
 
 **Keep this chat/context permanent.** Resume with: “pull up Meridian”, “Meridian ads”, “live urls”, “know me”.
 
+## Launch-gate code pass — 2026-10-05 01:30 UTC
+
+Read the newest MERIDIAN-SESSION-SYNC.md entry first. Tests 220/220. Disclosure, SMS STOP/START/HELP, NANP-only AI texts, fallback wording, and draft privacy/terms/contact pages are in source on `meridian-agency-2-0`. They are not deployed. Production legal URLs still serve the old pages. Full customer launch is NO-GO. Owner must redeploy, call, text, confirm calendar, publish a monitored mailbox, and approve SLA/legal terms. Do not merge or spend from this note.
+
 ## Owner update — 2026-10-04
 
 Ken confirms he previously spoke with Meridian reception in a successful demo call and requests all remaining routing/launch work. Treat it as owner-reported call success, not as zero evidence; exact number/time and main-line routing remain unconfirmed. Twilio plugin search returned no integration and current tools lack number/trunk control. Pause for authorization to use Twilio Console, inspect existing +1 647-490-3326 main and preserve +1 289-670-7853 demo. Do not export provider secrets as an access workaround. Existing legal/contact, provisioning and calendar acceptance gates are not resolved by a successful demo conversation.

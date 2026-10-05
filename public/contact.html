@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Contact — Meridian Agency</title>
+<meta name="description" content="Contact Meridian Agency. Support messages are saved for a three-business-day reply once the dedicated mailbox is monitored.">
+<meta name="theme-color" content="#0C0C0B">
+<link rel="canonical" href="/contact">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root { --bg:#F7F6F3; --ink:#0C0C0B; --muted:#6B6A66; --line:rgba(12,12,11,.08); --line-strong:rgba(12,12,11,.14); --soft:#E8E6E1; --max:720px; --serif:'Instrument Serif',Georgia,serif; --sans:Inter,system-ui,sans-serif; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:var(--sans); background:var(--bg); color:var(--ink); line-height:1.65; }
+  a { color:inherit; }
+  .nav { display:flex; justify-content:space-between; gap:16px; padding:16px 24px; border-bottom:1px solid var(--line); position:sticky; top:0; background:rgba(247,246,243,.9); }
+  .brand { font-weight:600; text-decoration:none; }
+  main { max-width:var(--max); margin:0 auto; padding:56px 24px 80px; }
+  h1 { font-family:var(--serif); font-weight:400; font-size:clamp(2rem,5vw,2.75rem); margin-bottom:12px; }
+  p, li { margin-bottom:12px; color:#2E2E2B; }
+  label { display:block; font-size:.9rem; font-weight:600; margin-bottom:4px; }
+  input, textarea { width:100%; padding:10px; border:1px solid var(--line-strong); border-radius:10px; font:inherit; margin-bottom:12px; background:#fff; }
+  button { padding:10px 18px; border:0; border-radius:999px; background:var(--ink); color:#fff; font-weight:600; cursor:pointer; }
+  .note { background:#fff; border:1px solid var(--line); border-radius:16px; padding:16px; margin:20px 0; }
+  footer { border-top:1px solid var(--line); padding:28px 24px 48px; text-align:center; color:var(--muted); font-size:.82rem; }
+  footer a { color:var(--ink); text-decoration:none; font-weight:500; }
+</style>
+</head>
+<body>
+<header class="nav">
+  <a class="brand" href="/">Meridian</a>
+  <nav><a href="/privacy">Privacy</a> · <a href="/terms">Terms</a></nav>
+</header>
+<main>
+  <h1>Contact</h1>
+  <p>Meridian Agency builds AI voice, text, and booking reception for local businesses. This page is the public support intake.</p>
+  <div class="note">
+    <p><strong>Monitored mailbox:</strong> not published yet. A dedicated support address must be created and watched by the owner before launch. Do not treat this form as proof that a person is already reading messages.</p>
+    <p>Target after that mailbox is live: a reply within <strong>three business days</strong>. Privacy requests also use the form on the <a href="/privacy">privacy page</a>.</p>
+    <p>Phone callers hear an AI disclosure and a recording notice. Text STOP to opt out of SMS. This page does not connect you to the live phone line.</p>
+  </div>
+  <form id="contact-form">
+    <div aria-hidden="true" style="position:absolute;left:-9999px;height:1px;overflow:hidden">
+      <label>Website <input name="website" type="text" tabindex="-1" autocomplete="off"></label>
+    </div>
+    <input type="hidden" name="_formStartedAt" id="started" value="">
+    <label for="name">Name</label>
+    <input id="name" name="name" autocomplete="name">
+    <label for="email">Email</label>
+    <input id="email" name="email" type="email" required autocomplete="email">
+    <label for="phone">Phone (optional)</label>
+    <input id="phone" name="phone" autocomplete="tel">
+    <label for="message">How can we help?</label>
+    <textarea id="message" name="message" rows="5" required minlength="8"></textarea>
+    <button type="submit" id="send">Send message</button>
+    <p id="out" role="status"></p>
+  </form>
+</main>
+<footer>
+  <p><a href="/">Home</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="/contact">Contact</a></p>
+</footer>
+<script>
+  document.getElementById('started').value = String(Date.now());
+  document.getElementById('contact-form').addEventListener('submit', async function (e) {
+    e.preventDefault();
+    var out = document.getElementById('out');
+    var btn = document.getElementById('send');
+    btn.disabled = true;
+    out.textContent = 'Sending…';
+    try {
+      var f = e.target;
+      var res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: f.name.value.trim(),
+          email: f.email.value.trim(),
+          phone: f.phone.value.trim(),
+          message: f.message.value.trim(),
+          website: f.website.value,
+          _formStartedAt: Number(f._formStartedAt.value) || Date.now()
+        })
+      });
+      var data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Could not save the message');
+      out.textContent = data.message || 'Saved.';
+      f.reset();
+      document.getElementById('started').value = String(Date.now());
+    } catch (err) {
+      out.textContent = err.message || 'Try again later.';
+    }
+    btn.disabled = false;
+  });
+</script>
+</body>
+</html>

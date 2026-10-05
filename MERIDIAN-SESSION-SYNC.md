@@ -2,6 +2,20 @@
 
 GitHub is source of truth.
 
+## Launch-gate code pass — 2026-10-05 01:30 UTC
+
+Code-only. Not a customer launch. Not a Railway or Netlify deploy. `master` was not changed by this commit. PR #2 was already merged at `4eaa904` on 2026-10-05 00:08 UTC; this work stays on `meridian-agency-2-0` until Kenny orders another promotion.
+
+- `npm test`: 220/220 passed (was 213/213). No skipped tests. New file `tests/launch-compliance.test.mjs`.
+- Fixed first utterance is now `You are speaking with {business}'s AI assistant. This call may be recorded for quality, training, and customer support.` It is pinned in Gather TwiML, fallback TwiML, realtime instructions, the xAI `response.create` first turn, and the browser demo instructions. Never-claim-human remains.
+- Fallback still says the virtual receptionist is not available, then dials `humanTransfer` or hangs up / takes voicemail. Asking for a person, agent, or transfer is a human-transfer intent.
+- SMS STOP / START / HELP replies match the compliance lines. Customer SMS is stamped with the business name and `Reply STOP to unsubscribe.` Non-Canada/US numbers do not get an AI text. Advanced Opt-Out empty TwiML is unchanged.
+- Privacy, terms, and `/contact` now state recording, AI identity, US voice processing, subprocessors, and a three-business-day target. They are explicitly draft until the owner approves them. The contact form stores a request and does not send mail or SMS. No dedicated mailbox is monitored yet.
+- `node scripts/launch-acceptance.mjs` is green with no URL. Against `https://meridian-production-4996.up.railway.app` health, Twilio status, and voice-demo status are 200 and do not leak a webhook token. Live `/privacy`, `/terms`, and `/contact` do **not** contain the new text because this commit is not deployed. Launch remains **NO-GO**.
+- Live Twilio status at probe time: `configured: true`, `webhookTokenSet: true`, `agentMapKeys: []`. Health `ok: true`, `status: degraded`, voice mode `xai`, `xaiConfigured: true`. That is not a verified call.
+
+Exact next action: Kenny approves a Railway redeploy of this branch, then places one real call and the STOP/START/HELP texts, confirms the main-line webhook, and approves the mailbox plus legal/commercial decisions. Do not route +1 647-490-3326 until he says which number he already tested. Do not touch +1 289-670-7853 until then.
+
 ## Owner call confirmation and routing request — 2026-10-04
 
 Ken reports that he already called Meridian reception and spoke with it successfully for a demo. Record this as an owner-reported successful demo conversation; do not describe it as an independently inspected call ledger, calendar booking, or proof that the separate main number is routed. The exact called number/time has not been supplied. Ken explicitly requests completion of remaining routing and launch work.
