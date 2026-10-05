@@ -2,6 +2,10 @@
 
 **Keep this chat/context permanent.** Resume with: “pull up Meridian”, “Meridian ads”, “live urls”, “know me”.
 
+## Redeploy attempt — 2026-10-05 01:34 UTC
+
+Netlify production deploy `6ac2fe64cc0fa7500ffd2a0b` is ready and the new draft privacy, terms, and contact pages are on https://meridian-open.netlify.app. Railway did not deploy: GitHub Actions run 37251822796 failed because `RAILWAY_TOKEN` is unset. Phone and SMS behavior is still the previous build. Contact form API returns 404. Launch remains NO-GO.
+
 ## Launch-gate code pass — 2026-10-05 01:30 UTC
 
 Read the newest MERIDIAN-SESSION-SYNC.md entry first. Tests 220/220. Disclosure, SMS STOP/START/HELP, NANP-only AI texts, fallback wording, and draft privacy/terms/contact pages are in source on `meridian-agency-2-0`. They are not deployed. Production legal URLs still serve the old pages. Full customer launch is NO-GO. Owner must redeploy, call, text, confirm calendar, publish a monitored mailbox, and approve SLA/legal terms. Do not merge or spend from this note.

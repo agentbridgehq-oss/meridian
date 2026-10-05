@@ -1,4 +1,8 @@
-# Meridian go-live — current checkpoint 2026-10-05
+# Meridian go-live — current checkpoint 2026-10-05 01:34 UTC
+
+**Customer launch: NO-GO.** Netlify front `6ac2fe64cc0fa7500ffd2a0b` is live with the draft legal and contact pages. Railway did not redeploy: Actions run 37251822796 failed because GitHub secret `RAILWAY_TOKEN` is empty. Phone disclosure and SMS compliance are in git at `84fdc8e` and are not on the phone server yet.
+
+## Previous checkpoint — 2026-10-05
 
 **Customer launch: NO-GO.** The disclosure and SMS compliance copy is in `meridian-agency-2-0` and covered by `npm test` (220/220) plus `node scripts/launch-acceptance.mjs`. It is not on Railway or Netlify until Kenny approves a redeploy. A live phone call, SMS STOP/START/HELP, human transfer, and a real calendar booking are still unproven. Privacy/terms/contact in source are drafts, not an approved legal sign-off.
 

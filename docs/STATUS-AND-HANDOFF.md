@@ -1,6 +1,10 @@
 # Meridian status and handoff
 
-## Latest verified update — 2026-10-05 01:30 UTC
+## Latest verified update — 2026-10-05 01:34 UTC
+
+Netlify production `6ac2fe64cc0fa7500ffd2a0b` is ready. Draft privacy, terms, and contact are on https://meridian-open.netlify.app. Railway redeploy failed: GitHub Actions run 37251822796, `RAILWAY_TOKEN` secret missing. Phone runtime is unchanged. Customer launch remains NO-GO.
+
+## Previous verified update — 2026-10-05 01:30 UTC
 
 Source on `meridian-agency-2-0` now has the fixed AI/recording first utterance, SMS STOP/START/HELP lines, business-name plus STOP on customer texts, Canada/US-only AI texts, and draft privacy, terms, and contact pages. `npm test` 220/220. This is not deployed. Production health is 200 and degraded; Twilio reports configured with an empty agent map; new legal copy is not on the live URLs yet. Customer launch remains NO-GO. See MERIDIAN-SESSION-SYNC.md.
 

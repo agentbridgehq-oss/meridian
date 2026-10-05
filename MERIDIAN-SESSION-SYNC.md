@@ -2,6 +2,17 @@
 
 GitHub is source of truth.
 
+## Redeploy attempt — 2026-10-05 01:34 UTC
+
+Kenny ordered a redeploy and a pass/fail confirmation. Netlify production is updated. Railway is not.
+
+- Netlify deploy `6ac2fe64cc0fa7500ffd2a0b` state `ready`, published 2026-10-05 01:33 UTC to https://meridian-open.netlify.app. Secret scan: 281 files, no matches. Live pages now contain the new draft privacy recording sentence, terms “AI call handling”, and contact “Monitored mailbox”. Homepage links to `/contact`.
+- Railway GitHub Action run [37251822796](https://github.com/agentbridgehq-oss/meridian/actions/runs/37251822796) on `84fdc8e` failed in one second: `RAILWAY_TOKEN` secret is not set. No Railway connector is available in this session. The live process was not restarted (`/healthz` still `ok: true`, `status: degraded`, uptime still hours, not seconds).
+- Railway `/privacy` and `/contact` do not contain the new copy. `POST /api/contact` through the Netlify proxy returns `Cannot POST /api/contact` because the old Railway build has no contact route.
+- Phone disclosure, SMS STOP/START/HELP, fallback, and the contact form are therefore **not live**. Customer launch remains **NO-GO**. A real call and a real text were not placed.
+
+Exact next action: Kenny adds a Railway project token as the GitHub secret `RAILWAY_TOKEN` (name exact, value not in chat), then re-runs Deploy to Railway on `meridian-agency-2-0`. After `/healthz` uptime resets and `/privacy` on Railway contains the recording sentence, he places the call and the STOP/START/HELP texts. Do not change +1 289-670-7853 or +1 647-490-3326 until he confirms which number he tested.
+
 ## Launch-gate code pass — 2026-10-05 01:30 UTC
 
 Code-only. Not a customer launch. Not a Railway or Netlify deploy. `master` was not changed by this commit. PR #2 was already merged at `4eaa904` on 2026-10-05 00:08 UTC; this work stays on `meridian-agency-2-0` until Kenny orders another promotion.
