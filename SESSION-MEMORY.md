@@ -235,3 +235,9 @@ Portfolio audit: Claudecraft paid checkout 404 and Stripe connector requires rea
 - No bypass actors. Admin token cannot bypass.
 - `meridian-agency-2-0` is not under this ruleset.
 - `master` still @ `05a6bbcd`.
+
+
+## 2026-10-05 — black front locked
+
+- Kenny kept the black site. The letter, cream, and agency versions are saved under docs/fronts/saved-alternate. Homepage was not replaced.
+- Launch work that still needs Kenny: Railway deploy approval or RAILWAY_TOKEN, which number was tested, one ledger call, STOP/START/HELP, one real calendar booking, approved legal mailbox, one Stripe payment.
