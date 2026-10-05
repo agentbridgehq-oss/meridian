@@ -1,62 +1,32 @@
 # Keep Meridian always accessible
 
-## What is already permanent
+## Status — 2026-09-05
 
-| Layer | Status | Depends on your laptop? |
-|-------|--------|-------------------------|
-| **Railway production** | Live, `sleepApplication: false` | **No** |
-| Public URL | https://meridian-production-915d.up.railway.app/ | **No** |
-| Volume `/data` | Attached for leads/agents | **No** |
-| Local `:8891` | Optional; Startup + watch task | Yes |
+Railway production is **down**. Both historic domains return `Application not found`:
 
-**If you never open PowerShell or Grok again, the public site still runs on Railway.**
+- https://meridian-production-915d.up.railway.app/
+- https://meridian-production-2eb0.up.railway.app/
 
-Closing PowerShell, this chat, or the laptop **does not** take Meridian offline. Only deleting the Railway project, exhausting billing, or a failed redeploy can.
+Do not tell anyone Meridian is live until `node scripts/go-live.mjs --url <domain>` reports health 200.
 
-Canonical domain: `meridian-production-915d.up.railway.app`.  
-Do **not** use `meridian-production-2eb0` — that hostname is unbound and returns Railway 404.
+Project: https://railway.com/project/3325e670-00e8-46e2-8d38-e1e4f77b8e66
 
-## What you must do (once / occasional)
+Recreate steps: `GO-LIVE.md`.
 
-1. **Keep Railway paid / trial valid**  
-   Free tiers can sleep or stop if the workspace hits limits. Check https://railway.com/dashboard and billing for workspace **agentbridgehq-oss's Projects**.
+## What is already in code
 
-2. **Do not delete the `meridian` project**  
-   Dashboard: https://railway.com/project/3325e670-00e8-46e2-8d38-e1e4f77b8e66
+| Layer | Status | Depends on laptop? |
+|-------|--------|--------------------|
+| GitHub `meridian-agency-2-0` / PR #2 | Built, not production | No |
+| Railway public process | Missing | No — must recreate service |
+| Local `:8891` | Optional | Yes |
 
-3. **Optional but recommended — connect GitHub** (so deploys work without local CLI)  
-   In Railway: Service → Settings → Source → connect repo + **master** branch. After that, push = redeploy.
+Closing this chat does not bring Railway back. Only creating the service does.
 
-4. **Save secrets outside this chat**  
-   - Railway Variables (already has `OPS_TOKEN`, `PUBLIC_BASE_URL`, `DATA_DIR`)  
-   - Confirm `PUBLIC_BASE_URL=https://meridian-production-915d.up.railway.app`  
-   - Add when you need them: `RESEND_API_KEY`, `STRIPE_SECRET_KEY`, `MERIDIAN_WEBHOOK_URL`  
-   - Local copy of `OPS_TOKEN`: `meridian\.env.railway` (gitignored)
+## What you must do
 
-5. **Bookmark the URL**  
-   Phone, browser, notes — you do not need CLI to *use* the site.
-
-## Claude Code — run / fix Meridian anytime
-
-```text
-cd C:\Users\hunte\github-clones\meridian
-```
-
-Claude Code will read `CLAUDE.md` in this folder.
-
-```powershell
-railway login          # once per machine if not logged in
-railway status
-railway up --detach -m "your change"
-railway logs --lines 100
-```
-
-Same folder works in Grok Build. Railway plugin optional for MCP tools.
-
-## You do NOT need
-
-- This Grok session open  
-- PowerShell open all day  
-- Laptop on for customers to reach Meridian  
-
-Laptop auto-start is only for **localhost:8891** development.
+1. Keep the Railway workspace billed.
+2. Do not delete project `meridian` if it still exists.
+3. Connect GitHub source to branch `meridian-agency-2-0` for staging. Keep `master` frozen until a real call works.
+4. Secrets live in Railway Variables and GitHub `RAILWAY_TOKEN` only.
+5. After a new domain exists, bookmark that URL and update `PUBLIC_BASE_URL`.

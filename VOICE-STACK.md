@@ -1,5 +1,12 @@
 # Meridian production voice stack (locked)
 
+> **2026-10-04 update (Kenny): all Meridian AI runs on xAI — one bill.**
+> Phone: Twilio number → Twilio Elastic SIP trunk → `sip:{number}@sip.voice.x.ai;transport=tls`
+> → xAI Grok Voice (`grok-voice-think-fast-2.0`, $0.08/min) → Meridian tools via
+> `/api/xai/webhooks/realtime` + realtime WebSocket. Brain/SMS/ops text: `grok-4.3`.
+> Caps, metering, idempotency and alerts are unchanged. Rollback: `MERIDIAN_AI_PROVIDER=legacy`.
+> Costs and margins: `/workspace/meridian-2.0-pricing-proposal.md` §8. The table below is historical.
+
 Goal: no dead air. Preview always plays. Paid calls use a cheap, low-latency phone path. Premium neural is optional and prepaid.
 
 ## What broke

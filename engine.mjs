@@ -4,6 +4,7 @@
  * Delivery: webhooks + email (consent / approved only)
  */
 
+import { CURRENCY_CODE, planForNeed } from './lib/pricing.mjs';
 import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
@@ -143,20 +144,22 @@ export function generateProposal(lead) {
   if (need.includes('sales') || need.includes('lead') || need.includes('full')) agents.push('Sales Lead Agent');
   if (need.includes('book') || need.includes('appoint') || need.includes('full')) agents.push('Booking Agent');
   if (!agents.length) agents.push('Voice Agent', 'Sales Lead Agent', 'Booking Agent');
-  const setup = agents.length >= 3 ? 2497 : agents.length === 2 ? 1797 : 997;
-  const monthly = agents.length >= 3 ? 497 : agents.length === 2 ? 347 : 247;
+  const plan = planForNeed(need, agents.length);
   return {
     id: rid('prop'),
     createdAt: new Date().toISOString(),
     leadId: lead.id,
     businessName: lead.businessName || 'Your business',
     agents,
-    setupUsd: setup,
-    monthlyUsd: monthly,
+    planId: plan.id,
+    planName: plan.name,
+    currency: CURRENCY_CODE,
+    setupCad: plan.setupCents / 100,
+    monthlyCad: plan.monthlyCents / 100,
+    caps: { ...plan.caps },
     summary: `Meridian installs ${agents.join(', ')} so every call and lead is answered and booked.`,
     intakePath: `/intake/${lead.intakeToken}`,
-    kitCheckout:
-      agents.length >= 3 ? '/checkout/stack' : need.includes('voice') ? '/checkout/voice' : need.includes('sales') ? '/checkout/sales' : '/checkout/booking',
+    kitCheckout: `/checkout/${plan.id}`,
   };
 }
 
@@ -234,6 +237,7 @@ export function provisionClientAgent(lead) {
 export function submitIntake(intakeToken, body) {
   const lead = getLeadByIntakeToken(intakeToken);
   if (!lead) return { ok: false, error: 'Invalid intake link' };
+  if (lead.agency) return { ok: false, error: 'Managed projects use their private onboarding hub; agent provisioning requires a separately reviewed install.' };
   const intake = {
     submittedAt: new Date().toISOString(),
     businessName: body.businessName || lead.businessName,
@@ -438,6 +442,7 @@ export function listApprovedUnsent() {
 export function runAgentOnLead(leadId) {
   const lead = getLead(leadId);
   if (!lead) return { ok: false, error: 'Lead not found' };
+  if (lead.agency) return { ok: true, action: 'managed_scope_required', lead };
   if (lead.unsubscribed) return { ok: false, error: 'Unsubscribed' };
   if (lead.stage === 'new' || lead.stage === 'qualified') {
     const withProp = attachProposal(leadId);

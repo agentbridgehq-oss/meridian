@@ -1,11 +1,11 @@
-# Meridian Agency — Claude Code project root
+# Meridian Agency — Claude / ChatGPT project root
 
-You are in the **canonical Meridian project**.
+Before any answer: read root `AGENTS.md`, then `MERIDIAN-SESSION-SYNC.md` on branch `meridian-agency-2-0`. Pull GitHub. Do not use chat memory as truth.
 
-- **Path:** `C:\Users\hunte\github-clones\meridian`
-- **Live:** https://meridian-production-2eb0.up.railway.app/
-- **Handoff:** https://meridian-production-2eb0.up.railway.app/for-claude
-- **Claude project memory:** `C:\Users\hunte\.claude\projects\C--Users-hunte-github-clones-meridian\memory\`
+- Path: `C:\\Users\\hunte\\github-clones\\meridian`
+- Branch: `meridian-agency-2-0`
+- PR: https://github.com/agentbridgehq-oss/meridian/pull/2
+- Production URL: DOWN. See `GO-LIVE.md`.
+- Railway project: https://railway.com/project/3325e670-00e8-46e2-8d38-e1e4f77b8e66
 
-Read **root** `CLAUDE.md` and `AGENTS.md` next.  
-This is **not** ClaudeCraft. Deploy with `railway up --detach` from this folder only.
+This is not ClaudeCraft. Do not merge to `master` unless Kenny says merge.

@@ -101,15 +101,18 @@
 
   async function loadContext() {
     state.loading = true;
+    state.error = '';
     render();
     try {
       let ctx;
       if (token) {
-        const res = await fetch(`${BASE}/api/setup/${token}`);
+        const res = await fetch(`${BASE}/api/setup/${token}`, { signal: AbortSignal.timeout(15000) });
         ctx = await res.json();
         if (!res.ok) throw new Error(ctx.error || 'Guide not found');
       } else {
-        ctx = await (await fetch(`${BASE}/api/setup/blank`)).json();
+        const res = await fetch(`${BASE}/api/setup/blank`, { signal: AbortSignal.timeout(15000) });
+        if (!res.ok) throw new Error('Setup could not be loaded. Use the customer guide or retry.');
+        ctx = await res.json();
       }
       state.ctx = ctx;
       state.selectedVoiceId = ctx.selectedVoiceId || ctx.xaiVoiceId || 'eve';
@@ -489,12 +492,12 @@
           <p class="lead">This wizard walks you through connecting <strong>${escapeHtml(c.businessName || 'your business')}</strong>’s Meridian agent to your website, automations, and phone — one block at a time. Click <strong>Next</strong> when each block is done.</p>
           <div class="callout good">
             <b>Seamless promise</b>
-            <p>Your agent is already built and smoke-tested. You only wire it to your systems. Secret keys never go in public pages.</p>
+            <p>Use your private delivery link after provisioning. This public wizard is a preview, not a live agent. Secret keys never go in public pages or AI chat.</p>
           </div>
           <ul class="bullets">
             <li>About 10–30 minutes depending on path</li>
             <li>Optional: fully autonomous OpenClaw pack at the end</li>
-            <li>Phone number attach in Retell/Vapi is the only carrier step that stays manual</li>
+            <li>Phone routing and customer-system actions require operator verification and a real acceptance test</li>
           </ul>
         </div>`;
     }
@@ -546,9 +549,9 @@
         { id: 'website', t: 'Website only', d: 'Chat bubble on my site — fastest' },
         { id: 'api', t: 'API / app', d: 'My software or backend will call Meridian' },
         { id: 'webhooks', t: 'Automations', d: 'n8n, Zapier, Make, CRM webhooks' },
-        { id: 'phone', t: 'Phone first', d: 'Retell / Vapi line answering calls' },
+        { id: 'phone', t: 'Phone first', d: 'Managed xAI Grok Voice + Twilio SIP' },
         { id: 'full', t: 'Everything', d: 'Website + API + webhooks + phone' },
-        { id: 'autonomous', t: 'Fully autonomous', d: 'OpenClaw packs install for me' },
+        { id: 'autonomous', t: 'Fully autonomous', d: 'Optional legacy packaging — not phone activation' },
       ];
       return `
         <div class="block-body">
@@ -598,7 +601,7 @@
         .join('');
       return `
         <div class="block-body">
-          <p class="lead">Pick the neural voice for <strong>Meridian-hosted</strong> speech (xAI). This is used when your stack requests audio with <code>audio: true</code>, or on the speak API. Phone lines still use Retell/Vapi native voices unless you wire hosted audio.</p>
+          <p class="lead">Pick the neural voice for <strong>Meridian-hosted</strong> speech (xAI). This is used when your stack requests audio with <code>audio: true</code>, or on the speak API. Current managed phone service uses xAI Grok Voice through Twilio SIP; a hosted-speech selection is not phone acceptance.</p>
           <div class="voice-toolbar">
             <input class="voice-search" id="voice-filter" type="search" placeholder="Search voices…" value="${escapeHtml(state.voiceFilter || '')}" />
             <button type="button" class="btn sm light" id="btn-reload-voices">Refresh list</button>
@@ -674,14 +677,14 @@
       const curl = `curl -s -X POST "${agent}" \\\n  -H "Authorization: Bearer ${key}" \\\n  -H "Content-Type: application/json" \\\n  -d "{\\"message\\":\\"What are your hours?\\",\\"history\\":[]}"`;
       return `
         <div class="block-body">
-          <p class="lead">Your server calls Meridian. Claude powers the reply. Store the key in env vars.</p>
+          <p class="lead">Your server calls Meridian. The current text provider is xAI. Store the key in server secret settings.</p>
           <ol class="steps-ol">
             <li>Put <code>MERIDIAN_AGENT_ID</code> and <code>MERIDIAN_API_KEY</code> in your secrets</li>
             <li>POST JSON <code>{"message":"…"}</code> to the Agent URL</li>
             <li>Show the user the <code>reply</code> field</li>
             <li>Keep short history (last 6–8 turns) for better sales conversations</li>
           </ol>
-          <div class="field"><label>Claude Agent API URL</label><div class="mono box" id="api-agent">${escapeHtml(agent)}</div>
+          <div class="field"><label>Meridian Agent API URL</label><div class="mono box" id="api-agent">${escapeHtml(agent)}</div>
           <button type="button" class="btn sm" data-copy-id="api-agent">Copy URL</button></div>
           <div class="field"><label>Chat URL (simple)</label><div class="mono box" id="api-chat">${escapeHtml(chat)}</div></div>
           <pre class="code" id="code-curl">${escapeHtml(curl)}</pre>
@@ -705,7 +708,7 @@
           <pre class="code" id="code-ev">${escapeHtml(ev)}</pre>
           <button type="button" class="btn dark" data-copy-id="code-ev">Copy events curl</button>
           <h3>B) n8n one-click workflow</h3>
-          <p>Import this JSON into n8n → activate once → point forms at the webhook.</p>
+          <p>Import the template into n8n, configure credentials, test it, then activate only after approval. An import is not a working customer integration.</p>
           ${
             token
               ? `<a class="btn dark" href="${BASE}/api/setup/${token}/n8n.json" download>Download n8n workflow</a>`
@@ -718,33 +721,19 @@
     }
 
     if (step.id === 'phone') {
-      const vt = c.endpoints?.voiceTurn || `${BASE}/api/v1/agents/${id}/voice-turn`;
       return `
         <div class="block-body">
-          <p class="lead">Meridian answers with the right business brain. Retell/Vapi/Bland owns the phone number and voice.</p>
+          <p class="lead">Managed phone service uses xAI Grok Voice through Twilio SIP. Your operator must verify the approved number, private agent route and billing eligibility.</p>
           <ol class="steps-ol">
-            <li>Create an assistant on Retell or Vapi</li>
-            <li>Download config below and paste the system prompt</li>
-            <li>Add a tool/server: every user utterance → POST voice-turn → speak field <code>reply</code></li>
-            <li>Auth header: <code>Bearer ${escapeHtml(key.startsWith('mdn_') ? key.slice(0, 12) + '…' : 'mdn_…')}</code></li>
-            <li>Attach a phone number → place a real test call</li>
+            <li>Confirm the assigned E.164 number and approved business facts</li>
+            <li>Have Meridian register the number with xAI and configure the signed webhook</li>
+            <li>Route the authorised number through Twilio SIP with a verified fallback</li>
+            <li>Test disclosure, interruption, transfer and failure recovery with a real call</li>
+            <li>Verify actual calendar actions and client acceptance before launch</li>
           </ol>
-          <div class="field"><label>Voice-turn URL</label><div class="mono box" id="vt-url">${escapeHtml(vt)}</div>
-          <button type="button" class="btn sm" data-copy-id="vt-url">Copy</button></div>
-          <pre class="code" id="code-vt">POST ${escapeHtml(vt)}
-Authorization: Bearer ${escapeHtml(key)}
-{"message":"{{caller transcript}}","audio":false}</pre>
-          <button type="button" class="btn dark" data-copy-id="code-vt">Copy template</button>
-          <div class="row">
-            ${
-              token
-                ? `<a class="btn light" href="${BASE}/guide/${token}/retell.json" download>⬇ Retell JSON</a>
-                   <a class="btn light" href="${BASE}/guide/${token}/vapi.json" download>⬇ Vapi JSON</a>`
-                : ''
-            }
-          </div>
-          <div class="callout good"><b>Latency tip</b><p>Keep <code>audio:false</code> on phone for lowest lag — Retell/Vapi speaks Meridian’s text with a platform voice. Your saved xAI voice (<strong>${escapeHtml(state.selectedVoiceId || c.selectedVoiceId || 'eve')}</strong>) applies when you request Meridian-hosted audio.</p></div>
-          <label class="check"><input type="checkbox" data-mark="phone" ${state.done.phone ? 'checked' : ''}/> Test call heard correct hours/services</label>
+          <a class="btn dark" href="/voice-connect#phone-setup">Open phone connection guide</a>
+          <div class="callout warn"><b>No automatic activation</b><p>Samples and saved checkmarks do not authorize a phone deployment. Never paste provider keys into this wizard or AI chat.</p></div>
+          <label class="check"><input type="checkbox" data-mark="phone" ${state.done.phone ? 'checked' : ''}/> Operator recorded the real-call acceptance test</label>
         </div>`;
     }
 
@@ -753,15 +742,15 @@ Authorization: Bearer ${escapeHtml(key)}
       return `
         <div class="block-body">
           <div class="callout good">
-            <b>Want almost zero work? Pay for Full Auto Install</b>
-            <p>Higher one-time fee → we provision, pack, and priority-queue OpenClaw. You only attach a phone number + paste the widget.</p>
+            <b>Want almost zero work? Pick a done-for-you plan</b>
+            <p>We provision, pack, and priority-queue OpenClaw. You only attach a phone number + paste the widget.</p>
             <p style="margin-top:10px">
-              <a class="btn dark" href="/checkout/auto">Full Auto · $1,497</a>
-              <a class="btn light" href="/checkout/auto_voice">Voice Auto · $997</a>
-              <a class="btn light" href="/#full-auto">Compare tiers</a>
+              <a class="btn dark" href="/checkout/growth">Front Desk Growth · CA$999/mo + CA$999 setup</a>
+              <a class="btn light" href="/checkout/pro">Front Desk Pro · CA$499/mo + CA$499 setup</a>
+              <a class="btn light" href="/#pricing">Compare plans</a>
             </p>
           </div>
-          <p class="lead"><strong>Or run free OpenClaw packaging now</strong> (included): packages widget, API, n8n, and phone configs, emails you, and notifies ops. Phone number attach in Retell/Vapi still requires your account.</p>
+          <p class="lead"><strong>Or run free OpenClaw packaging now</strong> (included): packages widget, API, n8n, and phone configs, emails you, and notifies ops. These legacy packs do not configure the current xAI SIP path. Use the connection hub and operator verification for managed phone service.</p>
           <div class="field"><label>Your email</label><input id="auto-email" type="email" placeholder="you@business.com" value="${escapeHtml(c.email || '')}"/></div>
           <div class="field"><label>Website URL (optional)</label><input id="auto-site" placeholder="https://yoursite.com"/></div>
           <div class="field"><label>Phone platform</label>

@@ -1,82 +1,25 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Booking Agent · Meridian</title>
-<meta name="description" content="Meridian Booking Agent — calendar, confirmations, no-show recovery. Description, special instructions, kit, and checkout.">
-<meta name="theme-color" content="#0A0A09">
-<link rel="stylesheet" href="/agent-detail.css">
-</head>
-<body>
-<header class="nav">
-  <a class="brand" href="/">Meridian</a>
-  <div class="nav-links">
-    <a class="g" href="/agents">All agents</a>
-    <a class="g" href="/agents/voice">Voice</a>
-    <a class="g" href="/agents/sales">Sales</a>
-    <a class="btn btn-dark" href="/checkout/booking">Buy kit</a>
-  </div>
-</header>
-<main class="wrap">
-  <p class="crumb"><a href="/">Home</a> · <a href="/agents">Agents</a> · Booking</p>
-  <div class="eyebrow">03 · Booking Agent</div>
-  <h1>Fill the calendar without the admin drag.</h1>
-  <p class="lede">
-    Schedules, reschedules, confirms, and recovers no-shows — so the calendar stays full.
-    Install Booking first when you run the full stack.
-  </p>
-  <div class="price">$497 <small>one-time kit</small></div>
-  <div class="actions">
-    <a class="btn btn-dark" href="/checkout/booking">Buy Booking Agent</a>
-    <a class="btn btn-light" href="/checkout/stack">Full stack · $997</a>
-    <a class="btn btn-light" href="/#proposal">Get a proposal</a>
-  </div>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Booking Agent · Meridian</title><meta name="description" content="Check real availability. Offer clear choices. Confirm every detail. Your scheduling agent brings a calm, human rhythm to the admin behind every appointment."><meta name="theme-color" content="#0A0A09"><link rel="stylesheet" href="/agent-detail.css"><link rel="stylesheet" href="/css/meridian-premium.css"></head>
+<body class="agent-profile"><header class="nav"><a class="brand" href="/">Meridian</a><nav class="nav-links" aria-label="Agents"><a class="g" href="/agents/voice">Receptionist</a><a class="g" href="/agents/booking">Booking</a><a class="g" href="/agents/service">Service</a><a class="g" href="/agents/sales">Sales</a><a class="btn btn-dark" href="/meridian-proposal.html?service=booking">Scope my system →</a></nav></header>
+<main class="wrap"><p class="crumb"><a href="/">Home</a> / <a href="/agents">Agents</a> / Booking</p><div class="profile-hero"><div><div class="eyebrow">02 / Managed voice operations</div><h1>A conversation. A confirmed appointment.</h1><p class="lede">Check real availability. Offer clear choices. Confirm every detail. Your scheduling agent brings a calm, human rhythm to the admin behind every appointment.</p><span class="profile-pill">Configured for your business · verified before launch</span><div class="actions"><a class="btn btn-dark" href="/meridian-proposal.html?service=booking">Build my proposal →</a><a class="btn btn-light" href="/meridian-voice-demo.html?role=booking">Try a conversation</a></div></div>
+<section class="voice-studio" id="voice-studio" data-vd-role="booking" aria-label="Booking voice preview"><div class="eyebrow">The sound of Meridian</div><h2>Hear the booking role.</h2><p class="vd-note">Select a studio voice. Preview a short AI-generated sample.</p><div class="vd-voices" data-vd-voices></div><label for="agent-sample" class="eyebrow">Sample script</label><textarea id="agent-sample" class="vd-text" data-vd-text maxlength="220" rows="4"></textarea><div class="vd-row"><button class="btn btn-dark" type="button" data-vd-play>Play studio sample</button><button class="btn btn-light" type="button" data-vd-stop>Stop</button></div><p data-vd-status class="vd-status" role="status" aria-live="polite">Checking studio…</p><audio data-vd-audio controls hidden></audio><button class="btn btn-light" type="button" data-vd-device hidden>Use device voice instead</button><p class="vd-note">Sample audio is separate from the live phone agent. Current phone service uses xAI Grok Voice + Twilio SIP. A browser conversation is a demonstration, with business actions disabled.</p></section></div>
+<section class="daily-note" data-daily-field-note data-note-context="booking" aria-label="Today’s Booking field note"><div class="daily-note-inner"><div class="daily-note-top"><span>Today’s Meridian Field Note</span><span>Booking</span></div><h2>Fresh operating guidance for this agent.</h2><p>This note changes daily and focuses on the practical details that make the agent safer and more useful.</p></div></section>
+<div class="profile-grid"><section class="block"><h2>What it can do</h2><ul><li>Checks the connected calendar before offering times</li><li>Confirms service, timezone, duration and caller consent</li><li>Creates appointments only after calendar confirmation</li><li>Cancels or reschedules identified appointments through the verified connector</li></ul></section><section class="block"><h2>What we connect</h2><ul><li>Calendar access and business timezone</li><li>Services, durations, buffers and minimum notice</li><li>Cancellation policy and approved confirmation channel</li></ul></section><section class="block"><h2>What we prove</h2><ul><li>Availability matches the business calendar</li><li>Unavailable slots are refused</li><li>A booked appointment appears in the calendar</li><li>Cancel and reschedule are confirmed by the calendar</li></ul></section></div>
+<section class="block"><div class="eyebrow">Expert capabilities</div><h2>Booking operating capabilities.</h2><p>These are the areas Meridian configures and verifies for this role. Final capabilities depend on the customer systems that are actually connected and accepted.</p><div class="capability-tags"><span>Live availability</span><span>Appointment creation</span><span>Rescheduling</span><span>Confirmation</span><span>Timezone handling</span><span>No-show workflow</span><span>Calendar guardrails</span><span>Human fallback</span></div></section>
+<section class="setup-brief" aria-labelledby="booking-setup-title"><div class="eyebrow">Customer instructions</div><h2 id="booking-setup-title">Shape your booking agent.</h2><p>Define the scheduling rules this agent must follow before it touches a live calendar. Do not enter passwords, API keys, payment data or customer records here.</p><form class="setup-grid" data-agent-setup-brief data-agent-role="booking">
+<label>Business type<input name="businessType" maxlength="160" placeholder="HVAC, dental, legal, home services…"></label>
+<label>Human handoff rule<input name="handoff" maxlength="500" placeholder="When should the agent transfer or request a callback?"></label>
+<label class="full">Must do<textarea name="mustDo" rows="3" maxlength="1000" placeholder="Actions, questions or information the agent must always cover."></textarea></label>
+<label class="full">Must never do<textarea name="mustNever" rows="3" maxlength="1000" placeholder="Claims, actions or topics the agent must avoid."></textarea></label>
+<label class="full">Special instructions<textarea name="specialInstructions" rows="4" maxlength="1800" placeholder="Tone, workflow rules, service-area details, escalation preferences or other instructions."></textarea></label>
+<div class="full"><button class="btn btn-dark" type="submit">Carry these instructions into setup →</button><p class="setup-status" data-setup-status role="status" aria-live="polite"></p></div>
+</form></section>
+<section class="block"><div class="eyebrow">From brief to deployment</div><h2>A service built around your operation.</h2><ol class="profile-steps"><li><strong>Define the job</strong>Approve the scope, business facts, tone, hours, escalation owner and provider budget.</li><li><strong>Connect securely</strong>Configure provider secrets on the server. Connect the phone number and only the customer systems in scope.</li><li><strong>Rehearse the difficult calls</strong>Test interruption, unclear questions, unavailable systems, transfers and failed bookings using staging.</li><li><strong>Accept and launch</strong>Review evidence from a real call. Approve the client deployment, rollback owner and monitoring before activation.</li></ol></section>
+<section class="block"><h2>Setup &amp; API instructions</h2><p><a class="btn btn-light" href="/voice-connect.html">Open connection hub →</a></p><details><summary>Managed installation — recommended</summary><p>Meridian handles configuration. You provide approved business facts, account access through secure provider invitations, calendar rules and a human fallback number. Credentials stay in server secret storage.</p></details><details><summary>Technical connection checklist</summary><p>Railway runs the phone runtime. Configure XAI_API_KEY and XAI_WEBHOOK_SECRET there. Register the approved number with xAI, point Twilio SIP to its xAI destination and verify the private route and billing gate. Enable calendar and CRM tools only after their signed HTTPS adapters pass verification. <a href="/install">Open the full integration guide →</a></p></details><details><summary>Authenticated customer API</summary><p>After provisioning, Meridian supplies your actual runtime URL, agent ID and private API key. Send requests from your server. Keep the key out of browser code.</p><pre>GET /api/v1/agents/:id
+Authorization: Bearer [your provisioned agent key]
 
-  <section class="block">
-    <h2>Description</h2>
-    <p>
-      Booking is the calendar OS for Voice and Sales. Same availability rules everywhere —
-      no double-books, clear reminders, and a recovery path when someone ghosts.
-    </p>
-    <ul>
-      <li>Schedule / reschedule / cancel flows</li>
-      <li>Reminder copy (SMS / email patterns)</li>
-      <li>No-show recovery playbook</li>
-      <li>Delivery sprint checklist</li>
-      <li>Aligned slots for Voice + Sales handoffs</li>
-    </ul>
-  </section>
-
-  <section class="block">
-    <h2>Special instructions</h2>
-    <ul>
-      <li><strong style="color:var(--ink)">Timezone truth</strong> — one timezone in knowledge; never mix shop local vs UTC in prompts.</li>
-      <li><strong style="color:var(--ink)">Buffer rules</strong> — travel time / room turnaround must be explicit or slots overfill.</li>
-      <li><strong style="color:var(--ink)">Human-only services</strong> — some jobs stay “call the office” — list them in intake.</li>
-      <li><strong style="color:var(--ink)">Confirmations</strong> — always confirm channel (SMS preferred for local trades).</li>
-      <li><strong style="color:var(--ink)">Install first</strong> — Booking before Sales and Voice so the other agents have real slots.</li>
-    </ul>
-    <div class="note">
-      <strong>Stack install order:</strong> Booking → Sales → Voice.
-    </div>
-  </section>
-
-  <section class="block">
-    <h2>What you get in the kit</h2>
-    <ul>
-      <li>Scheduler system prompt</li>
-      <li>Reminder &amp; recovery copy</li>
-      <li>No-show playbook</li>
-      <li>Delivery sprint checklist</li>
-    </ul>
-  </section>
-
-  <p class="foot">
-    <a href="/agents">← All agents</a> ·
-    <a href="/install">Install guide</a> ·
-    <a href="/kits/booking/BOOKING-AGENT-KIT.md">Kit markdown</a>
-  </p>
-</main>
-</body>
-</html>
+POST /api/v1/agents/:id/chat
+Content-Type: application/json
+Authorization: Bearer [your provisioned agent key]
+{"message":"What services do you provide?"}</pre><p>This checks the customer API. A real inbound call is a separate phone acceptance test.</p></details></section>
+<section class="block"><h2>Clear limits. Better delivery.</h2><p>Availability, prices, job status and completed actions come from approved facts and verified tools. When a connection fails, the agent explains the limit and offers an agreed human fallback. The studio never claims a real booking or transfer.</p></section>
+<section class="block"><h2>Choose the right engagement.</h2><p>Meridian is done-for-you and priced in CAD: Missed-Call Rescue $199/mo ($0 setup, 200 AI min, 300 SMS); Front Desk Pro $499/mo + $499 setup (600 AI min, 800 SMS); Front Desk Growth $999/mo + $999 setup (1,200 AI min, 2,000 SMS). Usage stops at the cap; extra usage is prepaid top-ups only (CA$45 per 100 min, CA$35 per 500 SMS).</p><div class="actions"><a class="btn btn-dark" href="/meridian-proposal.html?service=booking">Scope a managed installation</a><a class="btn btn-light" href="/#pricing">See plans (CAD)</a></div></section><footer class="foot"><a href="/">← Meridian</a> · <a href="/install">Integration guide</a> · <a href="/privacy.html">Privacy</a></footer></main><script src="/js/daily-field-note.js" defer></script><script src="/js/agent-setup-brief.js" defer></script><script src="/js/voice-demo.js" defer></script></body></html>

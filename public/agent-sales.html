@@ -1,83 +1,25 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Sales Agent · Meridian</title>
-<meta name="description" content="Meridian Sales Agent — instant lead follow-up. Description, special instructions, kit, and checkout.">
-<meta name="theme-color" content="#0A0A09">
-<link rel="stylesheet" href="/agent-detail.css">
-</head>
-<body>
-<header class="nav">
-  <a class="brand" href="/">Meridian</a>
-  <div class="nav-links">
-    <a class="g" href="/agents">All agents</a>
-    <a class="g" href="/agents/voice">Voice</a>
-    <a class="g" href="/agents/booking">Booking</a>
-    <a class="btn btn-dark" href="/checkout/sales">Buy kit</a>
-  </div>
-</header>
-<main class="wrap">
-  <p class="crumb"><a href="/">Home</a> · <a href="/agents">Agents</a> · Sales</p>
-  <div class="eyebrow">02 · Sales Agent</div>
-  <h1>Follow up before the lead cools.</h1>
-  <p class="lede">
-    Instant lead follow-up by SMS, chat, or email — qualifies, sends next steps, and books while interest is hot.
-    Built for speed with consent-first messaging (CASL).
-  </p>
-  <div class="price">$497 <small>one-time kit</small></div>
-  <div class="actions">
-    <a class="btn btn-dark" href="/checkout/sales">Buy Sales Agent</a>
-    <a class="btn btn-light" href="/checkout/auto_sales">Full Auto Sales · $997</a>
-    <a class="btn btn-light" href="/#proposal">Get a proposal</a>
-  </div>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Sales Agent · Meridian</title><meta name="description" content="Qualify inbound interest with one useful question at a time. Keep approved follow-up connected to the business, and move ready prospects toward a booking or human estimate."><meta name="theme-color" content="#0A0A09"><link rel="stylesheet" href="/agent-detail.css"><link rel="stylesheet" href="/css/meridian-premium.css"></head>
+<body class="agent-profile"><header class="nav"><a class="brand" href="/">Meridian</a><nav class="nav-links" aria-label="Agents"><a class="g" href="/agents/voice">Receptionist</a><a class="g" href="/agents/booking">Booking</a><a class="g" href="/agents/service">Service</a><a class="g" href="/agents/sales">Sales</a><a class="btn btn-dark" href="/meridian-proposal.html?service=sales">Scope my system →</a></nav></header>
+<main class="wrap"><p class="crumb"><a href="/">Home</a> / <a href="/agents">Agents</a> / Sales</p><div class="profile-hero"><div><div class="eyebrow">04 / Managed voice operations</div><h1>Good enquiries deserve a better first reply.</h1><p class="lede">Qualify inbound interest with one useful question at a time. Keep approved follow-up connected to the business, and move ready prospects toward a booking or human estimate.</p><span class="profile-pill">Configured for your business · verified before launch</span><div class="actions"><a class="btn btn-dark" href="/meridian-proposal.html?service=sales">Build my proposal →</a><a class="btn btn-light" href="/meridian-voice-demo.html?role=sales">Try a conversation</a></div></div>
+<section class="voice-studio" id="voice-studio" data-vd-role="sales" aria-label="Sales voice preview"><div class="eyebrow">The sound of Meridian</div><h2>Hear the sales role.</h2><p class="vd-note">Select a studio voice. Preview a short AI-generated sample.</p><div class="vd-voices" data-vd-voices></div><label for="agent-sample" class="eyebrow">Sample script</label><textarea id="agent-sample" class="vd-text" data-vd-text maxlength="220" rows="4"></textarea><div class="vd-row"><button class="btn btn-dark" type="button" data-vd-play>Play studio sample</button><button class="btn btn-light" type="button" data-vd-stop>Stop</button></div><p data-vd-status class="vd-status" role="status" aria-live="polite">Checking studio…</p><audio data-vd-audio controls hidden></audio><button class="btn btn-light" type="button" data-vd-device hidden>Use device voice instead</button><p class="vd-note">Sample audio is separate from the live phone agent. Current phone service uses xAI Grok Voice + Twilio SIP. A browser conversation is a demonstration, with business actions disabled.</p></section></div>
+<section class="daily-note" data-daily-field-note data-note-context="sales" aria-label="Today’s Sales field note"><div class="daily-note-inner"><div class="daily-note-top"><span>Today’s Meridian Field Note</span><span>Sales</span></div><h2>Fresh operating guidance for this agent.</h2><p>This note changes daily and focuses on the practical details that make the agent safer and more useful.</p></div></section>
+<div class="profile-grid"><section class="block"><h2>What it can do</h2><ul><li>Qualifies need, timing and service area</li><li>Answers from approved offer and price information</li><li>Captures consent-aware follow-up and lead context</li><li>Routes to booking or a human estimate when appropriate</li></ul></section><section class="block"><h2>What we connect</h2><ul><li>Approved offer, service area and qualification criteria</li><li>CRM access and follow-up consent rules</li><li>Verified calendar if booking is in scope</li></ul></section><section class="block"><h2>What we prove</h2><ul><li>No false scarcity or invented offer</li><li>Consent and opt-out rules are respected</li><li>Lead outcome is recorded</li><li>Booking success is stated only after verification</li></ul></section></div>
+<section class="block"><div class="eyebrow">Expert capabilities</div><h2>Sales operating capabilities.</h2><p>These are the areas Meridian configures and verifies for this role. Final capabilities depend on the customer systems that are actually connected and accepted.</p><div class="capability-tags"><span>Fast lead response</span><span>Qualification</span><span>Offer Q&A</span><span>Consent-aware follow-up</span><span>CRM handoff</span><span>Booking handoff</span><span>Escalation</span><span>Outcome tracking</span></div></section>
+<section class="setup-brief" aria-labelledby="sales-setup-title"><div class="eyebrow">Customer instructions</div><h2 id="sales-setup-title">Shape your sales agent.</h2><p>Define the sales rules, qualification boundaries, follow-up expectations and human handoff before deployment. Do not enter passwords, API keys, payment data or customer records here.</p><form class="setup-grid" data-agent-setup-brief data-agent-role="sales">
+<label>Business type<input name="businessType" maxlength="160" placeholder="HVAC, dental, legal, home services…"></label>
+<label>Human handoff rule<input name="handoff" maxlength="500" placeholder="When should the agent transfer or request a callback?"></label>
+<label class="full">Must do<textarea name="mustDo" rows="3" maxlength="1000" placeholder="Actions, questions or information the agent must always cover."></textarea></label>
+<label class="full">Must never do<textarea name="mustNever" rows="3" maxlength="1000" placeholder="Claims, actions or topics the agent must avoid."></textarea></label>
+<label class="full">Special instructions<textarea name="specialInstructions" rows="4" maxlength="1800" placeholder="Tone, workflow rules, service-area details, escalation preferences or other instructions."></textarea></label>
+<div class="full"><button class="btn btn-dark" type="submit">Carry these instructions into setup →</button><p class="setup-status" data-setup-status role="status" aria-live="polite"></p></div>
+</form></section>
+<section class="block"><div class="eyebrow">From brief to deployment</div><h2>A service built around your operation.</h2><ol class="profile-steps"><li><strong>Define the job</strong>Approve the scope, business facts, tone, hours, escalation owner and provider budget.</li><li><strong>Connect securely</strong>Configure provider secrets on the server. Connect the phone number and only the customer systems in scope.</li><li><strong>Rehearse the difficult calls</strong>Test interruption, unclear questions, unavailable systems, transfers and failed bookings using staging.</li><li><strong>Accept and launch</strong>Review evidence from a real call. Approve the client deployment, rollback owner and monitoring before activation.</li></ol></section>
+<section class="block"><h2>Setup &amp; API instructions</h2><p><a class="btn btn-light" href="/voice-connect.html">Open connection hub →</a></p><details><summary>Managed installation — recommended</summary><p>Meridian handles configuration. You provide approved business facts, account access through secure provider invitations, calendar rules and a human fallback number. Credentials stay in server secret storage.</p></details><details><summary>Technical connection checklist</summary><p>Railway runs the phone runtime. Configure XAI_API_KEY and XAI_WEBHOOK_SECRET there. Register the approved number with xAI, point Twilio SIP to its xAI destination and verify the private route and billing gate. Enable calendar and CRM tools only after their signed HTTPS adapters pass verification. <a href="/install">Open the full integration guide →</a></p></details><details><summary>Authenticated customer API</summary><p>After provisioning, Meridian supplies your actual runtime URL, agent ID and private API key. Send requests from your server. Keep the key out of browser code.</p><pre>GET /api/v1/agents/:id
+Authorization: Bearer [your provisioned agent key]
 
-  <section class="block">
-    <h2>Description</h2>
-    <p>
-      Sales owns the first minute after a form fill, ad click, or missed-call lead.
-      Pipeline path: form → <code>/sales/lead</code> → draft SMS → human send when required (CASL).
-    </p>
-    <ul>
-      <li>Sub-1-minute follow-up patterns</li>
-      <li>Qualification scorecard</li>
-      <li>Consent-aware sequences</li>
-      <li>CRM go-live list</li>
-      <li>Books into the same calendar language as Booking</li>
-    </ul>
-  </section>
-
-  <section class="block">
-    <h2>Special instructions</h2>
-    <ul>
-      <li><strong style="color:var(--ink)">CASL / consent</strong> — never auto-blast cold SMS/email without explicit approval path.</li>
-      <li><strong style="color:var(--ink)">Draft vs send</strong> — default is draft SMS for human send; auto-send only when client has consent tooling.</li>
-      <li><strong style="color:var(--ink)">No fake social proof</strong> — never invent “340+ customers” style claims in sequences.</li>
-      <li><strong style="color:var(--ink)">Money decisions</strong> — refunds, discounts over policy, contracts = human gate.</li>
-      <li><strong style="color:var(--ink)">Lead source</strong> — log channel (web, ad, call) so follow-up tone matches context.</li>
-    </ul>
-    <div class="note">
-      <strong>Install order:</strong> Booking first (slots exist), then Sales, then Voice.
-    </div>
-  </section>
-
-  <section class="block">
-    <h2>What you get in the kit</h2>
-    <ul>
-      <li>Master sales prompt</li>
-      <li>Consent-aware sequence templates</li>
-      <li>Qualification scorecard</li>
-      <li>CRM go-live checklist</li>
-      <li>Sales language for agencies reselling installs</li>
-    </ul>
-  </section>
-
-  <p class="foot">
-    <a href="/agents">← All agents</a> ·
-    <a href="/install">Install guide</a> ·
-    <a href="/kits/sales/SALES-AGENT-KIT.md">Kit markdown</a>
-  </p>
-</main>
-</body>
-</html>
+POST /api/v1/agents/:id/chat
+Content-Type: application/json
+Authorization: Bearer [your provisioned agent key]
+{"message":"What services do you provide?"}</pre><p>This checks the customer API. A real inbound call is a separate phone acceptance test.</p></details></section>
+<section class="block"><h2>Clear limits. Better delivery.</h2><p>Availability, prices, job status and completed actions come from approved facts and verified tools. When a connection fails, the agent explains the limit and offers an agreed human fallback. The studio never claims a real booking or transfer.</p></section>
+<section class="block"><h2>Choose the right engagement.</h2><p>Meridian is done-for-you and priced in CAD: Missed-Call Rescue $199/mo ($0 setup, 200 AI min, 300 SMS); Front Desk Pro $499/mo + $499 setup (600 AI min, 800 SMS); Front Desk Growth $999/mo + $999 setup (1,200 AI min, 2,000 SMS). Usage stops at the cap; extra usage is prepaid top-ups only (CA$45 per 100 min, CA$35 per 500 SMS).</p><div class="actions"><a class="btn btn-dark" href="/meridian-proposal.html?service=sales">Scope a managed installation</a><a class="btn btn-light" href="/#pricing">See plans (CAD)</a></div></section><footer class="foot"><a href="/">← Meridian</a> · <a href="/install">Integration guide</a> · <a href="/privacy.html">Privacy</a></footer></main><script src="/js/daily-field-note.js" defer></script><script src="/js/agent-setup-brief.js" defer></script><script src="/js/voice-demo.js" defer></script></body></html>

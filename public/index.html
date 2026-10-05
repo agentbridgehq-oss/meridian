@@ -935,7 +935,22 @@
   }
   .vd-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
   .vd-status { font-size: 0.78rem; color: var(--muted); margin-top: 10px; }
+
+  /* Daily field note directly under the opening section */
+  .daily-value { max-width:var(--max); margin:10px auto 34px; padding:0 24px; }
+  .daily-value .daily-note-inner {
+    border:1px solid rgba(61,220,132,.18); border-radius:24px; padding:clamp(24px,4vw,34px);
+    background:linear-gradient(145deg,rgba(61,220,132,.06),rgba(255,255,255,.02));
+    box-shadow:0 22px 52px rgba(0,0,0,.24);
+  }
+  .daily-note-top { display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; color:var(--muted); font-size:.68rem; font-weight:600; letter-spacing:.13em; text-transform:uppercase; margin-bottom:12px; }
+  .daily-value h2 { font-family:var(--serif); font-weight:400; font-size:clamp(1.7rem,3.6vw,2.35rem); letter-spacing:-.03em; line-height:1.12; max-width:22ch; margin:0 0 12px; }
+  .daily-value p { color:var(--muted); max-width:66ch; font-size:1rem; line-height:1.7; }
+  .daily-note-actions { display:flex; flex-wrap:wrap; gap:16px; margin-top:18px; }
+  .daily-note-actions a { font-size:.86rem; font-weight:600; text-decoration:none; }
+
 </style>
+<link rel="stylesheet" href="/css/meridian-premium.css">
 </head>
 <body>
 
@@ -958,7 +973,7 @@
         <a href="/agents/booking">Booking <span>Calendar · no-shows</span></a>
       </div>
     </details>
-    <a class="ghost" href="#voice-demo">Try voice</a>
+    <a class="ghost" href="#voice-demo">Try voice</a><a class="ghost" href="/voice-connect.html">Connect voice</a>
     <a class="ghost" href="#method">Method</a>
     <a class="ghost" href="/why-agents">Why agents</a>
     <a class="ghost" href="/install">Install guide</a>
@@ -987,10 +1002,10 @@
       <div class="hero-cta-chips" id="heroCtaChips" data-hero-cta-track>
         <!-- Set A + set B (duplicate) = seamless half-width loop, same pattern as ClaudeCraft chips -->
         <a class="btn btn-dark btn-lg" href="/agents">View agents</a>
-        <a class="btn btn-light btn-lg" href="#stack">Full stack — $997</a>
+        <a class="btn btn-light btn-lg" href="#stack">Explore the full stack</a>
         <a class="btn btn-light btn-lg" href="#proposal">Get a proposal</a>
         <a class="btn btn-dark btn-lg" href="/agents" data-cta-clone tabindex="-1" aria-hidden="true">View agents</a>
-        <a class="btn btn-light btn-lg" href="#stack" data-cta-clone tabindex="-1" aria-hidden="true">Full stack — $997</a>
+        <a class="btn btn-light btn-lg" href="#stack" data-cta-clone tabindex="-1" aria-hidden="true">Explore the full stack</a>
         <a class="btn btn-light btn-lg" href="#proposal" data-cta-clone tabindex="-1" aria-hidden="true">Get a proposal</a>
       </div>
     </div>
@@ -1015,7 +1030,7 @@
       <div class="hero-composer-hints">
         <button type="button" class="hero-composer-hint" data-hero-hint="What does the Voice agent do?">Voice</button>
         <button type="button" class="hero-composer-hint" data-hero-hint="What does the Sales agent do?">Sales</button>
-        <button type="button" class="hero-composer-hint" data-hero-hint="What is the Full Stack for $997?">Stack</button>
+        <button type="button" class="hero-composer-hint" data-hero-hint="What does the Full Stack include?">Stack</button>
       </div>
     </div>
   </div>
@@ -1023,6 +1038,14 @@
   <button type="button" class="hero-video-toggle" id="hero-video-toggle" aria-pressed="false" title="Optional hero video">
     Video
   </button>
+</section>
+
+<section class="daily-value" data-daily-field-note data-note-context="home" aria-label="Today’s Meridian field note">
+  <div class="daily-note-inner">
+    <div class="daily-note-top"><span>Today’s Meridian Field Note</span><span>Operations</span></div>
+    <h2>Useful automation starts with one clear next action.</h2>
+    <p>Define what should happen after a call, lead or booking request before adding automation. Meridian then connects that outcome to the right agent and system.</p>
+  </div>
 </section>
 
 <section class="agent-reel" aria-label="Meridian agents in action">
@@ -1139,15 +1162,19 @@
 
 <section class="voice-demo" id="voice-demo" aria-label="Voice sample">
   <div class="voice-demo-panel">
-    <h2>Voice sample</h2>
-    <p class="vd-lede">One short line. Pick a voice and play.</p>
+    <h2>A voice worth answering.</h2>
+    <p class="vd-lede">Try each role. Hear the delivery. Then explore its complete service page.</p>
+    <div class="vd-roles" aria-label="Agent role"><button type="button" data-vd-role="receptionist" aria-pressed="true">Receptionist</button><button type="button" data-vd-role="booking" aria-pressed="false">Booking</button><button type="button" data-vd-role="service" aria-pressed="false">Service</button><button type="button" data-vd-role="sales" aria-pressed="false">Sales</button></div>
     <div class="vd-voices" data-vd-voices></div>
     <textarea class="vd-text" id="vd-text" data-vd-text maxlength="220" rows="2">Thanks for calling. I can help with hours, booking, or a quick question — how can I help you today?</textarea>
     <div class="vd-row">
       <button type="button" class="btn btn-dark" data-vd-play>Play</button>
-      <a class="btn btn-light" href="#stack">Full stack</a>
+      <button type="button" class="btn btn-light" data-vd-stop>Stop</button><a class="btn btn-light" data-vd-detail href="/agents/voice">Explore this agent →</a>
     </div>
-    <p class="vd-status" data-vd-status>Loading…</p>
+    <p class="vd-status" data-vd-status role="status" aria-live="polite">Checking studio…</p>
+    <audio data-vd-audio controls hidden></audio>
+    <button type="button" class="btn btn-light" data-vd-device hidden>Use device voice instead</button>
+    <p class="vd-note">Recorded AI voice sample. Current phone service uses xAI Grok Voice through Twilio SIP; website audio does not prove a live call or booking.</p>
   </div>
 </section>
 
@@ -1198,10 +1225,10 @@
       <p>Answer the phone, follow up fast, fill the calendar — open any card for install and checkout.</p>
     </div>
     <div class="agents-entry-grid">
-      <a class="agent-card featured" href="/agents/voice">
+      <a class="agent-card featured" href="/agents/voice" target="_blank" rel="noopener">
         <div class="agent-card-top">
           <span class="agent-card-num">01 · Voice</span>
-          <span class="agent-card-price">$497</span>
+          <span class="agent-card-price">Explore</span>
         </div>
         <h3>Voice</h3>
         <p>24/7 receptionist. Answers, qualifies, books, escalates — so after-hours never means missed revenue.</p>
@@ -1212,10 +1239,10 @@
         </div>
         <span class="agent-card-go">Open Voice <i aria-hidden="true">→</i></span>
       </a>
-      <a class="agent-card" href="/agents/sales">
+      <a class="agent-card" href="/agents/sales" target="_blank" rel="noopener">
         <div class="agent-card-top">
           <span class="agent-card-num">02 · Sales</span>
-          <span class="agent-card-price">$497</span>
+          <span class="agent-card-price">Explore</span>
         </div>
         <h3>Sales</h3>
         <p>Sub-1-minute lead follow-up. Qualify, next steps, and book while interest is still hot. CASL-aware.</p>
@@ -1226,10 +1253,10 @@
         </div>
         <span class="agent-card-go">Open Sales <i aria-hidden="true">→</i></span>
       </a>
-      <a class="agent-card" href="/agents/booking">
+      <a class="agent-card" href="/agents/booking" target="_blank" rel="noopener">
         <div class="agent-card-top">
           <span class="agent-card-num">03 · Booking</span>
-          <span class="agent-card-price">$497</span>
+          <span class="agent-card-price">Explore</span>
         </div>
         <h3>Booking</h3>
         <p>Schedule, confirm, and recover no-shows — a fuller calendar without the admin drag.</p>
@@ -1244,92 +1271,66 @@
   </section>
 
   <section class="section" id="pricing">
-    <div class="stack" id="voice-usage" style="margin-bottom:28px">
+    <!-- Prices mirror lib/pricing.mjs (single source of truth); live list at /api/pricing -->
+    <div id="voice-usage"></div><div id="full-auto"></div><div id="stack"></div>
+    <div class="stack" id="plan-rescue" style="margin-bottom:28px">
       <div>
-        <div class="live-label" style="color:#A1A1AA">Usage billing · cash first</div>
-        <h2>Premium voice — customer pays first</h2>
-        <p>
-          Hosted neural speech runs only after the customer prepays. Meridian holds a turn, then spends on speech,
-          then commits. If audio fails, the turn is refunded. Free site demos never spend your speech budget.
-        </p>
+        <div class="live-label" style="color:#A1A1AA">Entry · land offer</div>
+        <h2>Missed-Call Rescue</h2>
         <ul class="stack-list">
-          <li><strong>Pay-as-you-go packs</strong> — Stripe cash first, turns second</li>
-          <li><strong>Voice Premium $197/mo</strong> — 300 turns included (prepaid monthly)</li>
-          <li><strong>Voice Pro $497/mo</strong> — 1,200 turns included; then top up a pack</li>
-          <li>No unpaid overage by default · Retell/Vapi text path stays free at Meridian</li>
+          <li>Missed-call text-back + after-hours AI voice</li>
+          <li>200 AI minutes · 300 SMS segments · 1 number</li>
+          <li>Weekly summary</li>
         </ul>
-        <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:8px">
-          <a class="btn btn-dark" href="/checkout/voice-pack/starter">100 turns · $49</a>
-          <a class="btn btn-light" href="/checkout/voice-pack/growth">500 turns · $199</a>
-          <a class="btn btn-light" href="/checkout/voice-pack/scale">2,000 turns · $697</a>
-        </div>
-        <p class="fine">About $0.35–$0.49 per turn to the customer · your provider cost is a small fraction</p>
+        <a class="btn btn-dark btn-lg" href="/checkout/rescue">Start Missed-Call Rescue</a>
+        <p class="fine">Prices in CAD · Tax treatment shown at checkout · Secure Stripe · month-to-month</p>
       </div>
       <div class="stack-side">
-        <div class="big">$197</div>
-        <div class="sub">/mo Voice Premium · 300 hosted turns</div>
-        <a class="btn btn-dark" href="/checkout/voice-sub" style="width:100%;margin-bottom:10px">Start subscription</a>
-        <a class="btn btn-light" href="/checkout/voice-pro" style="width:100%">Pro $497/mo · 1,200 turns</a>
-        <p class="fine" style="margin-top:16px">When included turns run out, buy a pack — pay first, speak second.</p>
+        <div class="big">CA$199</div>
+        <div class="sub">/mo CAD · $0 setup</div>
+        <a class="btn btn-dark" href="/checkout/rescue" style="width:100%">Checkout with Stripe</a>
       </div>
     </div>
-
-    <div class="stack" id="full-auto" style="margin-bottom:28px;background:linear-gradient(145deg,#0C0C0B 0%,#1a1a18 100%);color:#F5F5F4">
+    <div class="stack" id="plan-pro" style="margin-bottom:28px">
       <div>
-        <div class="live-label" style="color:#A1A1AA">Pay more · do almost nothing</div>
-        <h2 style="color:#fff">Full Auto Install</h2>
-        <p style="color:#A1A1AA">
-          You pay a higher one-time fee. Meridian provisions your agent, smoke-tests it, builds widget + API + n8n + phone packs with OpenClaw,
-          and drops you into a short wizard. <strong style="color:#fff">Your work:</strong> attach a phone number in Retell/Vapi and paste the widget if you want it on the site.
-        </p>
-        <ul class="stack-list" style="color:#D4D4D4">
-          <li>Agent built + verified the moment you pay</li>
-          <li>Checkout collects hours &amp; services — no long forms after</li>
-          <li>OpenClaw priority pack + setup wizard pre-filled</li>
-          <li>Starter premium voice turns included</li>
-          <li>Only carrier step stays with you (phone number ownership)</li>
-        </ul>
-        <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:8px">
-          <a class="btn btn-dark" href="/checkout/auto_voice" style="background:#fff;color:#0C0C0B">Voice Auto · $997</a>
-          <a class="btn btn-light" href="/checkout/auto" style="border-color:#444;color:#fff;background:transparent">Full Auto · $1,497</a>
-          <a class="btn btn-light" href="/checkout/auto_stack" style="border-color:#444;color:#fff;background:transparent">Stack Auto · $2,497</a>
-          <a class="btn btn-light" href="/checkout/auto_sales" style="border-color:#444;color:#fff;background:transparent">Sales Auto · $997</a>
-        </div>
-        <p class="fine" style="color:#71717A;margin-top:12px">Secure Stripe · Instant provision · Wizard at /setup after pay</p>
-      </div>
-      <div class="stack-side" style="background:rgba(255,255,255,0.04);border-color:rgba(255,255,255,0.1)">
-        <div class="big" style="color:#fff">$1,497</div>
-        <div class="sub" style="color:#A1A1AA">Full Auto · most businesses</div>
-        <a class="btn btn-dark" href="/checkout/auto" style="width:100%;background:#fff;color:#0C0C0B;margin-bottom:10px">Pay for Full Auto</a>
-        <a class="btn btn-light" href="/setup" style="width:100%;border-color:#444;color:#fff;background:transparent">Preview setup wizard</a>
-        <p class="fine" style="margin-top:16px;color:#71717A">DIY kits from $497 if you prefer to install yourself.</p>
-      </div>
-    </div>
-
-    <div class="stack" id="stack">
-      <div>
-        <div class="live-label" style="color:#A1A1AA">Recommended</div>
-        <h2>Meridian Full Stack</h2>
-        <p>
-          All three agent kits plus the agency playbook: retail pricing, 14-day delivery sprint,
-          niche focus, and the funnel to get clients.
-        </p>
+        <div class="live-label" style="color:#A1A1AA">Most popular</div>
+        <h2>Front Desk Pro</h2>
         <ul class="stack-list">
-          <li>Voice + Sales + Booking kits</li>
-          <li>Suggested client pricing ($797–$3,497 setups)</li>
-          <li>Order of install (booking → sales → voice)</li>
-          <li>Compliance notes for SMS / consent</li>
+          <li>24/7 voice receptionist + SMS + booking on a verified calendar</li>
+          <li>600 AI minutes · 800 SMS segments · 1 number · 150 warm transfers</li>
+          <li>EN/FR · monthly report</li>
         </ul>
-        <a class="btn btn-dark btn-lg" href="/checkout/stack">Get Full Stack — $997</a>
-        <p class="fine">Secure Stripe · Instant kit access · Meridian standalone product</p>
+        <a class="btn btn-dark btn-lg" href="/checkout/pro">Start Front Desk Pro</a>
+        <p class="fine">Prices in CAD · Tax treatment shown at checkout · Secure Stripe · month-to-month</p>
       </div>
       <div class="stack-side">
-        <div class="big">$997</div>
-        <div class="sub">One-time · all three agents + playbook</div>
-        <a class="btn btn-dark" href="/checkout/stack" style="width:100%">Checkout with Stripe</a>
-        <p class="fine" style="margin-top:16px">Prefer singles? Each agent is $497.</p>
+        <div class="big">CA$499</div>
+        <div class="sub">/mo CAD · + $499 one-time setup</div>
+        <a class="btn btn-dark" href="/checkout/pro" style="width:100%">Checkout with Stripe</a>
       </div>
     </div>
+    <div class="stack" id="plan-growth" style="margin-bottom:28px">
+      <div>
+        <div class="live-label" style="color:#A1A1AA">Multi-truck / multi-location</div>
+        <h2>Front Desk Growth</h2>
+        <ul class="stack-list">
+          <li>Voice + Booking + Service + Sales follow-up (CASL)</li>
+          <li>1,200 AI minutes · 2,000 SMS segments · 2 numbers · 400 warm transfers</li>
+          <li>CRM / job-software integration · monthly optimisation call</li>
+        </ul>
+        <a class="btn btn-dark btn-lg" href="/checkout/growth">Start Front Desk Growth</a>
+        <p class="fine">Prices in CAD · Tax treatment shown at checkout · Secure Stripe · month-to-month</p>
+      </div>
+      <div class="stack-side">
+        <div class="big">CA$999</div>
+        <div class="sub">/mo CAD · + $999 one-time setup</div>
+        <a class="btn btn-dark" href="/checkout/growth" style="width:100%">Checkout with Stripe</a>
+      </div>
+    </div>
+    <p class="fine">Usage alerts at 80% and 100%. Without approved pay-as-you-go billing and a valid card, your plan cap applies.
+      Prepaid blocks: CA$45 per 100 AI minutes, CA$35 per 500 SMS segments. Approved pay-as-you-go overage: CA$0.45/minute and CA$0.07/SMS.
+      20-minute wrap-up reminder; 60-minute safety ceiling. If the base payment fails, new AI calls stop; calls in progress can finish.</p>
+    <p class="fine">Already a client? <a href="https://billing.stripe.com/p/login/cNi9AVbYVazXd481dw7ok00" data-portal-link style="color:inherit;text-decoration:underline">Manage billing</a> — update your card, download invoices or change your plan in the secure Stripe portal.</p>
   </section>
 
   <section class="section" id="method">
@@ -1436,6 +1437,7 @@
     <a href="/install">Install guide</a> ·
     <a href="/setup">Setup</a> ·
     <a href="/dashboard">Dashboard</a> ·
+    <a href="https://billing.stripe.com/p/login/cNi9AVbYVazXd481dw7ok00" data-portal-link>Manage billing</a> ·
     <a href="/status">Status</a> ·
     <a href="/security">Security</a> ·
     <a href="/#proposal">Proposal</a> ·
@@ -1648,12 +1650,20 @@
   })();
 
   const params = new URLSearchParams(location.search);
-  const bought = params.get('purchased');
+  const bought = params.get('purchased') || params.get('voice_billed');
   if (bought) {
     const t = document.getElementById('toast');
-    t.textContent = 'Purchase received: ' + bought + '. Check email for kit access.';
+    const portal = document.querySelector('[data-portal-link]');
+    t.textContent = 'Purchase received. Check your email for next steps. ';
+    if (portal) {
+      const a = document.createElement('a');
+      a.href = portal.href;
+      a.textContent = 'Manage billing';
+      a.style.cssText = 'color:#fff;text-decoration:underline;font-weight:600';
+      t.appendChild(a);
+    }
     t.classList.add('show');
-    setTimeout(() => t.classList.remove('show'), 6000);
+    setTimeout(() => t.classList.remove('show'), 12000);
   }
 
   const form = document.getElementById('funnel-form');
@@ -1689,8 +1699,8 @@
         '<strong>Proposal ready.</strong> ' +
         (p.summary || '') +
         '<br>Agents: ' + (p.agents || []).join(', ') +
-        ' · Setup ~$' + (p.setupUsd || '—') +
-        ' · Monthly ~$' + (p.monthlyUsd || '—') +
+        ' · ' + (p.planName || 'Plan') + ': CA$' + (p.monthlyCad ?? '—') + '/mo' +
+        ' · Setup CA$' + (p.setupCad ?? '—') +
         '<br><br><a href="' + (data.intakeUrl || '#') + '">Open intake form →</a>';
       result.classList.add('show');
       form.reset();
@@ -1741,5 +1751,5 @@
   });
 })();
 </script>
-</body>
+<script src="/js/daily-field-note.js" defer></script>\n</body>
 </html>

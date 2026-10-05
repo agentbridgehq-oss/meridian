@@ -1,0 +1,13 @@
+.connection-callout { padding:26px;border:1px solid #494238;border-radius:20px;background:linear-gradient(120deg,#1d1a15,#10100f);margin:32px 0; }
+.connection-callout .profile-pill { margin-bottom:12px; }
+.connection-callout button { margin:15px 0 8px; }
+.profile-grid article>p { margin:12px 0 20px; }
+[data-check] { border:1px solid #3a352d;padding:10px 13px;border-radius:10px;color:#d9c6a1!important;font-size:.82rem!important; }
+[data-check][data-state=ready] { border-color:#447256;color:#b0d5bc!important; }
+.credential-table { overflow:auto;margin:20px 0; }
+table { width:100%;border-collapse:collapse;font-size:.86rem; }
+th,td { text-align:left;padding:16px 14px;border-bottom:1px solid var(--line); }
+th { color:#d9c6a1;font-weight:500; }td { color:var(--muted); }
+.endpoint-box { border:1px solid var(--line);padding:22px;border-radius:16px;display:grid;gap:14px;margin:20px 0; }
+.endpoint-box code { font-size:.9rem;overflow-wrap:anywhere;color:#e5d4b4; }.endpoint-box button { justify-self:start; }
+button:disabled { opacity:.5;cursor:default; }

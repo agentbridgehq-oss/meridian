@@ -1,0 +1,270 @@
+{
+  "name": "Meridian Calendar Receptionist \u2014 Verified Adapter Bridge",
+  "active": false,
+  "nodes": [
+    {
+      "id": "calendar-hook",
+      "name": "Calendar Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        300
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "meridian-calendar-receptionist",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {}
+      }
+    },
+    {
+      "id": "calendar-config",
+      "name": "Configure Adapter URL",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        220,
+        300
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "adapter-url",
+              "name": "adapterUrl",
+              "type": "string",
+              "value": ""
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "calendar-validate",
+      "name": "Validate Calendar Request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        440,
+        300
+      ],
+      "parameters": {
+        "jsCode": "const incoming = $('Calendar Webhook').first().json;\nconst request = incoming.body || {};\nconst endpoint = String($json.adapterUrl || '').trim();\nconst deny = code => [{ json: { valid:false, statusCode:400, result:{ok:false,confirmed:false,code} } }];\nconst actions = ['check_availability','book_appointment','cancel_appointment','reschedule_appointment'];\nif (request.version !== 1 || !actions.includes(request.action)) return deny('unsupported_calendar_action');\nif (typeof request.deploymentId !== 'string' || !request.deploymentId || typeof request.idempotencyKey !== 'string' || !request.idempotencyKey) return deny('missing_request_identity');\nlet target;\ntry { target = new URL(endpoint); } catch { return deny('adapter_not_configured'); }\nif (target.protocol !== 'https:' || target.username || target.password) return deny('unsafe_adapter_url');\nconst data = request.data || {};\nif (['book_appointment','reschedule_appointment'].includes(request.action) && data.callerConfirmedSlot !== true) return deny('slot_not_confirmed');\nif (['book_appointment','reschedule_appointment'].includes(request.action) && (!data.startTime || !data.timezone || !Number.isFinite(Date.parse(data.startTime)))) return deny('invalid_appointment_time');\nif (request.action === 'book_appointment' && (!data.callerName || !data.service)) return deny('missing_booking_details');\nif (request.action === 'check_availability' && (!data.preferredDate || !data.service || !data.timezone)) return deny('missing_availability_details');\nif (['cancel_appointment','reschedule_appointment'].includes(request.action) && !data.bookingId) return deny('missing_booking_id');\nreturn [{json:{valid:true,request,endpoint:target.toString()}}];"
+      }
+    },
+    {
+      "id": "calendar-if",
+      "name": "Valid Request?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        660,
+        300
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "valid-request",
+              "leftValue": "={{ $json.valid }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "calendar-http",
+      "name": "Verified Calendar Adapter",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        900,
+        160
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.endpoint }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-meridian-idempotency-key",
+              "value": "={{ $json.request.idempotencyKey }}"
+            },
+            {
+              "name": "x-meridian-action",
+              "value": "={{ $json.request.action }}"
+            },
+            {
+              "name": "x-meridian-signature",
+              "value": "={{ $('Calendar Webhook').first().json.headers['x-meridian-signature'] || '' }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.request) }}",
+        "options": {
+          "timeout": 8000,
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "calendar-confirm",
+      "name": "Require Calendar Confirmation",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1140,
+        160
+      ],
+      "parameters": {
+        "jsCode": "const response = $json;\nconst action = $('Validate Calendar Request').first().json.request.action;\nconst body = response.body || {};\nconst good = Number(response.statusCode) >= 200 && Number(response.statusCode) < 300 && body.ok === true && body.confirmed === true;\nif (!good) return [{json:{statusCode:502,result:{ok:false,confirmed:false,code:'calendar_adapter_not_confirmed'}}}];\nconst result = {ok:true,confirmed:true,action};\nfor (const key of ['bookingId','start','end','message']) if (typeof body[key] === 'string') result[key] = body[key].slice(0,key === 'message' ? 1000 : 300);\nif (typeof body.available === 'boolean') result.available = body.available;\nif (Array.isArray(body.slots)) result.slots = body.slots.slice(0,12).filter(s=>s && typeof s.start === 'string' && Number.isFinite(Date.parse(s.start))).map(s=>({start:s.start,end:typeof s.end === 'string'?s.end:'',label:typeof s.label === 'string'?s.label.slice(0,200):''}));\nreturn [{json:{statusCode:200,result}}];"
+      }
+    },
+    {
+      "id": "calendar-response",
+      "name": "Calendar Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        1380,
+        300
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json.result) }}",
+        "options": {
+          "responseCode": "={{ $json.statusCode || 502 }}"
+        }
+      }
+    },
+    {
+      "id": "calendar-note",
+      "name": "Setup Before Activation",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        0,
+        -130
+      ],
+      "parameters": {
+        "width": 1250,
+        "height": 290,
+        "content": "## Meridian signed calendar bridge \u2014 inactive until configured\n1. Webhook Header Auth credential: Authorization = Bearer [the per-deployment calendar connector secret].\n2. Configure Adapter URL: set the approved HTTPS calendar adapter endpoint. The blank default fails closed.\n3. HTTP Request Header Auth credential: select the adapter credential agreed with its owner. To use Meridian HMAC/bearer contract unchanged, use the same connector secret.\n4. Calendar actions and business rules are performed by the verified adapter, not this bridge. Attach its real calendar OAuth/account separately.\n5. Prove availability \u2192 book \u2192 reschedule \u2192 cancel, duplicate request handling, unavailable-slot rejection and failure behavior before marking the deployment verified.\n6. Activate; use the production webhook URL. No credentials or client records are shipped in this template."
+      }
+    }
+  ],
+  "connections": {
+    "Calendar Webhook": {
+      "main": [
+        [
+          {
+            "node": "Configure Adapter URL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Configure Adapter URL": {
+      "main": [
+        [
+          {
+            "node": "Validate Calendar Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Calendar Request": {
+      "main": [
+        [
+          {
+            "node": "Valid Request?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Valid Request?": {
+      "main": [
+        [
+          {
+            "node": "Verified Calendar Adapter",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Calendar Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verified Calendar Adapter": {
+      "main": [
+        [
+          {
+            "node": "Require Calendar Confirmation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Require Calendar Confirmation": {
+      "main": [
+        [
+          {
+            "node": "Calendar Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataSuccessExecution": "none",
+    "saveDataErrorExecution": "none",
+    "saveManualExecutions": false
+  },
+  "meta": {
+    "templateCredsSetupCompleted": false,
+    "description": "Authenticated validation and confirmation bridge. Requires a real downstream calendar adapter. No direct Google Calendar connection is included."
+  }
+}

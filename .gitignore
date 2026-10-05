@@ -13,3 +13,5 @@ logs/
 data/deploys/
 
 .env.railway
+
+.netlify/
