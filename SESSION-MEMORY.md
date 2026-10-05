@@ -246,3 +246,9 @@ Portfolio audit: Claudecraft paid checkout 404 and Stripe connector requires rea
 ## 2026-10-05 — owner approved privacy and terms
 
 - Kenny approved the published privacy policy and terms. Banners changed from draft to owner-approved. Not a lawyer sign-off. SLA, turnaround, guarantee, and Rescue scope remain unset.
+
+
+## 2026-10-05 — OpenClaw stays caged
+
+- Kenny ordered OpenClaw off bank, folders, Drive, and personal files unless he instructs a specific task.
+- Containment policy 2026-10-05-contained-ops. Expert briefs for reception, booking, service, and sales. Jobs stay inside Meridian data. No send. No money.
