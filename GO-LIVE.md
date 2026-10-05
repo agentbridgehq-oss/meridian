@@ -1,4 +1,8 @@
-# Meridian go-live — current checkpoint 2026-10-05 01:34 UTC
+# Meridian go-live — current checkpoint 2026-10-05 01:50 UTC
+
+**NO-GO.** Product `e5d91da` passes 225/225 tests and is staged on existing Railway production. Automatic approval review blocked accept-deploy pending explicit approval for this exact deploy. Runtime stays `23fd69e`. Twilio authentication/routing, real call/SMS/transfer/calendar/package acceptance, and monitored contact/legal/commercial approval remain incomplete. Read the newest session sync.
+
+## Previous checkpoint — 2026-10-05 01:34 UTC
 
 **Customer launch: NO-GO.** Netlify front `6ac2fe64cc0fa7500ffd2a0b` is live with the draft legal and contact pages. Railway did not redeploy: Actions run 37251822796 failed because GitHub secret `RAILWAY_TOKEN` is empty. Phone disclosure and SMS compliance are in git at `84fdc8e` and are not on the phone server yet.
 

@@ -1,5 +1,9 @@
 # Meridian status and handoff
 
+## Latest verified update — 2026-10-05 01:50 UTC
+
+Product `e5d91da65f21f7d6dc94edc985b9b7f20f85f65a` combines newer disclosure/SMS/contact work with xAI WebSocket hardening and corrected setup guidance. Tests **225/225**, production audit zero vulnerabilities. Railway connector staged one source change but automatic approval review rejected deployment pending explicit approval of that exact production deploy. Runtime remains `23fd69e`. Twilio authentication timed out; no routing changes. **Customer launch remains NO-GO.** See latest MERIDIAN-SESSION-SYNC.md for blockers. The older missing GitHub token does not prevent use of the connected Railway deploy tool after approval.
+
 ## Latest verified update — 2026-10-05 01:34 UTC
 
 Netlify production `6ac2fe64cc0fa7500ffd2a0b` is ready. Draft privacy, terms, and contact are on https://meridian-open.netlify.app. Railway redeploy failed: GitHub Actions run 37251822796, `RAILWAY_TOKEN` secret missing. Phone runtime is unchanged. Customer launch remains NO-GO.

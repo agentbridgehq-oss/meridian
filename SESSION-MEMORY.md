@@ -2,6 +2,10 @@
 
 **Keep this chat/context permanent.** Resume with: “pull up Meridian”, “Meridian ads”, “live urls”, “know me”.
 
+## Launch patch staged, not deployed — 2026-10-05 01:50 UTC
+
+Product `e5d91da65f21f7d6dc94edc985b9b7f20f85f65a` preserves newer disclosure/SMS/contact work and hardens xAI WebSocket transport and customer setup guidance. Tests 225/225; production audit zero vulnerabilities. Railway has one staged source change, but automatic approval review rejected production deployment until Ken explicitly approves this exact deploy. Runtime remains `23fd69e`. Twilio sign-in timed out and the tab disappeared; no routing changed. PR #2 was already merged; new work stays on `meridian-agency-2-0`. Full launch remains NO-GO pending deploy, authenticated routing, real acceptance and monitored contact/legal/commercial approval. See newest session sync.
+
 ## Redeploy attempt — 2026-10-05 01:34 UTC
 
 Netlify production deploy `6ac2fe64cc0fa7500ffd2a0b` is ready and the new draft privacy, terms, and contact pages are on https://meridian-open.netlify.app. Railway did not deploy: GitHub Actions run 37251822796 failed because `RAILWAY_TOKEN` is unset. Phone and SMS behavior is still the previous build. Contact form API returns 404. Launch remains NO-GO.

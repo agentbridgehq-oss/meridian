@@ -2,6 +2,18 @@
 
 GitHub is source of truth.
 
+## Launch patch staged; approval blocked — 2026-10-05 01:50 UTC
+
+- Ken requested completion with xAI brain/voice and Twilio telephony. Product `e5d91da65f21f7d6dc94edc985b9b7f20f85f65a` preserves newer `84fdc8e` / `6aa262a` disclosure/SMS/contact work and adds a pinned server WebSocket client, handshake cleanup, strict signature version checks, private-contact prompt protection, and corrected setup/payment guidance. Fixed "install" being detected as "all services".
+- Validation: **225/225 tests passed**, no skips; production npm audit zero vulnerabilities; diff check and local launch-acceptance code checks passed. A real local WebSocket handshake checks authorization and bidirectional events. No live call, SMS, payment or booking was made.
+- Railway connector is available. Staged exactly one change from runtime source `23fd69e` to `e5d91da`, patch `e28d2a38-3821-42f3-8f8d-1442b082e1b4`. No variables, volume, network or auto-deploy settings changed.
+- Automatic approval review **rejected accept-deploy**, requiring explicit approval for this exact production deploy despite the broad launch request. Nothing deployed. Do not retry through CLI, workflow or indirect execution. Ask Ken to approve deploying `e5d91da` to the existing Meridian Railway production service; re-inspect staged changes after approval.
+- Live probe at 01:48 UTC: health/Twilio/demo-status HTTP 200; Railway privacy/terms/contact lack the new source markers. Existing deployment remains `e48f1e19-abe1-464b-a8bd-72095ae46eeb` at `23fd69e`. Netlify was not changed here; previous handoff records draft pages published there.
+- Twilio secure sign-in timed out and the tab disappeared. Authentication is unconfirmed. No phone number, trunk, callback or xAI registration changed. Preserve the owner-reported successful reception demo as reported evidence; exact called number and independent acceptance remain unconfirmed.
+- PR #2 is merged, recorded head `4eaa904`; master merge `eddd5a7`. This later patch is on `meridian-agency-2-0` only. No new merge.
+- **Launch remains NO-GO:** deployment approval; authenticated main-line routing while preserving the tested demo; real inbound/fallback/SMS/transfer/calendar and package activation acceptance; approved monitored contact/legal/commercial details. Inherited NANP-format checks are not strict Canada/US country enforcement.
+- Next: approve the staged Railway deploy, verify its live contact/disclosure/API behavior, then finish authenticated routing and actual acceptance. Credentials or generated setup packs are not proof of a live phone deployment.
+
 ## Redeploy attempt — 2026-10-05 01:34 UTC
 
 Kenny ordered a redeploy and a pass/fail confirmation. Netlify production is updated. Railway is not.
