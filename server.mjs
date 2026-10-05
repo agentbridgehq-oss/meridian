@@ -922,13 +922,13 @@ async function handlePaidCheckout(session) {
           const c = intakeResult.connection;
           await sendEmail(
             fresh.email,
-            delivery.ok ? 'Your Meridian agent is LIVE — connect guide inside' : 'Payment received — agent provisioning needs attention',
+            delivery.ok ? 'Your Meridian setup is ready — connection and activation next' : 'Payment received — agent provisioning needs attention',
             `Payment confirmed — and your agent is already built from the details you gave on chat.\n\n` +
               `Agent ID: ${c.id}\nAPI Key (save once): ${c.apiKey}\n\n` +
               `Setup wizard (Next through each block):\n${BASE}/setup/${delivery.deliveryToken}\n\n` +
               `Connect guide:\n${delivery.guideUrl}\n\n` +
               `Want us to do almost everything? Upgrade path was Full Auto Install at checkout.\n\n` +
-              `Verified: ${delivery.ok ? 'YES — smoke tests passed' : 'pending — Meridian ops will follow up'}\n\n${manageBillingLine()}\n\nMeridian Agency\n${BASE}`,
+              `Agent checks: ${delivery.ok ? 'passed' : 'pending — Meridian ops will follow up'}. Phone routing and calendar actions require separate connection and live acceptance before activation.\n\n${manageBillingLine()}\n\nMeridian Agency\n${BASE}`,
           );
         }
         return {
