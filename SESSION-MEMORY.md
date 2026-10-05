@@ -241,3 +241,8 @@ Portfolio audit: Claudecraft paid checkout 404 and Stripe connector requires rea
 
 - Kenny kept the black site. The letter, cream, and agency versions are saved under docs/fronts/saved-alternate. Homepage was not replaced.
 - Launch work that still needs Kenny: Railway deploy approval or RAILWAY_TOKEN, which number was tested, one ledger call, STOP/START/HELP, one real calendar booking, approved legal mailbox, one Stripe payment.
+
+
+## 2026-10-05 — owner approved privacy and terms
+
+- Kenny approved the published privacy policy and terms. Banners changed from draft to owner-approved. Not a lawyer sign-off. SLA, turnaround, guarantee, and Rescue scope remain unset.
