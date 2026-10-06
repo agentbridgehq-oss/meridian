@@ -2,6 +2,17 @@
 
 GitHub is source of truth.
 
+## Twilio connector checked; carrier route still open — 2026-10-06 00:30 UTC
+
+Kenny asked to complete the Twilio integration after connecting Twilio in Grok. Starting head: `c39542c931589e550e26e5c354381b0001f3dbb7` on `meridian-agency-2-0`.
+
+- The connected Twilio tool is Twilio's public docs MCP (`twilio__search` / `twilio__retrieve` only). Twilio documents it as read-only: it does not execute account API calls, so it cannot list numbers, assign a trunk, or set a messaging webhook. No auth token was read or reused.
+- No Railway connector is available in this session. Nothing was deployed. `master` was not changed.
+- Live probe of https://meridian-production-4996.up.railway.app/api/twilio/status : HTTP 200, `configured: true`, `from` is the Milton demo `+12896707853`, `webhookTokenSet: true`, `agentMapKeys: []`. An empty map means the running process is still the older build. Branch source already falls back both `+12896707853` and `+16474903326` to `agent_05f24ebc02d2b04c`, but that code is not what production is running.
+- Toronto main `+1 647-490-3326` is therefore still not confirmed on the carrier. Do not treat the source map as a live route. Do not change the Milton demo trunk.
+
+Exact next action: in the Twilio console, leave `+1 289-670-7853` on trunk `TKfd21d22bf686f96b9561a3e6c567e2d2`, put `+1 647-490-3326` on that same trunk for voice, and set that number's SMS webhook to `https://meridian-production-4996.up.railway.app/api/twilio/sms/agent_05f24ebc02d2b04c` with the existing Railway `TWILIO_WEBHOOK_TOKEN` query token. Then approve a Railway deploy of `c39542c` (or newer) so the in-source number map is actually running. A text to the Toronto number that is answered by reception is the acceptance check. Not a customer launch.
+
 ## Launch patch staged; approval blocked — 2026-10-05 01:50 UTC
 
 - Ken requested completion with xAI brain/voice and Twilio telephony. Product `e5d91da65f21f7d6dc94edc985b9b7f20f85f65a` preserves newer `84fdc8e` / `6aa262a` disclosure/SMS/contact work and adds a pinned server WebSocket client, handshake cleanup, strict signature version checks, private-contact prompt protection, and corrected setup/payment guidance. Fixed "install" being detected as "all services".

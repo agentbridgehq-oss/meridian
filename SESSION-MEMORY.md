@@ -1,3 +1,12 @@
+# Session memory — Meridian Agency full chat
+
+## 2026-10-06 — Twilio connector cannot finish the carrier route
+
+- Grok's connected Twilio tool is the public docs server, not account control. It cannot set the trunk or SMS URL.
+- Production `/api/twilio/status` still reports an empty agent map and from-number `+12896707853`. Source on `meridian-agency-2-0` @ `c39542c` maps both the Milton demo and Toronto main `+16474903326` to `agent_05f24ebc02d2b04c`, but that build is not the live Railway process.
+- Next: console-route the Toronto number onto the existing trunk and SMS webhook, then deploy `c39542c`. Do not call the integration complete until a real text or call hits that number.
+
+
 # Session memory — Meridian Agency full chat (2026-07-19)
 
 **Keep this chat/context permanent.** Resume with: “pull up Meridian”, “Meridian ads”, “live urls”, “know me”.
