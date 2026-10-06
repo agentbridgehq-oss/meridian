@@ -277,3 +277,9 @@ Portfolio audit: Claudecraft paid checkout 404 and Stripe connector requires rea
 - Rules verified on `master`: deletion blocked, non-fast-forward blocked, pull request required with zero approving reviews. No status checks. `current_user_can_bypass` is never. No bypass actors.
 - PR #2 was not merged. `master` SHA remains `05a6bbcd`.
 - Next: one staging call in the ledger before any customer invoice.
+# 2026-10-06 — 647 reception deployment completion
+
+- Updated the patched `proxy-addr` transitive dependency from 2.0.7 to 2.0.8; `npm audit --omit=dev` now reports zero vulnerabilities.
+- Verified the current branch with all 226 automated tests passing in an isolated data directory.
+- Deployment target remains Railway production service `fe23148e-0c58-4e87-82c7-5dc0a95c9fcd` on branch `meridian-agency-2-0`.
+- The real Meridian reception number is `+1 647-490-3326`; preserve the `+1 289-670-7853` demo route.

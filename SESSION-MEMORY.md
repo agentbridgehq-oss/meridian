@@ -274,3 +274,7 @@ Portfolio audit: Claudecraft paid checkout 404 and Stripe connector requires rea
 - Source map now includes both numbers to agent_05f24ebc02d2b04c. Twilio console was not reachable, so the carrier route is not confirmed.
 - Calendar test event kip6djgp3vf9hq0dj1csvb27tk is confirmed for 2026-10-06 11:00 America/Toronto on hunter82kh@gmail.com. Not a customer booking.
 - Terms now set: 5 business day setup after pay/forward/consent, funded-line answer SLA, 14-day smoke-check correction, Rescue $199 with 200 minutes and 300 texts, no warm transfer.
+# 2026-10-06 — 647 reception integration
+
+- User directed completion of the real Meridian reception integration on `+1 647-490-3326`, using xAI premium voice, while retaining `+1 289-670-7853` as the demo number.
+- Dependency audit was repaired (`proxy-addr` 2.0.8), with 226/226 automated tests passing and zero production dependency vulnerabilities before deployment.
