@@ -1,5 +1,10 @@
 # Session memory — Meridian Agency full chat
 
+## 2026-10-06 — xAI desk stands in for the premium line
+
+- Twilio connector cannot move numbers. xAI cannot mint a DID. Meridian Line (Grok app) answers the premium desk by voice and text on xAI. +1 647-490-3326 is not yet a live cellphone route. Milton demo untouched.
+
+
 ## 2026-10-06 — Twilio connector cannot finish the carrier route
 
 - Grok's connected Twilio tool is the public docs server, not account control. It cannot set the trunk or SMS URL.

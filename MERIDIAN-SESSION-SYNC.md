@@ -2,6 +2,16 @@
 
 GitHub is source of truth.
 
+## Premium line on xAI desk, not Twilio — 2026-10-06 00:40 UTC
+
+Kenny said to use xAI for the premium number with a different service, or build the tool Twilio does not provide. Starting head `13c1f7ff186e738917ce9ce25100497fe863e420`.
+
+- xAI will not provision a phone number. Direct SIP still needs a carrier (Telnyx or Plivo) aimed at `sip:+16474903326@sip.voice.x.ai;transport=tls`. Twilio's connected tool remains read-only, so the Toronto number was not moved and the Milton demo was not touched.
+- Built Meridian Line in the Grok app: browser call on Grok Voice (`grok-voice-latest`, voice ara, disclosure first) and text on `grok-4.5`. One live text reply was received and included STOP. This is the working desk. It is not a cellphone answer on +1 647-490-3326.
+- No Railway deploy. No merge to master.
+
+Exact next action: use the desk to talk to reception. A real call to +1 647-490-3326 still needs Telnyx or Plivo, not the Twilio docs connector.
+
 ## Twilio connector checked; carrier route still open — 2026-10-06 00:30 UTC
 
 Kenny asked to complete the Twilio integration after connecting Twilio in Grok. Starting head: `c39542c931589e550e26e5c354381b0001f3dbb7` on `meridian-agency-2-0`.
