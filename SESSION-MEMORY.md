@@ -1,5 +1,15 @@
 # Session memory — Meridian Agency full chat
 
+## 2026-10-08 — V2 source saved; Netlify authentication blocked
+
+- Ken explicitly approved the GitHub push and cloud-browser publishing. Green V2 source is saved on meridian-agency-2-0 at 62b42174d9d63cce11fc5c499547528549568332. Connected GitHub API completed the save after shell Git had no configured authentication. No master merge.
+- Black standby remains on standby/meridian-black-2026-10-08 at 50fc5a7 and public/meridian-black.html. Eight existing customer-front/billing checks passed.
+- Photos supplied by Ken confirm the operating-layer layout, carousel, workflow demo, opportunity scan and FAQ reference.
+- Netlify browser reached the existing deployment page but showed Unauthorized / Access Denied and Log in. Login methods were offered through secure browserAuth; the request timed out and runtime handles were lost. Authentication result is unknown; no password or token was read. No deploy attempted.
+- Published Netlify deployment remains 6ac3b4d1a5cd62cbc5924718 (ready), per connector. V2 is not live. Netlify connector exposes deploy reads only; no local deploy credentials configured.
+- Next: recover secure authenticated Netlify publishing, publish the approved static V2 front, then verify desktop/mobile. V2 is selected for future work. No Railway, voice or payment-processing change.
+
+
 ## 2026-10-08 — Restore green Meridian V2
 
 - Ken selected the green operating-layer homepage as V2. Restored its original hero/operating-layer/service/demo layout to public/index.html and public/meridian-2.html, using the requested headline “AI operations that move businesses forward”.
