@@ -1,5 +1,14 @@
 # Meridian session sync ledger
 
+## 2026-10-08 12:45 UTC — Enhanced mobile V2 and private preview
+
+- Ken requested a preview, mobile smooth scrolling and polished minimal interactions. Preserved the green/serif identity, hero wording, operating layer, CAD plans and black standby. Added phone menu, 44px controls, native scroll/snap services, tappable operating-layer steps, playable/pauseable/resettable four-scenario workflow, selective mobile plan CTA, reduced-motion support and lightweight decorative Canvas orbit motion. Canvas pauses offscreen and when the page is hidden; no scroll interception, dependency or video payload added.
+- Research: official Retell (https://www.retellai.com/ai-voice-agents), Vapi (https://vapi.ai/) and Sierra (https://sierra.ai/) sites. Applied hands-on scenarios, visible workflow steps and outcome-focused explanation as design inspiration. No competitor performance, testimonial or superiority claim copied. Canvas chosen from Ken's requested alternatives; no Higgsfield/CapCut migration.
+- Validation: customer-front and customer-portal 8/8 pass; scripts/check-v2-interactions.cjs passes 11 interaction groups using a mocked DOM (not a real-browser test). JS syntax, V2 parity, unique IDs/anchors/assets, black byte comparison and git diff checks pass. No actual mobile rendered/performance QA: static preview has no supported browser-testing runtime here.
+- Private design preview SUCCESS: https://meridian-v2-preview.hunter82kh.chatgpt.site . Sites project appgprj_6ac78fdb52c881919966df6e2c362367; deployment appgdep_6ac790355d888191a93339cbf3c49829; preview source a385c1ba16658d46d3da11b17f411f38ec23bdd8. This is a static presentation preview; checkout/service/setup/proposal links go to the existing public application, with no backend in the preview.
+- Saved implementation on meridian-agency-2-0 in this commit. No master merge, Netlify/Railway deployment, phone or payment-processing changes. Netlify production V2 publication still needs secure authenticated access; earlier login handoffs failed on Ken's phone. Do not claim this preview changed meridian-open.netlify.app.
+- Next: Ken reviews the private preview on his phone; apply feedback on V2, then use already approved Netlify publication when authenticated. PR #2 remains previously merged at 4eaa904 and does not track this work.
+
 ## 2026-10-08 — V2 source saved; Netlify authentication blocked
 
 - Ken explicitly approved the GitHub push and cloud-browser publishing. Green V2 source is saved on meridian-agency-2-0 at 62b42174d9d63cce11fc5c499547528549568332. Connected GitHub API completed the save after shell Git had no configured authentication. No master merge.
