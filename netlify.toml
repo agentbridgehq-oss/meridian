@@ -125,3 +125,10 @@
   for = "/api/*"
   [headers.values]
     Cache-Control = "no-store"
+
+# V2 service detail pages are rendered by the existing Railway runtime.
+[[redirects]]
+  from = "/go/*"
+  to = "https://meridian-production-4996.up.railway.app/go/:splat"
+  status = 200
+  force = true

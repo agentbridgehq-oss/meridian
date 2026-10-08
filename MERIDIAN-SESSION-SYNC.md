@@ -1,5 +1,15 @@
 # Meridian session sync ledger
 
+## 2026-10-08 — Restore green Meridian V2
+
+- Ken selected the green operating-layer homepage as V2. Restored its original hero/operating-layer/service/demo layout to public/index.html and public/meridian-2.html, using the requested headline “AI operations that move businesses forward”.
+- Preserved the black homepage byte-for-byte at public/meridian-black.html and the full pre-switch source/assets on standby/meridian-black-2026-10-08 at 50fc5a71e290eb48dc66b510257852c6490d2419. Rollback instructions: docs/fronts/V2.md.
+- Retained current CAD plan pricing, checkout, billing portal, agents, setup and legal links. Added /go/* proxy to existing Railway-rendered service pages. No runtime/voice/credential/payment-processing changes.
+- Validation: customer-front and customer-portal tests 8/8 pass; homepage asset/anchor/local-file checks pass; black backup byte comparison and matching V2 pages pass; agency-home.js syntax and git diff checks pass. Visual browser verification unavailable because Chromium download failed.
+- Static deployment pending: connected Netlify tools expose no deploy action; no configured local Netlify authentication. Need approval for cloud-browser fallback to publish this exact static front on meridian-open.netlify.app. No live switch or Railway deployment claimed.
+- PR #2 was previously merged at 4eaa904; master untouched. V2 changes are committed locally only: automatic approval review rejected the git push because it requires explicit approval to publish source and session documentation to the public repository. Do not bypass that rejection. Remote meridian-agency-2-0 remains 50fc5a7; standby branch was created successfully. Next: obtain approval for the V2 source/documentation push and cloud-browser Netlify publication, publish, visually check desktop/mobile, then continue V2 development.
+
+
 GitHub is source of truth.
 
 ## Premium line on xAI desk, not Twilio — 2026-10-06 00:40 UTC

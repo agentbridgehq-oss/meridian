@@ -24,3 +24,5 @@
 /api/* https://meridian-production-4996.up.railway.app/api/:splat 200!
 /meridian-voice-demo.html https://meridian-production-4996.up.railway.app/meridian-voice-demo.html 200!
 /meridian-voice-demo https://meridian-production-4996.up.railway.app/meridian-voice-demo.html 200!
+
+/go/* https://meridian-production-4996.up.railway.app/go/:splat 200!

@@ -1,0 +1,8 @@
+/* V2: restored operating-layer design. Scoped to this homepage. */
+body[data-meridian-version="v2"]{--b:#0b2017;--p:#10291e;--m:#b4c5bb;background:radial-gradient(ellipse at 70% 0,#275f4080,transparent 48%),var(--b)}
+[data-meridian-version="v2"] .nav{background:#0b2017ed}
+.version-mark{font:600 10px system-ui;letter-spacing:.1em;color:var(--a);border:1px solid #bff7d73b;border-radius:5px;padding:3px 5px;margin-left:7px;vertical-align:middle}
+.v2-pricing .stack{display:grid;grid-template-columns:1fr 260px;gap:32px;padding:30px;border:1px solid var(--l);border-radius:20px;background:var(--p)}
+.v2-pricing .stack-side{align-self:center}.v2-pricing .big{font:42px Georgia,serif}.v2-pricing .sub{color:var(--m);margin-bottom:18px}.v2-pricing .fine{font-size:13px;color:var(--m);margin-top:15px}.v2-pricing .stack-list{padding-left:20px;color:var(--m)}.v2-pricing .btn-dark{background:var(--t);color:var(--b)}
+.v2-footer-links{display:flex;flex-wrap:wrap;gap:18px}.foot{gap:20px;flex-wrap:wrap}
+@media(max-width:700px){.v2-pricing .stack{grid-template-columns:1fr;padding:22px}.ni{height:auto;min-height:70px;gap:8px}.links{gap:0}.links .cta{font-size:12px;padding:10px}.brand{white-space:nowrap}}
