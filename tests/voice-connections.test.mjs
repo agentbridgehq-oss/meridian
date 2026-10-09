@@ -1,7 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import vm from 'node:vm';
-import { readFileSync } from 'node:fs';
+import { readFileSync, mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
 import { publicVoiceConnections } from '../lib/voice-connections.mjs';
 
 const workflow=JSON.parse(readFileSync(new URL('../n8n/meridian-calendar-receptionist.json',import.meta.url),'utf8'));
@@ -10,8 +12,8 @@ const run=(name,input,nodes={})=>vm.runInNewContext(`(function(){${code(name)}})
 const request={version:1,deploymentId:'dep_test',idempotencyKey:'test_request_1',action:'book_appointment',data:{callerName:'Test Caller',service:'Consultation',startTime:'2026-10-01T14:00:00-04:00',timezone:'America/Toronto',callerConfirmedSlot:true}};
 
 test('connection status never exposes secret values or customer records',()=>{
-  const before=process.env.OPENAI_API_KEY;process.env.OPENAI_API_KEY='test-secret-must-stay-private';
-  try{const result=publicVoiceConnections();assert.equal(result.browser.toolsEnabled,false);assert.equal(result.phone.liveCallVerified,null);assert.equal(JSON.stringify(result).includes('test-secret-must-stay-private'),false);assert.equal('deployments' in result,false);assert.equal('clients' in result,false);assert.equal(result.roles.length,4);}finally{if(before===undefined)delete process.env.OPENAI_API_KEY;else process.env.OPENAI_API_KEY=before;}
+  const before=process.env.OPENAI_API_KEY, beforeData=process.env.DATA_DIR;const dir=mkdtempSync(path.join(tmpdir(),'meridian-voice-status-'));process.env.DATA_DIR=dir;process.env.OPENAI_API_KEY='test-secret-must-stay-private';
+  try{const result=publicVoiceConnections();assert.equal(result.browser.toolsEnabled,false);assert.equal(result.phone.liveCallVerified,null);assert.equal(JSON.stringify(result).includes('test-secret-must-stay-private'),false);assert.equal('deployments' in result,false);assert.equal('clients' in result,false);assert.equal(result.roles.length,4);}finally{if(before===undefined)delete process.env.OPENAI_API_KEY;else process.env.OPENAI_API_KEY=before;if(beforeData===undefined)delete process.env.DATA_DIR;else process.env.DATA_DIR=beforeData;rmSync(dir,{recursive:true,force:true});}
 });
 
 test('importable calendar bridge has authenticated ingress and no configured secrets',()=>{

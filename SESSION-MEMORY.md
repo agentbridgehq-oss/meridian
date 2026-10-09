@@ -1,5 +1,17 @@
 # Session memory — Meridian Agency full chat
 
+## 2026-10-09 — Website analysis, offers and growth worker
+
+- Added an actual public HTTPS HTML analyzer with pinned DNS, redirect/size/time checks, bounded concurrency and scan rate limits. Observed search/mobile/structure/enquiry findings carry evidence and explicit limits; no invented revenue, rankings or Core Web Vitals. Free interest creates the existing private agency project and a requested-report email job.
+- Added customer offer requests, owner-approved priced templates, current-revision customer approval, intake, delivery work plans and approved-design deployment preparation. Existing integration/QA/client-acceptance/rollback gates remain. Custom offers need final scope, CAD fees, timing and provider costs; no prices or activated client systems are invented.
+- Added niche/location campaigns with start/pause, hourly bounded searches, daily caps, deduplication, source records and up to two candidate website verifications per cycle. Public mailto/tel observations retain source evidence. Candidates still require business-fit/contact-permission review. No cold outreach sender.
+- Added approved live-project daily website reviews with new/resolved findings, explicit scope and pause. Operator workspace includes quote/templates/campaigns/provider readiness/queue/retry/design preparation controls. Worker is opt-in via MERIDIAN_GROWTH_WORKER=1 and uses the existing persistent DATA_DIR, one replica. It does not publish arbitrary SEO content or modify external client systems without implemented scoped connectors.
+- Validation: full npm test 236/236; new growth checks 10/10; V2 mocked-DOM interactions 11 groups; JS syntax and diff checks pass. Fixed pre-existing voice-status test leakage by isolating its data directory (test-only). No rendered browser/mobile QA. Live analyzer fetch from this workspace failed DNS EAI_AGAIN, so real-site acceptance is not claimed; fixtures cover analysis/offer/approval/email acceptance/work plan/deployment blockers and HTTP auth.
+- Railway read-only inspection: existing service fe23148e-0c58-4e87-82c7-5dc0a95c9fcd, production 9dbfe413-b78a-4a9a-a974-eb371785cfde, deployment c903f1af-617d-4958-a1ca-9f8fdc7e4ef5 SUCCESS, source pinned at 50fc5a71e290eb48dc66b510257852c6490d2419, one replica and /data volume. No staged changes. Growth worker, Brave/Serper and Resend variable names absent. No secret values read and no production mutation.
+- New analysis and growth pages added to the existing private V2 design preview with explicit backend-pending labels; preview submissions and operator credential entry disabled. Netlify browser access remains denied from the earlier action; no retry or workaround.
+- Starting source 134716f72eb4629d502afe454001b713c122e868; source saved to meridian-agency-2-0. PR #2 is previously merged; master untouched. Exact next: review preview, obtain explicit production deploy confirmation required by Railway accept-deploy, deploy this tested release and enable worker with configured search/email; approve commercial templates and niche campaigns, then verify real fetch/report email/offer approval/intake/delivery/search.
+
+
 ## 2026-10-09 — Premium interactive onboarding
 
 - Preserved the linked dark green onboarding page, serif typography, existing private project/intake IDs and agency API behavior. Added ten-stage interactive process explorer, next-stage navigation, local-only four-item preparation checklist with reset, responsive native horizontal stage rail, scoped premium styling and reduced-motion support.

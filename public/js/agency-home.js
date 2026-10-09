@@ -95,7 +95,7 @@
   });
   window.addEventListener('resize', railUpdate, {passive:true}); railUpdate();
   document.querySelector('#scan-router').addEventListener('submit', event => {
-    event.preventDefault(); location.assign(`/meridian-proposal.html?service=${encodeURIComponent(event.currentTarget.elements.namedItem('service').value)}`);
+    event.preventDefault(); location.assign(`/meridian-analysis.html?service=${encodeURIComponent(event.currentTarget.elements.namedItem('service').value)}`);
   });
   const mobilePlan = document.querySelector('.mobile-plan');
   let heroVisible = true, scanVisible = false, finalVisible = false;

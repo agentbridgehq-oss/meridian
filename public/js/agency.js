@@ -4,7 +4,7 @@
   const label = s => s.replaceAll('-', ' ').replace(/^./, c => c.toUpperCase());
   const el = (tag, text, cls) => { const n = document.createElement(tag); if (text !== undefined) n.textContent = text; if (cls) n.className = cls; return n; };
   function renderProposal(root, p) {
-    root.replaceChildren(el('h2', p.title), el('p', `${label(p.tier)} · ${p.status === 'approved' ? 'Approved scope — commercial agreement recorded' : 'Draft scope — commercial review required'}`, 'muted'), el('p', p.summary, 'lead'));
+    root.replaceChildren(el('h2', p.title), el('p', `${label(p.tier)} · ${p.status === 'approved' ? 'Approved scope — commercial agreement recorded' : p.status === 'offered' ? 'Written offer — review scope and fees before approval' : 'Draft scope — commercial review required'}`, 'muted'), el('p', p.summary, 'lead'));
     const grid = el('div', undefined, 'grid');
     for (const [title, rows] of [['Delivery scope', p.deliverables], ['Integration plan', p.integrations.map(i => `${i.name}: ${i.status}`)], ['Acceptance checks', p.acceptanceChecks]]) {
       const card = el('article', undefined, 'card'), ul = el('ul'); card.append(el('h3', title));
@@ -14,6 +14,8 @@
     if (p.quote) {
       const money = new Intl.NumberFormat(undefined, { style: 'currency', currency: p.quote.currency });
       root.append(el('p', `Agreed fees (${p.quote.currency}): ${money.format(p.quote.setupFee)} setup · ${money.format(p.quote.monthlyFee)} monthly`, 'note'), el('p', p.quote.scopeNotes, 'muted'));
+      if (p.quote.timing) root.append(el('p', `Delivery timing: ${p.quote.timing}`, 'muted'));
+      if (p.quote.providerCosts) root.append(el('p', `Provider costs: ${p.quote.providerCosts}`, 'muted'));
     } else root.append(el('p', p.commercialTerms, 'note'));
     const exclusions = el('ul', undefined, 'muted'); p.exclusions.forEach(x => exclusions.append(el('li', x)));
     root.append(exclusions, el('p', p.nextStep, 'muted'));
@@ -99,6 +101,7 @@
         document.querySelector('#intake-state').textContent = p.intakeReceived ? 'Your business intake has been saved.' : 'Business intake opens after approval.';
         document.querySelector('#project-intake').hidden = p.stage !== 'intake';
         renderProposal(document.querySelector('#project-proposal'), p.proposal);
+        window.dispatchEvent(new CustomEvent('meridian-project-loaded', { detail: p }));
         status.textContent = `Current stage: ${label(p.stage)}. Updated ${new Date(p.updatedAt).toLocaleString()}.`;
       } catch (error) { status.textContent = error.message || 'Could not load your project. Refresh to retry.'; }
     }
