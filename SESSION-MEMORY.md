@@ -1,5 +1,14 @@
 # Session memory — Meridian Agency full chat
 
+## 2026-10-09 — Premium interactive onboarding
+
+- Preserved the linked dark green onboarding page, serif typography, existing private project/intake IDs and agency API behavior. Added ten-stage interactive process explorer, next-stage navigation, local-only four-item preparation checklist with reset, responsive native horizontal stage rail, scoped premium styling and reduced-motion support.
+- Verified JS syntax, git diff --check and customer-front/customer-portal tests: 8/8 pass. No rendered phone/browser QA claimed.
+- Netlify published deploy remains 6ac3b4d1a5cd62cbc5924718. Browser security policy denied access to app.netlify.com in this session; no Netlify publication attempted after denial. Railway, voice and payment processing unchanged.
+- Updating the existing owner-private Meridian V2 preview with an onboarding presentation page; live business links return to Netlify. Preview has no authenticated project backend.
+- Starting head 0ae3387d084404c01f6fbea37a9d0c379c240278. PR #2 was already merged and does not track these newer changes. Next: review private onboarding preview; publish exact static changes to existing Netlify when access is authorized and available.
+
+
 ## 2026-10-08 12:45 UTC — Enhanced mobile V2 and private preview
 
 - Ken requested a preview, mobile smooth scrolling and polished minimal interactions. Preserved the green/serif identity, hero wording, operating layer, CAD plans and black standby. Added phone menu, 44px controls, native scroll/snap services, tappable operating-layer steps, playable/pauseable/resettable four-scenario workflow, selective mobile plan CTA, reduced-motion support and lightweight decorative Canvas orbit motion. Canvas pauses offscreen and when the page is hidden; no scroll interception, dependency or video payload added.
