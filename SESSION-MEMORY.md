@@ -1,5 +1,13 @@
 # Session memory — Meridian Agency full chat
 
+## 2026-10-11 00:11 UTC — Production deployment authorized; Railway GitHub revoked
+
+Ken explicitly confirmed production deployment of tested release ba13721b2022e364929809df9a84ae4351c316b2 and worker enablement. Railway connect-service-source rejected staging that commit: “Your GitHub connection has been revoked. Please reconnect your GitHub account.” ChatGPT's GitHub connector remains usable; this is Railway's repository integration.
+
+Only MERIDIAN_GROWTH_WORKER=1 was staged (patch db35c2a8-34fc-4ddd-8e3e-60364c66f220), not applied. accept-deploy was not called, because the approved new source was not staged. Production remains pinned to 50fc5a71e290eb48dc66b510257852c6490d2419; existing deployment c903f1af-617d-4958-a1ca-9f8fdc7e4ef5 SUCCESS. Existing /data and service preserved. No secrets read.
+
+Next: owner reconnects GitHub inside Railway. Reuse this explicit approval; do not ask again. Stage exact approved product ba13721, inspect the existing pending patch, then accept-deploy and verify deployment/runtime/features. Search/email configuration and customer-system acceptance remain separate readiness limits.
+
 ## 2026-10-09 — Website analysis, offers and growth worker
 
 - Added an actual public HTTPS HTML analyzer with pinned DNS, redirect/size/time checks, bounded concurrency and scan rate limits. Observed search/mobile/structure/enquiry findings carry evidence and explicit limits; no invented revenue, rankings or Core Web Vitals. Free interest creates the existing private agency project and a requested-report email job.
